@@ -1,5 +1,7 @@
 import React, { useState } from "react";
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const AIMessageBox = ({ isOpen, onClose }) => {
   const [mode, setMode] = useState("generate");
   const [businessType, setBusinessType] = useState("real estate");
@@ -32,7 +34,7 @@ const AIMessageBox = ({ isOpen, onClose }) => {
       if (res.ok) {
         setOutputMessage(data.message);
       } else {
-        alert(data.error);
+        alert(data.error || "Failed to generate message");
       }
     } catch (error) {
       console.error(error);
@@ -63,7 +65,7 @@ const AIMessageBox = ({ isOpen, onClose }) => {
       if (res.ok) {
         setOutputMessage(data.message);
       } else {
-        alert(data.error);
+        alert(data.error || "Failed to improve message");
       }
     } catch (error) {
       console.error(error);
