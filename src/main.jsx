@@ -15,6 +15,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       signInForceRedirectUrl="/dashboard"
       signInFallbackRedirectUrl="/dashboard"
       signUpFallbackRedirectUrl="/onboarding"
+      afterSignOutUrl="/"
     >
       <BrowserRouter>
         <App />
