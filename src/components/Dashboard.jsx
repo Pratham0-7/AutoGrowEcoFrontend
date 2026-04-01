@@ -81,7 +81,7 @@ const Dashboard = () => {
             if (!updated[lead._id]) {
               updated[lead._id] = {
                 channel: "email",
-                scheduled_for: "",
+                interval_days: 2,
               };
             }
           });
@@ -216,6 +216,8 @@ const Dashboard = () => {
   };
 
   const handleStartFollowup = async (leadId) => {
+    const leadConfig = leadSchedules[leadId] || {};
+
     if (!messageTemplate.trim()) {
       alert("Please enter message template");
       return;
@@ -230,8 +232,8 @@ const Dashboard = () => {
         body: JSON.stringify({
           subject: emailSubject,
           message: messageTemplate,
-          channel: "email",
-          interval_days: Number(intervalDays),
+          channel: leadConfig.channel || "email",
+          interval_days: Number(leadConfig.interval_days || 2),
         }),
       });
 
@@ -414,7 +416,7 @@ const Dashboard = () => {
                   </label>
                   <select
                     value={intervalDays}
-                    onChange={(e) => setIntervalDays(e.target.value)}
+                    onChange={(e) => setIntervalDays(Number(e.target.value))}
                     className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
                   >
                     <option value={2}>2 days</option>
@@ -504,6 +506,7 @@ const Dashboard = () => {
                           Next Follow-up
                         </th>
                         <th className="px-4 py-3 font-semibold">Channel</th>
+                        <th className="px-4 py-3 font-semibold">Gap</th>
                         <th className="px-4 py-3 font-semibold">Action</th>
                       </tr>
                     </thead>
@@ -522,7 +525,7 @@ const Dashboard = () => {
                           <td className="px-4 py-4">
                             <span
                               className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getSendStatusStyle(
-                                lead.send_status,
+                                lead.send_status
                               )}`}
                             >
                               {lead.send_status || "not sent"}
@@ -531,7 +534,7 @@ const Dashboard = () => {
                           <td className="px-4 py-4">
                             <span
                               className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getResponseStatusStyle(
-                                lead.response_status,
+                                lead.response_status
                               )}`}
                             >
                               {lead.response_status || "pending"}
@@ -548,14 +551,12 @@ const Dashboard = () => {
                           </td>
                           <td className="px-4 py-4">
                             <select
-                              value={
-                                leadSchedules[lead._id]?.channel || "email"
-                              }
+                              value={leadSchedules[lead._id]?.channel || "email"}
                               onChange={(e) =>
                                 updateLeadSchedule(
                                   lead._id,
                                   "channel",
-                                  e.target.value,
+                                  e.target.value
                                 )
                               }
                               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
@@ -566,19 +567,33 @@ const Dashboard = () => {
                             </select>
                           </td>
                           <td className="px-4 py-4">
-                            <button
-                              onClick={() => handleStartFollowup(lead._id)}
-                              className="w-full inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                            <select
+                              value={
+                                leadSchedules[lead._id]?.interval_days || 2
+                              }
+                              onChange={(e) =>
+                                updateLeadSchedule(
+                                  lead._id,
+                                  "interval_days",
+                                  Number(e.target.value)
+                                )
+                              }
+                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
                             >
-                              Start Follow-ups
-                            </button>
+                              <option value={2}>2 days</option>
+                              <option value={3}>3 days</option>
+                              <option value={4}>4 days</option>
+                              <option value={5}>5 days</option>
+                              <option value={6}>6 days</option>
+                              <option value={7}>7 days</option>
+                            </select>
                           </td>
                           <td className="px-4 py-4">
                             <button
-                              onClick={() => handleSingleSchedule(lead._id)}
+                              onClick={() => handleStartFollowup(lead._id)}
                               className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
                             >
-                              Schedule
+                              Start Follow-ups
                             </button>
                           </td>
                         </tr>
@@ -609,14 +624,14 @@ const Dashboard = () => {
                         <div className="flex items-end gap-2 sm:flex-col">
                           <span
                             className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getSendStatusStyle(
-                              lead.send_status,
+                              lead.send_status
                             )}`}
                           >
                             {lead.send_status || "not sent"}
                           </span>
                           <span
                             className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getResponseStatusStyle(
-                              lead.response_status,
+                              lead.response_status
                             )}`}
                           >
                             {lead.response_status || "pending"}
@@ -654,7 +669,7 @@ const Dashboard = () => {
                             updateLeadSchedule(
                               lead._id,
                               "channel",
-                              e.target.value,
+                              e.target.value
                             )
                           }
                           className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
@@ -664,24 +679,30 @@ const Dashboard = () => {
                           <option value="both">Both</option>
                         </select>
 
-                        <input
-                          type="datetime-local"
-                          value={leadSchedules[lead._id]?.scheduled_for || ""}
+                        <select
+                          value={leadSchedules[lead._id]?.interval_days || 2}
                           onChange={(e) =>
                             updateLeadSchedule(
                               lead._id,
-                              "scheduled_for",
-                              e.target.value,
+                              "interval_days",
+                              Number(e.target.value)
                             )
                           }
                           className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
-                        />
+                        >
+                          <option value={2}>2 days</option>
+                          <option value={3}>3 days</option>
+                          <option value={4}>4 days</option>
+                          <option value={5}>5 days</option>
+                          <option value={6}>6 days</option>
+                          <option value={7}>7 days</option>
+                        </select>
 
                         <button
-                          onClick={() => handleSingleSchedule(lead._id)}
+                          onClick={() => handleStartFollowup(lead._id)}
                           className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
                         >
-                          Schedule for This Lead
+                          Start Follow-ups
                         </button>
                       </div>
                     </div>

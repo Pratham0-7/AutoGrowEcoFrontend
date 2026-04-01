@@ -16,6 +16,11 @@ const Landing = () => {
         <WhyAGE />
         <Solution />
         <Results />
+        <footer className="mt-16 py-8 text-center">
+          <p className="text-base font-semibold text-slate-700 tracking-wide">
+            Built by Pratham Pandey
+          </p>
+        </footer>{" "}
       </main>
     </div>
   );
