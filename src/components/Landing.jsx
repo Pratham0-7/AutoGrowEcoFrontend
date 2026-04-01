@@ -13,9 +13,9 @@ const Landing = () => {
       <main>
         <Hero />
         <Problem />
+        <WhyAGE />
         <Solution />
         <Results />
-        <WhyAGE />
       </main>
     </div>
   );
