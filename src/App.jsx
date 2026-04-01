@@ -170,7 +170,7 @@ const App = () => {
         <Route path="/onboarding" element={<ProtectedOnboarding />} />
         <Route path="/dashboard" element={<ProtectedDashboard />} />
       </Routes>
-      <p className="text-sm text-slate-500">Built by Pratham Pandey</p>{" "}
+      <p className="text-sm text-center text-black">Built by Pratham Pandey</p>
     </>
   );
 };
