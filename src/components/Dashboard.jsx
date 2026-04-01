@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import AIMessageBox from "./AIMessageBox";
 import { useUser, UserButton } from "@clerk/clerk-react";
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Dashboard = () => {
@@ -13,6 +14,7 @@ const Dashboard = () => {
   const [emailSubject, setEmailSubject] = useState("Follow-up from AGE");
   const [messageTemplate, setMessageTemplate] = useState("");
   const [isAIAssistOpen, setIsAIAssistOpen] = useState(false);
+  const [leadSchedules, setLeadSchedules] = useState({});
 
   const company_id = localStorage.getItem("company_id");
   const user_id = localStorage.getItem("user_id");
@@ -69,7 +71,23 @@ const Dashboard = () => {
       const data = await res.json();
 
       if (res.ok) {
-        setLeads(sortLeads(data));
+        const sortedLeads = sortLeads(data);
+        setLeads(sortedLeads);
+
+        setLeadSchedules((prev) => {
+          const updated = { ...prev };
+
+          sortedLeads.forEach((lead) => {
+            if (!updated[lead._id]) {
+              updated[lead._id] = {
+                channel: "email",
+                scheduled_for: "",
+              };
+            }
+          });
+
+          return updated;
+        });
       } else {
         alert(data.error);
       }
@@ -184,6 +202,72 @@ const Dashboard = () => {
     } catch (error) {
       console.error(error);
       alert("Bulk send failed");
+    }
+  };
+
+  const updateLeadSchedule = (leadId, field, value) => {
+    setLeadSchedules((prev) => ({
+      ...prev,
+      [leadId]: {
+        ...prev[leadId],
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleSingleSchedule = async (leadId) => {
+    const leadConfig = leadSchedules[leadId] || {};
+
+    if (!messageTemplate.trim()) {
+      alert("Please generate or enter a message first.");
+      return;
+    }
+
+    if (!leadConfig.channel) {
+      alert("Please select a channel.");
+      return;
+    }
+
+    if (!leadConfig.scheduled_for) {
+      alert("Please select date and time for this lead.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/schedule_single/${leadId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          subject: emailSubject,
+          message: messageTemplate,
+          channel: leadConfig.channel,
+          scheduled_for: leadConfig.scheduled_for,
+          interval_days: Number(intervalDays),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert(data.message);
+
+        setLeadSchedules((prev) => ({
+          ...prev,
+          [leadId]: {
+            ...prev[leadId],
+            scheduled_for: "",
+          },
+        }));
+
+        fetchLeads();
+      } else {
+        alert(data.error);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Single lead scheduling failed");
     }
   };
 
@@ -431,6 +515,9 @@ const Dashboard = () => {
                         <th className="px-4 py-3 font-semibold">Follow-ups</th>
                         <th className="px-4 py-3 font-semibold">Last Follow-up</th>
                         <th className="px-4 py-3 font-semibold">Next Follow-up</th>
+                        <th className="px-4 py-3 font-semibold">Channel</th>
+                        <th className="px-4 py-3 font-semibold">Schedule At</th>
+                        <th className="px-4 py-3 font-semibold">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 bg-white">
@@ -448,7 +535,7 @@ const Dashboard = () => {
                           <td className="px-4 py-4">
                             <span
                               className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getSendStatusStyle(
-                                lead.send_status,
+                                lead.send_status
                               )}`}
                             >
                               {lead.send_status || "not sent"}
@@ -457,7 +544,7 @@ const Dashboard = () => {
                           <td className="px-4 py-4">
                             <span
                               className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getResponseStatusStyle(
-                                lead.response_status,
+                                lead.response_status
                               )}`}
                             >
                               {lead.response_status || "pending"}
@@ -471,6 +558,41 @@ const Dashboard = () => {
                           </td>
                           <td className="px-4 py-4 text-slate-600">
                             {formatDate(lead.next_followup_at)}
+                          </td>
+                          <td className="px-4 py-4">
+                            <select
+                              value={leadSchedules[lead._id]?.channel || "email"}
+                              onChange={(e) =>
+                                updateLeadSchedule(lead._id, "channel", e.target.value)
+                              }
+                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+                            >
+                              <option value="email">Email</option>
+                              <option value="sms">SMS</option>
+                              <option value="both">Both</option>
+                            </select>
+                          </td>
+                          <td className="px-4 py-4">
+                            <input
+                              type="datetime-local"
+                              value={leadSchedules[lead._id]?.scheduled_for || ""}
+                              onChange={(e) =>
+                                updateLeadSchedule(
+                                  lead._id,
+                                  "scheduled_for",
+                                  e.target.value
+                                )
+                              }
+                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+                            />
+                          </td>
+                          <td className="px-4 py-4">
+                            <button
+                              onClick={() => handleSingleSchedule(lead._id)}
+                              className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+                            >
+                              Schedule
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -500,14 +622,14 @@ const Dashboard = () => {
                         <div className="flex items-end gap-2 sm:flex-col">
                           <span
                             className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getSendStatusStyle(
-                              lead.send_status,
+                              lead.send_status
                             )}`}
                           >
                             {lead.send_status || "not sent"}
                           </span>
                           <span
                             className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getResponseStatusStyle(
-                              lead.response_status,
+                              lead.response_status
                             )}`}
                           >
                             {lead.response_status || "pending"}
@@ -536,6 +658,40 @@ const Dashboard = () => {
                             {formatDate(lead.next_followup_at)}
                           </p>
                         </div>
+                      </div>
+
+                      <div className="mt-4 grid gap-3">
+                        <select
+                          value={leadSchedules[lead._id]?.channel || "email"}
+                          onChange={(e) =>
+                            updateLeadSchedule(lead._id, "channel", e.target.value)
+                          }
+                          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+                        >
+                          <option value="email">Email</option>
+                          <option value="sms">SMS</option>
+                          <option value="both">Both</option>
+                        </select>
+
+                        <input
+                          type="datetime-local"
+                          value={leadSchedules[lead._id]?.scheduled_for || ""}
+                          onChange={(e) =>
+                            updateLeadSchedule(
+                              lead._id,
+                              "scheduled_for",
+                              e.target.value
+                            )
+                          }
+                          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+                        />
+
+                        <button
+                          onClick={() => handleSingleSchedule(lead._id)}
+                          className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                        >
+                          Schedule for This Lead
+                        </button>
                       </div>
                     </div>
                   ))}
