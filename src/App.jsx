@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { SignedIn, SignedOut, SignIn, SignUp, useUser } from "@clerk/clerk-react";
+import {
+  SignedIn,
+  SignedOut,
+  SignIn,
+  SignUp,
+  useUser,
+} from "@clerk/clerk-react";
 import Landing from "./components/Landing";
 import Dashboard from "./components/Dashboard";
 import Onboarding from "./components/Onboarding";
@@ -55,7 +61,11 @@ const ProtectedDashboard = () => {
   }, [isLoaded, isSignedIn, user]);
 
   if (!isLoaded || checking) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
   if (!isSignedIn) {
@@ -115,7 +125,11 @@ const ProtectedOnboarding = () => {
   }, [isLoaded, isSignedIn, user]);
 
   if (!isLoaded || checking) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
   if (!isSignedIn) {
@@ -131,30 +145,33 @@ const ProtectedOnboarding = () => {
 
 const App = () => {
   return (
-    <Routes>
-      <Route path="/" element={<Landing />} />
+    <>
+      <Routes>
+        <Route path="/" element={<Landing />} />
 
-      <Route
-        path="/sign-in/*"
-        element={
-          <div className="min-h-screen bg-black text-white flex items-center justify-center">
-            <SignIn routing="path" path="/sign-in" />
-          </div>
-        }
-      />
+        <Route
+          path="/sign-in/*"
+          element={
+            <div className="min-h-screen bg-black text-white flex items-center justify-center">
+              <SignIn routing="path" path="/sign-in" />
+            </div>
+          }
+        />
 
-      <Route
-        path="/sign-up/*"
-        element={
-          <div className="min-h-screen bg-black text-white flex items-center justify-center">
-            <SignUp routing="path" path="/sign-up" />
-          </div>
-        }
-      />
+        <Route
+          path="/sign-up/*"
+          element={
+            <div className="min-h-screen bg-black text-white flex items-center justify-center">
+              <SignUp routing="path" path="/sign-up" />
+            </div>
+          }
+        />
 
-      <Route path="/onboarding" element={<ProtectedOnboarding />} />
-      <Route path="/dashboard" element={<ProtectedDashboard />} />
-    </Routes>
+        <Route path="/onboarding" element={<ProtectedOnboarding />} />
+        <Route path="/dashboard" element={<ProtectedDashboard />} />
+      </Routes>
+      <p className="text-sm text-slate-500">Built by Pratham Pandey</p>{" "}
+    </>
   );
 };
 
