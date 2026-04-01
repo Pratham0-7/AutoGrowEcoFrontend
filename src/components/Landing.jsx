@@ -4,6 +4,7 @@ import Problem from "./Problem";
 import Solution from "./Solution";
 import Results from "./Results";
 import Navbar from "./Navbar";
+import WhyAGE from "./WhyPage";
 
 const Landing = () => {
   return (
@@ -14,6 +15,7 @@ const Landing = () => {
         <Problem />
         <Solution />
         <Results />
+        <WhyAGE />
       </main>
     </div>
   );
