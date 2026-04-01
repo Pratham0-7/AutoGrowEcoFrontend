@@ -215,26 +215,14 @@ const Dashboard = () => {
     }));
   };
 
-  const handleSingleSchedule = async (leadId) => {
-    const leadConfig = leadSchedules[leadId] || {};
-
+  const handleStartFollowup = async (leadId) => {
     if (!messageTemplate.trim()) {
-      alert("Please generate or enter a message first.");
-      return;
-    }
-
-    if (!leadConfig.channel) {
-      alert("Please select a channel.");
-      return;
-    }
-
-    if (!leadConfig.scheduled_for) {
-      alert("Please select date and time for this lead.");
+      alert("Please enter message template");
       return;
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/schedule_single/${leadId}`, {
+      const res = await fetch(`${API_BASE_URL}/start_followup/${leadId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -242,8 +230,7 @@ const Dashboard = () => {
         body: JSON.stringify({
           subject: emailSubject,
           message: messageTemplate,
-          channel: leadConfig.channel,
-          scheduled_for: leadConfig.scheduled_for,
+          channel: "email",
           interval_days: Number(intervalDays),
         }),
       });
@@ -251,23 +238,14 @@ const Dashboard = () => {
       const data = await res.json();
 
       if (res.ok) {
-        alert(data.message);
-
-        setLeadSchedules((prev) => ({
-          ...prev,
-          [leadId]: {
-            ...prev[leadId],
-            scheduled_for: "",
-          },
-        }));
-
+        alert("Follow-ups started");
         fetchLeads();
       } else {
         alert(data.error);
       }
-    } catch (error) {
-      console.error(error);
-      alert("Single lead scheduling failed");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to start follow-up");
     }
   };
 
@@ -296,7 +274,9 @@ const Dashboard = () => {
         <div className="mb-8 rounded-3xl border border-slate-200 bg-white shadow-sm">
           <div className="flex flex-col gap-5 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-600">AGE Dashboard</p>
+              <p className="text-sm font-medium text-slate-600">
+                AGE Dashboard
+              </p>
               <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
                 Welcome back, {name}
               </h1>
@@ -393,7 +373,9 @@ const Dashboard = () => {
 
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="mb-5">
-              <h2 className="text-lg font-semibold sm:text-xl">Campaign Setup</h2>
+              <h2 className="text-lg font-semibold sm:text-xl">
+                Campaign Setup
+              </h2>
               <p className="mt-1 text-sm text-slate-500">
                 Set your subject, message, and follow-up timing before sending.
               </p>
@@ -511,12 +493,17 @@ const Dashboard = () => {
                         <th className="px-4 py-3 font-semibold">Email</th>
                         <th className="px-4 py-3 font-semibold">Phone</th>
                         <th className="px-4 py-3 font-semibold">Sent Via</th>
-                        <th className="px-4 py-3 font-semibold">Receiver Reply</th>
+                        <th className="px-4 py-3 font-semibold">
+                          Receiver Reply
+                        </th>
                         <th className="px-4 py-3 font-semibold">Follow-ups</th>
-                        <th className="px-4 py-3 font-semibold">Last Follow-up</th>
-                        <th className="px-4 py-3 font-semibold">Next Follow-up</th>
+                        <th className="px-4 py-3 font-semibold">
+                          Last Follow-up
+                        </th>
+                        <th className="px-4 py-3 font-semibold">
+                          Next Follow-up
+                        </th>
                         <th className="px-4 py-3 font-semibold">Channel</th>
-                        <th className="px-4 py-3 font-semibold">Schedule At</th>
                         <th className="px-4 py-3 font-semibold">Action</th>
                       </tr>
                     </thead>
@@ -535,7 +522,7 @@ const Dashboard = () => {
                           <td className="px-4 py-4">
                             <span
                               className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getSendStatusStyle(
-                                lead.send_status
+                                lead.send_status,
                               )}`}
                             >
                               {lead.send_status || "not sent"}
@@ -544,7 +531,7 @@ const Dashboard = () => {
                           <td className="px-4 py-4">
                             <span
                               className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getResponseStatusStyle(
-                                lead.response_status
+                                lead.response_status,
                               )}`}
                             >
                               {lead.response_status || "pending"}
@@ -561,9 +548,15 @@ const Dashboard = () => {
                           </td>
                           <td className="px-4 py-4">
                             <select
-                              value={leadSchedules[lead._id]?.channel || "email"}
+                              value={
+                                leadSchedules[lead._id]?.channel || "email"
+                              }
                               onChange={(e) =>
-                                updateLeadSchedule(lead._id, "channel", e.target.value)
+                                updateLeadSchedule(
+                                  lead._id,
+                                  "channel",
+                                  e.target.value,
+                                )
                               }
                               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
                             >
@@ -573,18 +566,12 @@ const Dashboard = () => {
                             </select>
                           </td>
                           <td className="px-4 py-4">
-                            <input
-                              type="datetime-local"
-                              value={leadSchedules[lead._id]?.scheduled_for || ""}
-                              onChange={(e) =>
-                                updateLeadSchedule(
-                                  lead._id,
-                                  "scheduled_for",
-                                  e.target.value
-                                )
-                              }
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
-                            />
+                            <button
+                              onClick={() => handleStartFollowup(lead._id)}
+                              className="w-full inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                            >
+                              Start Follow-ups
+                            </button>
                           </td>
                           <td className="px-4 py-4">
                             <button
@@ -622,14 +609,14 @@ const Dashboard = () => {
                         <div className="flex items-end gap-2 sm:flex-col">
                           <span
                             className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getSendStatusStyle(
-                              lead.send_status
+                              lead.send_status,
                             )}`}
                           >
                             {lead.send_status || "not sent"}
                           </span>
                           <span
                             className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getResponseStatusStyle(
-                              lead.response_status
+                              lead.response_status,
                             )}`}
                           >
                             {lead.response_status || "pending"}
@@ -664,7 +651,11 @@ const Dashboard = () => {
                         <select
                           value={leadSchedules[lead._id]?.channel || "email"}
                           onChange={(e) =>
-                            updateLeadSchedule(lead._id, "channel", e.target.value)
+                            updateLeadSchedule(
+                              lead._id,
+                              "channel",
+                              e.target.value,
+                            )
                           }
                           className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
                         >
@@ -680,7 +671,7 @@ const Dashboard = () => {
                             updateLeadSchedule(
                               lead._id,
                               "scheduled_for",
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
