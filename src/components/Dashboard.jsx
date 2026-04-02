@@ -488,68 +488,62 @@ const Dashboard = () => {
             ) : (
               <>
                 <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 lg:block">
-                  <table className="min-w-full text-sm">
+                  <table className="w-full min-w-275 text-sm">
                     <thead className="bg-slate-50">
                       <tr className="text-left text-slate-600">
-                        <th className="px-4 py-3 font-semibold">Name</th>
-                        <th className="px-4 py-3 font-semibold">Email</th>
-                        <th className="px-4 py-3 font-semibold">Phone</th>
-                        <th className="px-4 py-3 font-semibold">Sent Via</th>
-                        <th className="px-4 py-3 font-semibold">
-                          Receiver Reply
-                        </th>
-                        <th className="px-4 py-3 font-semibold">Follow-ups</th>
-                        <th className="px-4 py-3 font-semibold">
-                          Last Follow-up
-                        </th>
-                        <th className="px-4 py-3 font-semibold">
-                          Next Follow-up
-                        </th>
-                        <th className="px-4 py-3 font-semibold">Channel</th>
-                        <th className="px-4 py-3 font-semibold">Gap</th>
-                        <th className="px-4 py-3 font-semibold">Action</th>
+                        <th className="whitespace-nowrap px-5 py-4 font-semibold">Name</th>
+                        <th className="whitespace-nowrap px-5 py-4 font-semibold">Email</th>
+                        <th className="whitespace-nowrap px-5 py-4 font-semibold">Phone</th>
+                        <th className="whitespace-nowrap px-5 py-4 font-semibold">Sent Via</th>
+                        <th className="whitespace-nowrap px-5 py-4 font-semibold">Receiver Reply</th>
+                        <th className="whitespace-nowrap px-5 py-4 font-semibold">Follow-ups</th>
+                        <th className="whitespace-nowrap px-5 py-4 font-semibold">Last Follow-up</th>
+                        <th className="whitespace-nowrap px-5 py-4 font-semibold">Next Follow-up</th>
+                        <th className="whitespace-nowrap px-5 py-4 font-semibold">Channel</th>
+                        <th className="whitespace-nowrap px-5 py-4 font-semibold">Gap</th>
+                        <th className="whitespace-nowrap px-5 py-4 font-semibold">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 bg-white">
                       {leads.map((lead) => (
                         <tr key={lead._id} className="hover:bg-slate-50">
-                          <td className="px-4 py-4 font-medium text-slate-900">
+                          <td className="whitespace-nowrap px-5 py-4 font-medium text-slate-900">
                             {lead.name || "-"}
                           </td>
-                          <td className="px-4 py-4 text-slate-600">
+                          <td className="px-5 py-4 text-slate-600">
                             {lead.email || "-"}
                           </td>
-                          <td className="px-4 py-4 text-slate-600">
+                          <td className="whitespace-nowrap px-5 py-4 text-slate-600">
                             {lead.phone || "-"}
                           </td>
-                          <td className="px-4 py-4">
+                          <td className="px-5 py-4">
                             <span
-                              className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getSendStatusStyle(
+                              className={`inline-flex whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${getSendStatusStyle(
                                 lead.send_status
                               )}`}
                             >
                               {lead.send_status || "not sent"}
                             </span>
                           </td>
-                          <td className="px-4 py-4">
+                          <td className="px-5 py-4">
                             <span
-                              className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getResponseStatusStyle(
+                              className={`inline-flex whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${getResponseStatusStyle(
                                 lead.response_status
                               )}`}
                             >
                               {lead.response_status || "pending"}
                             </span>
                           </td>
-                          <td className="px-4 py-4 text-slate-600">
+                          <td className="whitespace-nowrap px-5 py-4 text-slate-600">
                             {lead.followup_count || 0}
                           </td>
-                          <td className="px-4 py-4 text-slate-600">
+                          <td className="whitespace-nowrap px-5 py-4 text-slate-600">
                             {formatDate(lead.last_followup_sent_at)}
                           </td>
-                          <td className="px-4 py-4 text-slate-600">
+                          <td className="whitespace-nowrap px-5 py-4 text-slate-600">
                             {formatDate(lead.next_followup_at)}
                           </td>
-                          <td className="px-4 py-4">
+                          <td className="px-5 py-4">
                             <select
                               value={leadSchedules[lead._id]?.channel || "email"}
                               onChange={(e) =>
@@ -559,14 +553,14 @@ const Dashboard = () => {
                                   e.target.value
                                 )
                               }
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+                              className="min-w-25 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
                             >
                               <option value="email">Email</option>
                               <option value="sms">SMS</option>
                               <option value="both">Both</option>
                             </select>
                           </td>
-                          <td className="px-4 py-4">
+                          <td className="px-5 py-4">
                             <select
                               value={
                                 leadSchedules[lead._id]?.interval_days || 2
@@ -578,7 +572,7 @@ const Dashboard = () => {
                                   Number(e.target.value)
                                 )
                               }
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+                              className="min-w-25 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
                             >
                               <option value={2}>2 days</option>
                               <option value={3}>3 days</option>
@@ -588,10 +582,10 @@ const Dashboard = () => {
                               <option value={7}>7 days</option>
                             </select>
                           </td>
-                          <td className="px-4 py-4">
+                          <td className="px-5 py-4">
                             <button
                               onClick={() => handleStartFollowup(lead._id)}
-                              className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+                              className="inline-flex whitespace-nowrap items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
                             >
                               Start Follow-ups
                             </button>
