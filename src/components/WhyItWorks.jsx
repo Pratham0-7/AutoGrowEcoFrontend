@@ -20,44 +20,86 @@ const useInView = (threshold = 0.15) => {
 };
 
 const responseSpeedData = [
-  { label: "First 5 minutes", value: 8, suffix: "x" },
-  { label: "After 5 min–24 hrs", value: 1, suffix: "x" },
+  { label: "First 5 min", value: 8, display: "8x" },
+  { label: "5 min–24 hrs", value: 1, display: "1x" },
 ];
 
-const touchpointData = [
-  { label: "Average touchpoints needed", value: 8, suffix: "" },
+const touchpointBars = [
+  { label: "1", value: 1 },
+  { label: "2", value: 2 },
+  { label: "3", value: 3 },
+  { label: "4", value: 4 },
+  { label: "5", value: 5 },
+  { label: "6", value: 6 },
+  { label: "7", value: 7 },
+  { label: "8", value: 8 },
 ];
 
 const statCards = [
   {
     value: "57.1%",
     title: "First calls happen too late",
-    desc: "Many first call attempts happen after more than a week.",
+    desc: "A large share of first call attempts happen after more than a week.",
+    source: "Source: InsideSales research",
   },
   {
     value: "0.1%",
     title: "Fast follow-up is rare",
-    desc: "Very few leads are engaged within the first five minutes.",
+    desc: "Only a tiny fraction of inbound leads are engaged within five minutes.",
+    source: "Source: InsideSales research",
   },
   {
     value: "10–15%",
     title: "Efficiency improvement",
     desc: "Sales automation can materially improve team efficiency.",
+    source: "Source: McKinsey",
   },
   {
-    value: "50%+",
-    title: "Buyers use multiple channels",
-    desc: "Customers often engage across 3–5 channels before acting.",
+    value: "1.7x",
+    title: "Omnichannel customers shop more",
+    desc: "Customers using multiple channels shop more than single-channel shoppers.",
+    source: "Source: McKinsey",
   },
 ];
 
 const bottomPills = [
-  "8x stronger early follow-up",
-  "8 touchpoints on average",
+  "Research-backed",
+  "Response speed matters",
+  "Repeated touchpoints matter",
   "Automation improves efficiency",
-  "Multi-channel buyer behavior",
-  "Built for conversion, not admin",
+  "Multi-channel buying is real",
 ];
+
+const SourceLine = ({ children }) => (
+  <p className="mt-3 text-xs leading-relaxed text-slate-400">{children}</p>
+);
+
+const SimpleBarChart = ({ data, maxValue, colorClass = "bg-violet-600" }) => {
+  return (
+    <div className="mt-6">
+      <div className="flex h-56 items-end gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 pb-4 pt-6">
+        {data.map((item) => (
+          <div key={item.label} className="flex flex-1 flex-col items-center justify-end gap-3">
+            <span className="text-sm font-bold text-slate-900">
+              {item.display || item.value}
+            </span>
+
+            <div className="flex h-36 w-full items-end justify-center">
+              <div
+                className={`w-full max-w-[72px] rounded-t-2xl ${colorClass} shadow-sm transition-all duration-700`}
+                style={{ height: `${(item.value / maxValue) * 100}%` }}
+              />
+            </div>
+
+            <span className="text-center text-xs font-medium text-slate-500">
+              {item.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const WhyItWorks = () => {
   const [headerRef, headerInView] = useInView(0.2);
@@ -69,7 +111,6 @@ const WhyItWorks = () => {
       <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent" />
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <div
           ref={headerRef}
           style={{
@@ -77,7 +118,7 @@ const WhyItWorks = () => {
             transform: headerInView ? "translateY(0)" : "translateY(24px)",
             transition: "opacity 0.7s ease, transform 0.7s ease",
           }}
-          className="mx-auto max-w-2xl text-center"
+          className="mx-auto max-w-3xl text-center"
         >
           <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-4 py-1.5 text-sm font-medium text-violet-600">
             <svg
@@ -97,17 +138,15 @@ const WhyItWorks = () => {
           </div>
 
           <h2 className="mt-5 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-            The numbers behind{" "}
-            <span className="text-violet-600">missed conversions.</span>
+            The numbers behind <span className="text-violet-600">missed conversions.</span>
           </h2>
 
           <p className="mt-4 text-lg text-slate-500">
-            Leads convert faster when follow-up is immediate, repeated, and consistent.
-            That is exactly what AGE is built to do.
+            AGE is built around what actually moves leads: fast response, repeated follow-up,
+            and consistent outreach across channels.
           </p>
         </div>
 
-        {/* Charts */}
         <div
           ref={chartRef}
           style={{
@@ -117,7 +156,6 @@ const WhyItWorks = () => {
           }}
           className="mt-16 grid gap-6 lg:grid-cols-2"
         >
-          {/* Chart 1 */}
           <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-200 px-8 py-6">
               <p className="text-sm font-semibold uppercase tracking-widest text-violet-600">
@@ -127,34 +165,13 @@ const WhyItWorks = () => {
                 Fast follow-up wins more leads
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                Conversion performance is dramatically higher when outreach happens
-                in the first five minutes.
+                Conversion performance is far stronger when outreach happens in the first five minutes.
               </p>
             </div>
 
-            <div className="space-y-6 px-8 py-8">
-              {responseSpeedData.map((item) => (
-                <div key={item.label}>
-                  <div className="mb-2 flex items-center justify-between gap-4">
-                    <span className="text-sm font-medium text-slate-700">
-                      {item.label}
-                    </span>
-                    <span className="text-sm font-semibold text-slate-900">
-                      {item.value}
-                      {item.suffix}
-                    </span>
-                  </div>
-
-                  <div className="h-3 overflow-hidden rounded-full bg-slate-100">
-                    <div
-                      className="h-full rounded-full bg-violet-600 transition-all duration-700"
-                      style={{
-                        width: `${(item.value / 8) * 100}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
+            <div className="px-8 py-8">
+              <SimpleBarChart data={responseSpeedData} maxValue={8} />
+              <SourceLine>Source: InsideSales research</SourceLine>
             </div>
 
             <div className="border-t border-slate-200 bg-violet-600 px-8 py-4 text-center">
@@ -164,7 +181,6 @@ const WhyItWorks = () => {
             </div>
           </div>
 
-          {/* Chart 2 */}
           <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-200 px-8 py-6">
               <p className="text-sm font-semibold uppercase tracking-widest text-violet-600">
@@ -174,38 +190,20 @@ const WhyItWorks = () => {
                 One message is rarely enough
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                Most conversions need repeated contact. AGE keeps outreach running
-                instead of stopping after the first attempt.
+                New prospects usually need repeated touchpoints before they convert or book a meeting.
               </p>
             </div>
 
             <div className="px-8 py-8">
-              {touchpointData.map((item) => (
-                <div key={item.label}>
-                  <div className="mb-3 flex items-center justify-between">
-                    <span className="text-sm font-medium text-slate-700">
-                      {item.label}
-                    </span>
-                    <span className="text-3xl font-bold text-violet-600">
-                      {item.value}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-8 gap-2">
-                    {Array.from({ length: 8 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="h-16 rounded-2xl border border-violet-100 bg-violet-50"
-                      />
-                    ))}
-                  </div>
-
-                  <p className="mt-4 text-sm leading-relaxed text-slate-500">
-                    Consistency matters more than intention. AGE automates the
-                    follow-up sequence so your team does not drop leads midway.
-                  </p>
-                </div>
-              ))}
+              <SimpleBarChart
+                data={touchpointBars}
+                maxValue={8}
+                colorClass="bg-violet-500"
+              />
+              <p className="mt-4 text-sm leading-relaxed text-slate-500">
+                AGE keeps the sequence going so your team does not stop after the first attempt.
+              </p>
+              <SourceLine>Source: RAIN Group</SourceLine>
             </div>
 
             <div className="border-t border-slate-200 bg-violet-600 px-8 py-4 text-center">
@@ -216,7 +214,6 @@ const WhyItWorks = () => {
           </div>
         </div>
 
-        {/* Stats */}
         <div
           ref={statsRef}
           style={{
@@ -240,11 +237,11 @@ const WhyItWorks = () => {
               <p className="mt-2 text-sm leading-relaxed text-slate-500">
                 {card.desc}
               </p>
+              <SourceLine>{card.source}</SourceLine>
             </div>
           ))}
         </div>
 
-        {/* Bottom pills */}
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
           {bottomPills.map((pill) => (
             <span
