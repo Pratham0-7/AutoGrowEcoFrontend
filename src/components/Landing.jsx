@@ -23,7 +23,7 @@ const Footer = () => {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600 text-xs font-bold text-white">
                 AGE
               </div>
-              <span className="text-sm font-semibold text-white">AutoGrowthEco</span>
+              <span className="text-sm font-semibold text-white">Automated Growth Ecosystem</span>
             </div>
             <p className="mt-2.5 max-w-xs text-xs leading-relaxed text-slate-500">
               Automated follow-ups for sales teams who can't afford to let leads go cold.
