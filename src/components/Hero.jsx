@@ -66,20 +66,19 @@ const Hero = () => {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-400" />
             </span>
-            Automated Lead Follow-ups · Built for Sales Teams
+            Lead Follow-Up Automation · Built for Sales Teams
           </div>
 
           {/* Headline */}
           <h1 className="hero-anim-2 mt-8 text-5xl font-extrabold tracking-tight text-white sm:text-6xl lg:text-7xl">
             Stop Losing Leads<br />
-            <span className="gradient-text">to Silence</span>
+            <span className="gradient-text">to Missed Follow-Ups</span>
           </h1>
 
           {/* Sub */}
           <p className="hero-anim-3 mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-slate-400 sm:text-xl">
-            70% of your leads go cold because no one followed up in time.
-            AGE sends automatic, personalized follow-ups until they reply —
-            so you close more without lifting a finger.
+            AGE sends automatic, personalized follow-ups so your team stays consistent,
+            responds on time, and closes more deals.
           </p>
 
           {/* CTAs */}
