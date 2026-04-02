@@ -5,6 +5,7 @@ import Solution from "./Solution";
 import Results from "./Results";
 import Navbar from "./Navbar";
 import WhyAGE from "./WhyPage";
+import WhyItWorks from "./WhyItWorks";
 import { useNavigate } from "react-router-dom";
 
 const Footer = () => {
@@ -75,6 +76,7 @@ const Landing = () => {
         <Hero />
         <Problem />
         <WhyAGE />
+        <WhyItWorks/>
         <Solution />
         <Results />
       </main>
