@@ -184,7 +184,7 @@ const AIMessageBox = ({ isOpen, onClose }) => {
                   value={extraContext}
                   onChange={(e) => setExtraContext(e.target.value)}
                   placeholder="City, offer, property type, product detail..."
-                  className="min-h-[110px] w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:bg-white focus:ring-2 focus:ring-violet-100"
+                  className="min-h-27.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:bg-white focus:ring-2 focus:ring-violet-100"
                 />
               </div>
             )}
@@ -198,7 +198,7 @@ const AIMessageBox = ({ isOpen, onClose }) => {
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   placeholder="Paste your existing message here..."
-                  className="min-h-[130px] w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:bg-white focus:ring-2 focus:ring-violet-100"
+                  className="min-h-32.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:bg-white focus:ring-2 focus:ring-violet-100"
                 />
               </div>
             )}
@@ -261,7 +261,7 @@ const AIMessageBox = ({ isOpen, onClose }) => {
                 value={outputMessage}
                 onChange={(e) => setOutputMessage(e.target.value)}
                 placeholder="AI output will appear here..."
-                className="min-h-[200px] w-full rounded-xl border border-violet-100 bg-violet-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                className="min-h-50 w-full rounded-xl border border-violet-100 bg-violet-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
               />
             </div>
 
