@@ -1,15 +1,10 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import {
-  SignedIn,
-  SignedOut,
-  SignIn,
-  SignUp,
-  useUser,
-} from "@clerk/clerk-react";
+import { SignIn, SignUp, useUser } from "@clerk/clerk-react";
 import Landing from "./components/Landing";
 import Dashboard from "./components/Dashboard";
 import Onboarding from "./components/Onboarding";
+import AdminDashboard from "./components/AdminDashboard";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -169,6 +164,7 @@ const App = () => {
 
         <Route path="/onboarding" element={<ProtectedOnboarding />} />
         <Route path="/dashboard" element={<ProtectedDashboard />} />
+        <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </>
   );

@@ -1,0 +1,406 @@
+import { useEffect, useRef, useState } from "react";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+// ─── helpers ────────────────────────────────────────────────────────────────
+
+function fmtDate(iso) {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function authHeaders(pin) {
+  return { "Content-Type": "application/json", "X-Admin-Pin": pin };
+}
+
+// ─── sub-components ─────────────────────────────────────────────────────────
+
+function StatCard({ label, value, sub }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <p className="text-xs font-medium uppercase tracking-widest text-slate-400">{label}</p>
+      <p className="mt-2 text-4xl font-bold text-slate-900">{value ?? "—"}</p>
+      {sub && <p className="mt-1 text-xs text-slate-500">{sub}</p>}
+    </div>
+  );
+}
+
+function NotifBell({ count, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="relative inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2 shadow-sm transition hover:bg-slate-50"
+    >
+      <svg className="h-5 w-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+      </svg>
+      {count > 0 && (
+        <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+          {count > 9 ? "9+" : count}
+        </span>
+      )}
+    </button>
+  );
+}
+
+// ─── main component ──────────────────────────────────────────────────────────
+
+export default function AdminDashboard() {
+  const [pin, setPin] = useState(() => sessionStorage.getItem("admin_pin") || "");
+  const [pinInput, setPinInput] = useState("");
+  const [pinError, setPinError] = useState("");
+  const [authing, setAuthing] = useState(false);
+
+  const [stats, setStats] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // Notifications
+  const [notifications, setNotifications] = useState([]);   // recent new signups
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [unseenCount, setUnseenCount] = useState(0);
+  const lastCheckedAt = useRef(new Date().toISOString());
+  const notifPanelRef = useRef(null);
+
+  // Search / filter
+  const [search, setSearch] = useState("");
+
+  // ── auth ────────────────────────────────────────────────────────────────
+
+  const verifyPin = async (e) => {
+    e.preventDefault();
+    setAuthing(true);
+    setPinError("");
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/ping`, {
+        headers: authHeaders(pinInput),
+      });
+      if (res.ok) {
+        sessionStorage.setItem("admin_pin", pinInput);
+        setPin(pinInput);
+      } else {
+        setPinError("Incorrect PIN. Try again.");
+      }
+    } catch {
+      setPinError("Could not reach server.");
+    } finally {
+      setAuthing(false);
+    }
+  };
+
+  // ── data fetching ────────────────────────────────────────────────────────
+
+  const fetchAll = async (currentPin) => {
+    if (!currentPin) return;
+    setLoading(true);
+    setError("");
+    try {
+      const [statsRes, usersRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/admin/stats`, { headers: authHeaders(currentPin) }),
+        fetch(`${API_BASE_URL}/admin/users`, { headers: authHeaders(currentPin) }),
+      ]);
+
+      if (statsRes.status === 401 || usersRes.status === 401) {
+        setPin("");
+        sessionStorage.removeItem("admin_pin");
+        setError("Session expired. Please re-enter PIN.");
+        return;
+      }
+
+      const statsData = await statsRes.json();
+      const usersData = await usersRes.json();
+
+      if (statsRes.ok) setStats(statsData);
+      if (usersRes.ok) setUsers(usersData.users || []);
+    } catch (err) {
+      setError("Failed to load data: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Poll for new registrations
+  const checkNotifications = async (currentPin) => {
+    if (!currentPin) return;
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/admin/notifications/check?since=${lastCheckedAt.current}`,
+        { headers: authHeaders(currentPin) }
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.count > 0) {
+        setNotifications((prev) => [...data.new_users, ...prev].slice(0, 50));
+        setUnseenCount((prev) => prev + data.count);
+        // Update the users list as well so the table stays fresh
+        setUsers((prev) => {
+          const existingIds = new Set(prev.map((u) => u.user_id));
+          const fresh = data.new_users.filter((u) => !existingIds.has(u.user_id));
+          return [...fresh, ...prev];
+        });
+      }
+      lastCheckedAt.current = new Date().toISOString();
+    } catch {
+      // silent — notification polling failures shouldn't disrupt the UI
+    }
+  };
+
+  // On pin acquired, load data
+  useEffect(() => {
+    if (!pin) return;
+    fetchAll(pin);
+  }, [pin]);
+
+  // Poll every 30 s
+  useEffect(() => {
+    if (!pin) return;
+    const id = setInterval(() => checkNotifications(pin), 30_000);
+    return () => clearInterval(id);
+  }, [pin]);
+
+  // Close notif panel on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (notifPanelRef.current && !notifPanelRef.current.contains(e.target)) {
+        setNotifOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // ── filtered list ────────────────────────────────────────────────────────
+
+  const filtered = users.filter((u) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      u.name.toLowerCase().includes(q) ||
+      u.email.toLowerCase().includes(q) ||
+      (u.company_name || "").toLowerCase().includes(q)
+    );
+  });
+
+  // ── PIN gate ─────────────────────────────────────────────────────────────
+
+  if (!pin) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
+        <div className="w-full max-w-sm rounded-2xl border border-slate-800 bg-slate-900 p-8 shadow-xl">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">AGE</p>
+          <h1 className="mt-3 text-2xl font-bold text-white">Admin Access</h1>
+          <p className="mt-1 text-sm text-slate-400">Enter your admin PIN to continue.</p>
+
+          <form onSubmit={verifyPin} className="mt-6 space-y-4">
+            <input
+              type="password"
+              placeholder="Admin PIN"
+              value={pinInput}
+              onChange={(e) => setPinInput(e.target.value)}
+              autoFocus
+              className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-white placeholder-slate-500 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-700"
+            />
+            {pinError && <p className="text-xs text-red-400">{pinError}</p>}
+            <button
+              type="submit"
+              disabled={authing || !pinInput}
+              className="w-full rounded-xl bg-white py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 disabled:opacity-50"
+            >
+              {authing ? "Verifying…" : "Enter"}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // ── main dashboard ────────────────────────────────────────────────────────
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+      {/* Top bar */}
+      <header className="border-b border-slate-200 bg-white px-6 py-4 shadow-sm">
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
+          <div>
+            <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">AGE</span>
+            <h1 className="mt-0.5 text-xl font-bold text-slate-900">Admin — Registrations</h1>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => fetchAll(pin)}
+              disabled={loading}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
+            >
+              {loading ? "Refreshing…" : "Refresh"}
+            </button>
+
+            {/* Notification bell */}
+            <div className="relative" ref={notifPanelRef}>
+              <NotifBell
+                count={unseenCount}
+                onClick={() => {
+                  setNotifOpen((o) => !o);
+                  setUnseenCount(0);
+                }}
+              />
+
+              {notifOpen && (
+                <div className="absolute right-0 top-10 z-50 w-80 rounded-2xl border border-slate-200 bg-white shadow-xl">
+                  <div className="border-b border-slate-100 px-4 py-3">
+                    <p className="text-sm font-semibold text-slate-800">New Registrations</p>
+                  </div>
+                  {notifications.length === 0 ? (
+                    <p className="px-4 py-6 text-center text-sm text-slate-400">
+                      No new signups since you opened this page.
+                    </p>
+                  ) : (
+                    <ul className="max-h-72 divide-y divide-slate-100 overflow-y-auto">
+                      {notifications.map((n) => (
+                        <li key={n.user_id} className="flex items-start gap-3 px-4 py-3">
+                          <div className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">
+                            {(n.name || n.email || "?")[0].toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-slate-800">
+                              {n.name || "—"}
+                            </p>
+                            <p className="truncate text-xs text-slate-500">{n.email}</p>
+                            <p className="text-xs text-slate-400">{fmtDate(n.created_at)}</p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => {
+                sessionStorage.removeItem("admin_pin");
+                setPin("");
+              }}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-500 shadow-sm transition hover:bg-slate-50"
+            >
+              Sign out
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+        {error && (
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        {/* Stats */}
+        {stats && (
+          <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            <StatCard label="Total Users" value={stats.total_users} />
+            <StatCard label="Companies" value={stats.total_companies} />
+            <StatCard label="Onboarded" value={stats.onboarding_completed} />
+            <StatCard label="New Today" value={stats.new_today} />
+            <StatCard label="This Week" value={stats.new_this_week} />
+          </div>
+        )}
+
+        {/* Search */}
+        <div className="mb-4 flex items-center gap-3">
+          <input
+            type="text"
+            placeholder="Search by name, email or company…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full max-w-sm rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+          />
+          <p className="text-sm text-slate-400">{filtered.length} user{filtered.length !== 1 ? "s" : ""}</p>
+        </div>
+
+        {/* Table */}
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          {loading && users.length === 0 ? (
+            <p className="py-12 text-center text-sm text-slate-400">Loading…</p>
+          ) : filtered.length === 0 ? (
+            <p className="py-12 text-center text-sm text-slate-400">No users found.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50 text-left">
+                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Name</th>
+                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Email</th>
+                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Company</th>
+                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Plan</th>
+                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Leads</th>
+                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">SMS</th>
+                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Status</th>
+                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Registered</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filtered.map((u) => (
+                    <tr key={u.user_id} className="transition hover:bg-slate-50">
+                      <td className="px-5 py-3 font-medium text-slate-800">
+                        {u.name || <span className="text-slate-400">—</span>}
+                      </td>
+                      <td className="px-5 py-3 text-slate-600">{u.email}</td>
+                      <td className="px-5 py-3 text-slate-600">
+                        {u.company_name || <span className="text-slate-400">—</span>}
+                      </td>
+                      <td className="px-5 py-3">
+                        <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${
+                          u.plan === "pro"
+                            ? "bg-violet-100 text-violet-700"
+                            : "bg-slate-100 text-slate-500"
+                        }`}>
+                          {u.plan || "free"}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 text-slate-700">{u.lead_count}</td>
+                      <td className="px-5 py-3">
+                        {u.msg91_configured ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                            Set up
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-400">Not set</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3">
+                        {u.onboarding_completed ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                            Active
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600">
+                            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                            Pending
+                          </span>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3 text-slate-500">
+                        {fmtDate(u.created_at)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}
