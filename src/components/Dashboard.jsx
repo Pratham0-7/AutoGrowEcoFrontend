@@ -4,6 +4,101 @@ import { useUser, UserButton } from "@clerk/clerk-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+// ─── icons ───────────────────────────────────────────────────────────────────
+const Icon = ({ d, size = 16, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth={1.8} strokeLinecap="round"
+    strokeLinejoin="round" className={className}>
+    <path d={d} />
+  </svg>
+);
+
+const ICONS = {
+  upload: "M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12",
+  mail: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",
+  users: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z",
+  ai: "M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z",
+  edit: "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z",
+  trash: "M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16",
+  check: "M5 13l4 4L19 7",
+  clock: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0",
+  filter: "M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z",
+  search: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0",
+  plus: "M12 4v16m8-8H4",
+  chevronLeft: "M15 19l-7-7 7-7",
+  chevronRight: "M9 5l7 7-7 7",
+};
+
+// ─── helpers ─────────────────────────────────────────────────────────────────
+const sortLeads = (arr) => {
+  const order = { yes: 1, pending: 2, "no reply": 2, no: 3 };
+  return [...arr].sort((a, b) => (order[a.response_status] || 99) - (order[b.response_status] || 99));
+};
+
+const formatDate = (d) => {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+};
+
+const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : "?");
+
+const AVATAR_COLORS = [
+  "#7C3AED","#6366F1","#0EA5E9","#10B981","#F59E0B","#EF4444","#EC4899","#14B8A6",
+];
+const avatarColor = (name) => AVATAR_COLORS[(name?.charCodeAt(0) || 0) % AVATAR_COLORS.length];
+
+// ─── badge helpers ────────────────────────────────────────────────────────────
+const SendBadge = ({ status }) => {
+  const map = {
+    "email sent": { label: "Email", bg: "#1E3A5F", color: "#60A5FA", border: "#2563EB33" },
+    "sms sent": { label: "SMS", bg: "#2D1B69", color: "#A78BFA", border: "#7C3AED33" },
+    "both sent": { label: "Both", bg: "#0F172A", color: "#E2E8F0", border: "#334155" },
+  };
+  const s = map[status] || { label: "Not Sent", bg: "#1E293B", color: "#64748B", border: "#334155" };
+  return (
+    <span style={{ background: s.bg, color: s.color, border: `1px solid ${s.border}` }}
+      className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold">
+      {s.label}
+    </span>
+  );
+};
+
+const ReplyBadge = ({ status }) => {
+  const map = {
+    yes: { label: "Yes", bg: "#052E16", color: "#4ADE80", border: "#16A34A44", dot: "#22C55E" },
+    no: { label: "No", bg: "#2D0A0A", color: "#F87171", border: "#DC262644", dot: "#EF4444" },
+  };
+  const s = map[status] || { label: "Pending", bg: "#1C1505", color: "#FCD34D", border: "#D9770644", dot: "#F59E0B" };
+  return (
+    <span style={{ background: s.bg, color: s.color, border: `1px solid ${s.border}` }}
+      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold">
+      <span style={{ background: s.dot }} className="h-1.5 w-1.5 rounded-full" />
+      {s.label}
+    </span>
+  );
+};
+
+// ─── stat card ────────────────────────────────────────────────────────────────
+const StatCard = ({ label, value, accent, icon, trend }) => (
+  <div style={{ background: "linear-gradient(135deg, #0F172A 0%, #1E1B4B 100%)", border: "1px solid #312E81" }}
+    className="rounded-2xl p-5 relative overflow-hidden">
+    <div style={{ background: accent, opacity: 0.08, filter: "blur(32px)" }}
+      className="absolute -top-4 -right-4 h-24 w-24 rounded-full pointer-events-none" />
+    <div className="flex items-start justify-between">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#6B7280" }}>{label}</p>
+        <p className="mt-2 text-4xl font-black" style={{ color: "#F1F5F9", fontVariantNumeric: "tabular-nums" }}>{value}</p>
+        {trend && <p className="mt-1 text-xs" style={{ color: accent }}>{trend}</p>}
+      </div>
+      <div style={{ background: accent + "22", color: accent }}
+        className="flex h-10 w-10 items-center justify-center rounded-xl">
+        <Icon d={icon} size={18} />
+      </div>
+    </div>
+  </div>
+);
+
+// ─── main dashboard ───────────────────────────────────────────────────────────
 const Dashboard = () => {
   const { isLoaded, isSignedIn, user } = useUser();
 
@@ -15,519 +110,390 @@ const Dashboard = () => {
   const [messageTemplate, setMessageTemplate] = useState("");
   const [isAIAssistOpen, setIsAIAssistOpen] = useState(false);
   const [leadSchedules, setLeadSchedules] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [activeSection, setActiveSection] = useState("leads"); // leads | campaign | upload
+  const LEADS_PER_PAGE = 10;
 
   const company_id = localStorage.getItem("company_id");
   const user_id = localStorage.getItem("user_id");
   const company_name = localStorage.getItem("company_name");
-
-  const name =
-    user?.fullName ||
-    user?.firstName ||
-    user?.primaryEmailAddress?.emailAddress ||
-    "User";
-
-  const sortLeads = (leadArray) => {
-    const responseOrder = {
-      yes: 1,
-      pending: 2,
-      "no reply": 2,
-      no: 3,
-    };
-
-    return [...leadArray].sort((a, b) => {
-      return (
-        (responseOrder[a.response_status] || 99) -
-        (responseOrder[b.response_status] || 99)
-      );
-    });
-  };
-
-  const getSendStatusStyle = (status) => {
-    if (status === "email sent") return "bg-blue-50 text-blue-700 border border-blue-200";
-    if (status === "sms sent") return "bg-violet-50 text-violet-700 border border-violet-200";
-    if (status === "both sent") return "bg-slate-900 text-white border border-slate-900";
-    return "bg-slate-100 text-slate-500 border border-slate-200";
-  };
-
-  const getResponseStatusStyle = (status) => {
-    if (status === "yes") return "bg-emerald-50 text-emerald-700 border border-emerald-200";
-    if (status === "no") return "bg-rose-50 text-rose-700 border border-rose-200";
-    return "bg-amber-50 text-amber-700 border border-amber-200";
-  };
+  const name = user?.fullName || user?.firstName || user?.primaryEmailAddress?.emailAddress || "User";
 
   const fetchLeads = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/get_leads/${company_id}`);
       const data = await res.json();
-
       if (res.ok) {
-        const sortedLeads = sortLeads(data);
-        setLeads(sortedLeads);
-
+        const sorted = sortLeads(data);
+        setLeads(sorted);
         setLeadSchedules((prev) => {
           const updated = { ...prev };
-          sortedLeads.forEach((lead) => {
-            if (!updated[lead._id]) {
-              updated[lead._id] = { channel: "email", interval_days: 2 };
-            }
-          });
+          sorted.forEach((l) => { if (!updated[l._id]) updated[l._id] = { channel: "email", interval_days: 2 }; });
           return updated;
         });
-      } else {
-        alert(data.error);
-      }
-    } catch (error) {
-      console.error(error);
-      alert("Failed to fetch leads");
-    }
+      } else alert(data.error);
+    } catch (e) { console.error(e); alert("Failed to fetch leads"); }
   };
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn) return;
-    if (!company_id || !user_id) return;
-
+    if (!isLoaded || !isSignedIn || !company_id || !user_id) return;
     fetchLeads();
-
-    const interval = setInterval(() => {
-      fetchLeads();
-    }, 3000);
-
-    const handleFocus = () => fetchLeads();
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener("focus", handleFocus);
-    };
+    const iv = setInterval(fetchLeads, 3000);
+    const onFocus = () => fetchLeads();
+    window.addEventListener("focus", onFocus);
+    return () => { clearInterval(iv); window.removeEventListener("focus", onFocus); };
   }, [isLoaded, isSignedIn, company_id, user_id]);
-
-  const handleFileChange = (e) => setFile(e.target.files[0]);
 
   const handleUpload = async (e) => {
     e.preventDefault();
-
     if (!file) { alert("Please select a file"); return; }
-    if (!company_id || !user_id) { alert("Missing login details. Please log in again."); return; }
-
+    if (!company_id || !user_id) { alert("Missing login details."); return; }
     const formData = new FormData();
-    formData.append("file", file);
-    formData.append("company_id", company_id);
-    formData.append("user_id", user_id);
-
+    formData.append("file", file); formData.append("company_id", company_id); formData.append("user_id", user_id);
     try {
       const res = await fetch(`${API_BASE_URL}/upload_leads`, { method: "POST", body: formData });
       const data = await res.json();
-
-      if (res.ok) {
-        alert(data.message);
-        setDuplicateWarnings(data.duplicates || []);
-        setFile(null);
-        fetchLeads();
-      } else {
-        alert(data.error);
-      }
-    } catch (error) {
-      console.error(error);
-      alert("Upload failed");
-    }
+      if (res.ok) { alert(data.message); setDuplicateWarnings(data.duplicates || []); setFile(null); fetchLeads(); }
+      else alert(data.error);
+    } catch (e) { console.error(e); alert("Upload failed"); }
   };
 
   const handleBulkSend = async (type) => {
-    if (!company_id) { alert("Missing company details. Please log in again."); return; }
+    if (!company_id) { alert("Missing company details."); return; }
     if (!messageTemplate.trim()) { alert("Please generate or enter a message first."); return; }
-
     try {
       const res = await fetch(`${API_BASE_URL}/send_bulk/${company_id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type,
-          interval_days: Number(intervalDays),
-          subject: emailSubject,
-          message: messageTemplate,
-        }),
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, interval_days: Number(intervalDays), subject: emailSubject, message: messageTemplate }),
       });
-
       const data = await res.json();
-
-      if (res.ok) {
-        alert(data.message);
-        if (data.failed?.length) console.log("Failed sends:", data.failed);
-        fetchLeads();
-      } else {
-        alert(data.error);
-      }
-    } catch (error) {
-      console.error(error);
-      alert("Bulk send failed");
-    }
-  };
-
-  const updateLeadSchedule = (leadId, field, value) => {
-    setLeadSchedules((prev) => ({
-      ...prev,
-      [leadId]: { ...prev[leadId], [field]: value },
-    }));
+      if (res.ok) { alert(data.message); fetchLeads(); }
+      else alert(data.error);
+    } catch (e) { console.error(e); alert("Bulk send failed"); }
   };
 
   const handleStartFollowup = async (leadId) => {
-    const leadConfig = leadSchedules[leadId] || {};
-
+    const cfg = leadSchedules[leadId] || {};
     if (!messageTemplate.trim()) { alert("Please enter message template"); return; }
-
     try {
       const res = await fetch(`${API_BASE_URL}/start_followup/${leadId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subject: emailSubject,
-          message: messageTemplate,
-          channel: leadConfig.channel || "email",
-          interval_days: Number(leadConfig.interval_days || 2),
-        }),
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subject: emailSubject, message: messageTemplate, channel: cfg.channel || "email", interval_days: Number(cfg.interval_days || 2) }),
       });
-
       const data = await res.json();
-
-      if (res.ok) {
-        alert("Follow-ups started");
-        fetchLeads();
-      } else {
-        alert(data.error);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Failed to start follow-up");
-    }
+      if (res.ok) { alert("Follow-ups started"); fetchLeads(); }
+      else alert(data.error);
+    } catch (e) { console.error(e); alert("Failed to start follow-up"); }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleString();
-  };
+  const updateLeadSchedule = (id, field, value) =>
+    setLeadSchedules((prev) => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
 
-  // Stat computations
+  // filtered + paginated
+  const filtered = leads.filter((l) =>
+    !searchQuery || [l.name, l.email, l.phone].some((v) => v?.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+  const totalPages = Math.max(1, Math.ceil(filtered.length / LEADS_PER_PAGE));
+  const paginated = filtered.slice((currentPage - 1) * LEADS_PER_PAGE, currentPage * LEADS_PER_PAGE);
+
   const totalLeads = leads.length;
   const sentLeads = leads.filter((l) => l.send_status && l.send_status !== "not sent").length;
   const yesLeads = leads.filter((l) => l.response_status === "yes").length;
-  const pendingLeads = leads.filter(
-    (l) => !l.response_status || l.response_status === "pending" || l.response_status === "no reply"
-  ).length;
+  const pendingLeads = leads.filter((l) => !l.response_status || l.response_status === "pending" || l.response_status === "no reply").length;
 
-  if (!isLoaded) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="rounded-2xl border border-slate-200 bg-white px-6 py-4 shadow-sm text-slate-600 text-sm">
-          Loading...
-        </div>
-      </div>
-    );
-  }
-
+  if (!isLoaded) return (
+    <div style={{ background: "#030712" }} className="flex min-h-screen items-center justify-center">
+      <div className="text-sm" style={{ color: "#6B7280" }}>Loading...</div>
+    </div>
+  );
   if (!isSignedIn) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div style={{ background: "#030712", minHeight: "100vh", fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap');
+        * { box-sizing: border-box; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0F172A; }
+        ::-webkit-scrollbar-thumb { background: #312E81; border-radius: 3px; }
+        .age-input { background: #0F172A !important; border: 1px solid #1E293B !important; color: #E2E8F0 !important; transition: border-color .2s, box-shadow .2s; }
+        .age-input::placeholder { color: #4B5563 !important; }
+        .age-input:focus { outline: none; border-color: #6D28D9 !important; box-shadow: 0 0 0 3px #6D28D920 !important; }
+        .age-input option { background: #0F172A; }
+        .lead-row:hover { background: #0F172A !important; }
+        .nav-item { color: #6B7280; transition: color .2s; cursor: pointer; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; }
+        .nav-item:hover { color: #E2E8F0; background: #1E293B; }
+        .nav-item.active { color: #A78BFA; background: #1E1B4B; }
+        .action-btn { transition: all .15s; }
+        .action-btn:hover { transform: translateY(-1px); }
+        .page-btn { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; border: 1px solid transparent; }
+        .page-btn:hover:not(.active-page) { background: #1E293B; color: #E2E8F0; }
+        .page-btn.active-page { background: #6D28D9; color: white; }
+      `}</style>
 
-      {/* Top nav */}
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-sm">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between gap-4">
+      {/* ── HEADER ── */}
+      <header style={{ background: "#030712", borderBottom: "1px solid #1E293B", position: "sticky", top: 0, zIndex: 40 }}>
+        <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 24px" }}>
+          <div style={{ height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
 
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600 text-white text-xs font-bold tracking-tight shrink-0">
+            {/* Logo + workspace */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ background: "linear-gradient(135deg, #7C3AED, #4F46E5)", borderRadius: 12, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 11, color: "white", letterSpacing: 1, flexShrink: 0 }}>
                 AGE
               </div>
-              <div className="hidden sm:block">
-                <p className="text-xs text-slate-400 font-medium">Salesperson</p>
-                <p className="text-sm font-semibold text-slate-900 leading-tight">
-                  {company_name || "Your Workspace"}
-                </p>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <span style={{ fontSize: 10, color: "#4B5563", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>Workspace</span>
+                <span style={{ fontSize: 14, color: "#E2E8F0", fontWeight: 700, lineHeight: 1.2 }}>{company_name || "Your Workspace"}</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700">
-                <span className="relative flex h-2 w-2 shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                </span>
-                <span className="hidden sm:inline">Live</span>
-              </div>
-              <span className="hidden sm:block text-sm text-slate-500">Hi, <span className="font-semibold text-slate-900">{name}</span></span>
-              <div className="rounded-full ring-2 ring-slate-100">
-                <UserButton />
-              </div>
-            </div>
+            {/* Nav */}
+            <nav style={{ display: "flex", gap: 4, alignItems: "center" }}>
+              {[
+                { key: "leads", label: "Lead List" },
+                { key: "campaign", label: "Campaign" },
+                { key: "upload", label: "Upload" },
+              ].map(({ key, label }) => (
+                <div key={key} onClick={() => setActiveSection(key)}
+                  className={`nav-item${activeSection === key ? " active" : ""}`}>
+                  {label}
+                </div>
+              ))}
+            </nav>
 
+            {/* Right */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#052E16", border: "1px solid #16A34A44", borderRadius: 100, padding: "5px 12px", fontSize: 12, fontWeight: 600, color: "#4ADE80" }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22C55E", animation: "pulse 2s infinite", display: "inline-block" }} />
+                Live
+              </div>
+              <span style={{ fontSize: 13, color: "#6B7280" }}>Hi, <span style={{ color: "#E2E8F0", fontWeight: 600 }}>{name}</span></span>
+              <div style={{ borderRadius: "50%", ring: 2 }}><UserButton /></div>
+            </div>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "24px 24px 48px" }}>
 
-        {/* Stat cards — only visible once leads exist */}
+        {/* ── STAT CARDS ── */}
         {leads.length > 0 && (
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-5">
-              <p className="text-xs font-semibold uppercase tracking-wider text-indigo-500">Total Leads</p>
-              <p className="mt-2 text-3xl font-bold text-slate-900">{totalLeads}</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+            <StatCard label="Total Leads" value={totalLeads} accent="#818CF8" icon={ICONS.users} trend={`${filtered.length} matching`} />
+            <StatCard label="Sent" value={sentLeads} accent="#60A5FA" icon={ICONS.mail} trend={`${Math.round(sentLeads / totalLeads * 100) || 0}% of leads`} />
+            <StatCard label="Replied Yes" value={yesLeads} accent="#4ADE80" icon={ICONS.check} trend={`${Math.round(yesLeads / totalLeads * 100) || 0}% conversion`} />
+            <StatCard label="Pending" value={pendingLeads} accent="#FCD34D" icon={ICONS.clock} trend={`${pendingLeads} need follow-up`} />
+          </div>
+        )}
+
+        {/* ══ UPLOAD SECTION ══ */}
+        {activeSection === "upload" && (
+          <div style={{ background: "#0F172A", border: "1px solid #1E293B", borderRadius: 20, overflow: "hidden" }}>
+            <div style={{ padding: "16px 24px", borderBottom: "1px solid #1E293B", display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ background: "#1E3A5F", borderRadius: 10, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", color: "#60A5FA" }}>
+                <Icon d={ICONS.upload} size={16} />
+              </div>
+              <div>
+                <h2 style={{ fontSize: 14, fontWeight: 700, color: "#E2E8F0", margin: 0 }}>Upload Leads</h2>
+                <p style={{ fontSize: 12, color: "#4B5563", margin: 0 }}>CSV or Excel files accepted</p>
+              </div>
             </div>
-            <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5">
-              <p className="text-xs font-semibold uppercase tracking-wider text-blue-500">Sent</p>
-              <p className="mt-2 text-3xl font-bold text-slate-900">{sentLeads}</p>
-            </div>
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-5">
-              <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600">Replied Yes</p>
-              <p className="mt-2 text-3xl font-bold text-slate-900">{yesLeads}</p>
-            </div>
-            <div className="rounded-2xl border border-amber-100 bg-amber-50 p-5">
-              <p className="text-xs font-semibold uppercase tracking-wider text-amber-600">Pending</p>
-              <p className="mt-2 text-3xl font-bold text-slate-900">{pendingLeads}</p>
+            <div style={{ padding: 24 }}>
+              <form onSubmit={handleUpload} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                <input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => setFile(e.target.files[0])}
+                  className="age-input"
+                  style={{ flex: 1, minWidth: 240, borderRadius: 12, padding: "10px 14px", fontSize: 13 }} />
+                <button type="submit" className="action-btn"
+                  style={{ background: "linear-gradient(135deg, #6D28D9, #4F46E5)", color: "white", border: "none", borderRadius: 12, padding: "11px 24px", fontSize: 14, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+                  Upload Leads
+                </button>
+              </form>
+
+              {duplicateWarnings.length > 0 && (
+                <div style={{ marginTop: 20, background: "#1C1505", border: "1px solid #D9770644", borderRadius: 12, padding: 16 }}>
+                  <h3 style={{ fontSize: 13, fontWeight: 700, color: "#FCD34D", margin: "0 0 4px" }}>⚠ Duplicate Leads Found</h3>
+                  <p style={{ fontSize: 12, color: "#92400E", margin: "0 0 12px" }}>These were already uploaded.</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {duplicateWarnings.map((d, i) => (
+                      <div key={i} style={{ background: "#0F172A", border: "1px solid #1E293B", borderRadius: 8, padding: 12, fontSize: 12, color: "#94A3B8", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                        <span><b style={{ color: "#CBD5E1" }}>Name:</b> {d.name || "—"}</span>
+                        <span><b style={{ color: "#CBD5E1" }}>Email:</b> {d.email || "—"}</span>
+                        <span><b style={{ color: "#CBD5E1" }}>Phone:</b> {d.phone || "—"}</span>
+                        <span style={{ color: "#FCD34D" }}>Uploaded by: {d.already_uploaded_by}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* Upload Leads */}
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex items-center gap-3 border-b border-slate-100 bg-slate-50 px-6 py-4">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100">
-              <svg className="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-              </svg>
+        {/* ══ CAMPAIGN SECTION ══ */}
+        {activeSection === "campaign" && (
+          <div style={{ background: "#0F172A", border: "1px solid #1E293B", borderRadius: 20, overflow: "hidden" }}>
+            <div style={{ padding: "16px 24px", borderBottom: "1px solid #1E293B", display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ background: "#2D1B69", borderRadius: 10, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", color: "#A78BFA" }}>
+                <Icon d={ICONS.mail} size={16} />
+              </div>
+              <div>
+                <h2 style={{ fontSize: 14, fontWeight: 700, color: "#E2E8F0", margin: 0 }}>Campaign Setup</h2>
+                <p style={{ fontSize: 12, color: "#4B5563", margin: 0 }}>Message, subject, and timing</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-sm font-semibold text-slate-900">Upload Leads</h2>
-              <p className="text-xs text-slate-400">CSV or Excel files</p>
-            </div>
-          </div>
 
-          <div className="p-6">
-            <form onSubmit={handleUpload} className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <input
-                type="file"
-                accept=".csv,.xlsx,.xls"
-                onChange={handleFileChange}
-                className="block w-full rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-slate-700 file:shadow-sm hover:file:bg-slate-50 transition"
-              />
-              <button
-                type="submit"
-                className="inline-flex shrink-0 items-center justify-center rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
-              >
-                Upload
-              </button>
-            </form>
+            <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 20 }}>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: "#4B5563", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 8 }}>Email Subject</label>
+                <input type="text" value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)}
+                  placeholder="Email subject line" className="age-input"
+                  style={{ width: "100%", borderRadius: 12, padding: "12px 16px", fontSize: 14 }} />
+              </div>
 
-            {duplicateWarnings.length > 0 && (
-              <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
-                <h3 className="text-sm font-semibold text-amber-800">Duplicate Leads Found</h3>
-                <p className="mt-0.5 text-xs text-amber-600">These were already uploaded earlier.</p>
-                <div className="mt-3 space-y-2">
-                  {duplicateWarnings.map((duplicate, index) => (
-                    <div key={index} className="rounded-lg border border-amber-100 bg-white p-3">
-                      <div className="grid gap-1.5 sm:grid-cols-2 text-xs text-slate-700">
-                        <p><span className="font-semibold">Name:</span> {duplicate.name || "-"}</p>
-                        <p><span className="font-semibold">Email:</span> {duplicate.email || "-"}</p>
-                        <p><span className="font-semibold">Phone:</span> {duplicate.phone || "-"}</p>
-                        <p className="font-medium text-amber-700">Uploaded by: {duplicate.already_uploaded_by}</p>
-                      </div>
-                    </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: "#4B5563", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 8 }}>Message Template</label>
+                <textarea value={messageTemplate} onChange={(e) => setMessageTemplate(e.target.value)}
+                  placeholder="Write your message. Use {{name}} to personalize." className="age-input"
+                  style={{ width: "100%", borderRadius: 12, padding: "12px 16px", fontSize: 14, minHeight: 160, resize: "vertical" }} />
+              </div>
+
+              <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between" }}>
+                <div style={{ minWidth: 180 }}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: "#4B5563", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 8 }}>Follow-up Gap</label>
+                  <select value={intervalDays} onChange={(e) => setIntervalDays(Number(e.target.value))}
+                    className="age-input"
+                    style={{ width: "100%", borderRadius: 12, padding: "12px 16px", fontSize: 14 }}>
+                    {[2,3,4,5,6,7].map((d) => <option key={d} value={d}>{d} days</option>)}
+                  </select>
+                </div>
+
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  {[
+                    { type: "email", label: "Email All", bg: "linear-gradient(135deg, #1D4ED8, #1E40AF)" },
+                    { type: "sms", label: "SMS All", bg: "linear-gradient(135deg, #6D28D9, #4C1D95)" },
+                    { type: "both", label: "Both Channels", bg: "linear-gradient(135deg, #0F172A, #1E293B)", border: "1px solid #334155" },
+                  ].map(({ type, label, bg, border }) => (
+                    <button key={type} onClick={() => handleBulkSend(type)} className="action-btn"
+                      style={{ background: bg, color: "white", border: border || "none", borderRadius: 12, padding: "12px 20px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                      {label}
+                    </button>
                   ))}
                 </div>
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* Campaign Setup */}
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex items-center gap-3 border-b border-slate-100 bg-slate-50 px-6 py-4">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-100">
-              <svg className="h-4 w-4 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-sm font-semibold text-slate-900">Campaign Setup</h2>
-              <p className="text-xs text-slate-400">Message, subject, and timing</p>
             </div>
           </div>
+        )}
 
-          <div className="p-6 space-y-4">
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Email Subject
-              </label>
-              <input
-                type="text"
-                value={emailSubject}
-                onChange={(e) => setEmailSubject(e.target.value)}
-                placeholder="Email subject"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-violet-400 focus:bg-white focus:ring-2 focus:ring-violet-100"
-              />
-            </div>
+        {/* ══ LEADS TABLE ══ */}
+        {activeSection === "leads" && (
+          <div style={{ background: "#0F172A", border: "1px solid #1E293B", borderRadius: 20, overflow: "hidden" }}>
 
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Message Template
-              </label>
-              <textarea
-                value={messageTemplate}
-                onChange={(e) => setMessageTemplate(e.target.value)}
-                placeholder="Write your message here. Use {{name}} to personalize."
-                className="min-h-[160px] w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-violet-400 focus:bg-white focus:ring-2 focus:ring-violet-100"
-              />
-            </div>
-
-            <div className="flex flex-col gap-4 pt-1 lg:flex-row lg:items-end lg:justify-between">
-              <div className="w-full lg:max-w-xs">
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  Follow-up Gap
-                </label>
-                <select
-                  value={intervalDays}
-                  onChange={(e) => setIntervalDays(Number(e.target.value))}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-violet-400 focus:bg-white focus:ring-2 focus:ring-violet-100"
-                >
-                  {[2, 3, 4, 5, 6, 7].map((d) => (
-                    <option key={d} value={d}>{d} days</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <button
-                  onClick={() => handleBulkSend("email")}
-                  className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
-                >
-                  Send Email to All
-                </button>
-                <button
-                  onClick={() => handleBulkSend("sms")}
-                  className="inline-flex items-center justify-center rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-700"
-                >
-                  Send SMS to All
-                </button>
-                <button
-                  onClick={() => handleBulkSend("both")}
-                  className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-                >
-                  Send Both
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Leads Table */}
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex flex-col gap-3 border-b border-slate-100 bg-slate-50 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100">
-                <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
+            {/* Table header bar */}
+            <div style={{ padding: "16px 24px", borderBottom: "1px solid #1E293B", display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", justifyContent: "space-between" }}>
               <div>
-                <h2 className="text-sm font-semibold text-slate-900">Your Leads</h2>
-                <p className="text-xs text-slate-400">Track delivery, replies, and follow-up progress</p>
+                <h2 style={{ fontSize: 14, fontWeight: 700, color: "#E2E8F0", margin: 0 }}>
+                  Lead List
+                  <span style={{ marginLeft: 10, fontSize: 12, fontWeight: 600, color: "#7C3AED", background: "#1E1B4B", border: "1px solid #312E81", borderRadius: 100, padding: "2px 10px" }}>
+                    {filtered.length} results
+                  </span>
+                </h2>
+              </div>
+              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                {/* Search */}
+                <div style={{ position: "relative" }}>
+                  <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#4B5563" }}>
+                    <Icon d={ICONS.search} size={14} />
+                  </span>
+                  <input value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                    placeholder="Search leads..." className="age-input"
+                    style={{ borderRadius: 10, padding: "8px 14px 8px 36px", fontSize: 13, width: 220 }} />
+                </div>
+                <button style={{ background: "#1E293B", border: "1px solid #334155", color: "#94A3B8", borderRadius: 10, padding: "8px 14px", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontWeight: 500 }}>
+                  <Icon d={ICONS.filter} size={13} /> Filter
+                </button>
+                <button style={{ background: "linear-gradient(135deg, #6D28D9, #4F46E5)", border: "none", color: "white", borderRadius: 10, padding: "8px 14px", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontWeight: 600 }}
+                  onClick={() => setActiveSection("upload")}>
+                  <Icon d={ICONS.plus} size={13} /> Import
+                </button>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-4 text-xs font-medium text-slate-400">
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-500"></span> Yes
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-amber-400"></span> Pending
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-rose-500"></span> No
-              </div>
-            </div>
-          </div>
-
-          <div className="p-6">
             {leads.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-6 py-14 text-center">
-                <p className="text-sm font-medium text-slate-400">No leads uploaded yet</p>
-                <p className="mt-1 text-xs text-slate-300">Upload a CSV or Excel file above to get started</p>
+              <div style={{ padding: "64px 24px", textAlign: "center" }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
+                <p style={{ fontSize: 14, color: "#4B5563", fontWeight: 500 }}>No leads uploaded yet</p>
+                <p style={{ fontSize: 12, color: "#374151", marginTop: 4 }}>Upload a CSV or Excel file to get started</p>
+                <button onClick={() => setActiveSection("upload")} className="action-btn"
+                  style={{ marginTop: 16, background: "linear-gradient(135deg, #6D28D9, #4F46E5)", border: "none", color: "white", borderRadius: 12, padding: "10px 24px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  Upload Leads
+                </button>
               </div>
             ) : (
               <>
-                {/* Desktop table */}
-                <div className="hidden overflow-x-auto rounded-xl border border-slate-200 lg:block">
-                  <table className="w-full min-w-275 text-sm">
+                {/* ── Desktop Table ── */}
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                     <thead>
-                      <tr className="bg-slate-900 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
-                        <th className="whitespace-nowrap px-5 py-3.5">Name</th>
-                        <th className="whitespace-nowrap px-5 py-3.5">Email</th>
-                        <th className="whitespace-nowrap px-5 py-3.5">Phone</th>
-                        <th className="whitespace-nowrap px-5 py-3.5">Sent Via</th>
-                        <th className="whitespace-nowrap px-5 py-3.5">Reply</th>
-                        <th className="whitespace-nowrap px-5 py-3.5">Follow-ups</th>
-                        <th className="whitespace-nowrap px-5 py-3.5">Last Follow-up</th>
-                        <th className="whitespace-nowrap px-5 py-3.5">Next Follow-up</th>
-                        <th className="whitespace-nowrap px-5 py-3.5">Channel</th>
-                        <th className="whitespace-nowrap px-5 py-3.5">Gap</th>
-                        <th className="whitespace-nowrap px-5 py-3.5">Action</th>
+                      <tr style={{ background: "#030712" }}>
+                        {["SL", "Name", "Contact", "Sent Via", "Reply", "Follow-ups", "Last Sent", "Next", "Channel", "Gap", "Action"].map((h) => (
+                          <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#4B5563", textTransform: "uppercase", letterSpacing: 1, whiteSpace: "nowrap", borderBottom: "1px solid #1E293B" }}>
+                            {h}
+                          </th>
+                        ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
-                      {leads.map((lead) => (
-                        <tr key={lead._id} className="transition-colors hover:bg-slate-50">
-                          <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-900">
-                            {lead.name || "-"}
+                    <tbody>
+                      {paginated.map((lead, idx) => (
+                        <tr key={lead._id} className="lead-row" style={{ borderBottom: "1px solid #0F172A" }}>
+                          <td style={{ padding: "14px 16px", color: "#4B5563", fontWeight: 600, fontSize: 12 }}>
+                            {String((currentPage - 1) * LEADS_PER_PAGE + idx + 1).padStart(2, "0")}
                           </td>
-                          <td className="px-5 py-4 text-slate-500">{lead.email || "-"}</td>
-                          <td className="whitespace-nowrap px-5 py-4 text-slate-500">{lead.phone || "-"}</td>
-                          <td className="px-5 py-4">
-                            <span className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${getSendStatusStyle(lead.send_status)}`}>
-                              {lead.send_status || "not sent"}
+                          <td style={{ padding: "14px 16px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                              <div style={{ width: 34, height: 34, borderRadius: "50%", background: avatarColor(lead.name), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: "white", flexShrink: 0 }}>
+                                {getInitial(lead.name)}
+                              </div>
+                              <span style={{ fontWeight: 700, color: "#E2E8F0", whiteSpace: "nowrap" }}>{lead.name || "—"}</span>
+                            </div>
+                          </td>
+                          <td style={{ padding: "14px 16px" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                              <span style={{ color: "#94A3B8", fontSize: 12 }}>📞 {lead.phone || "—"}</span>
+                              <span style={{ color: "#94A3B8", fontSize: 12 }}>✉ {lead.email || "—"}</span>
+                            </div>
+                          </td>
+                          <td style={{ padding: "14px 16px" }}><SendBadge status={lead.send_status} /></td>
+                          <td style={{ padding: "14px 16px" }}><ReplyBadge status={lead.response_status} /></td>
+                          <td style={{ padding: "14px 16px", color: "#94A3B8", textAlign: "center" }}>
+                            <span style={{ background: "#1E1B4B", color: "#818CF8", border: "1px solid #312E81", borderRadius: 8, padding: "3px 10px", fontWeight: 700, fontSize: 13 }}>
+                              {lead.followup_count || 0}
                             </span>
                           </td>
-                          <td className="px-5 py-4">
-                            <span className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${getResponseStatusStyle(lead.response_status)}`}>
-                              {lead.response_status || "pending"}
-                            </span>
-                          </td>
-                          <td className="whitespace-nowrap px-5 py-4 text-slate-500">
-                            {lead.followup_count || 0}
-                          </td>
-                          <td className="whitespace-nowrap px-5 py-4 text-xs text-slate-400">
-                            {formatDate(lead.last_followup_sent_at)}
-                          </td>
-                          <td className="whitespace-nowrap px-5 py-4 text-xs text-slate-400">
-                            {formatDate(lead.next_followup_at)}
-                          </td>
-                          <td className="px-5 py-4">
-                            <select
-                              value={leadSchedules[lead._id]?.channel || "email"}
+                          <td style={{ padding: "14px 16px", color: "#6B7280", fontSize: 12, whiteSpace: "nowrap" }}>{formatDate(lead.last_followup_sent_at)}</td>
+                          <td style={{ padding: "14px 16px", color: "#6B7280", fontSize: 12, whiteSpace: "nowrap" }}>{formatDate(lead.next_followup_at)}</td>
+                          <td style={{ padding: "14px 16px" }}>
+                            <select value={leadSchedules[lead._id]?.channel || "email"}
                               onChange={(e) => updateLeadSchedule(lead._id, "channel", e.target.value)}
-                              className="min-w-25 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs outline-none transition focus:border-violet-400 focus:ring-1 focus:ring-violet-100"
-                            >
+                              className="age-input"
+                              style={{ borderRadius: 8, padding: "6px 10px", fontSize: 12, minWidth: 80 }}>
                               <option value="email">Email</option>
                               <option value="sms">SMS</option>
                               <option value="both">Both</option>
                             </select>
                           </td>
-                          <td className="px-5 py-4">
-                            <select
-                              value={leadSchedules[lead._id]?.interval_days || 2}
+                          <td style={{ padding: "14px 16px" }}>
+                            <select value={leadSchedules[lead._id]?.interval_days || 2}
                               onChange={(e) => updateLeadSchedule(lead._id, "interval_days", Number(e.target.value))}
-                              className="min-w-25 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs outline-none transition focus:border-violet-400 focus:ring-1 focus:ring-violet-100"
-                            >
-                              {[2, 3, 4, 5, 6, 7].map((d) => (
-                                <option key={d} value={d}>{d} days</option>
-                              ))}
+                              className="age-input"
+                              style={{ borderRadius: 8, padding: "6px 10px", fontSize: 12, minWidth: 80 }}>
+                              {[2,3,4,5,6,7].map((d) => <option key={d} value={d}>{d}d</option>)}
                             </select>
                           </td>
-                          <td className="px-5 py-4">
-                            <button
-                              onClick={() => handleStartFollowup(lead._id)}
-                              className="inline-flex whitespace-nowrap items-center justify-center rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-violet-700"
-                            >
-                              Start Follow-ups
+                          <td style={{ padding: "14px 16px" }}>
+                            <button onClick={() => handleStartFollowup(lead._id)} className="action-btn"
+                              style={{ background: "linear-gradient(135deg, #6D28D9, #4F46E5)", border: "none", color: "white", borderRadius: 8, padding: "7px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+                              Follow-up ▶
                             </button>
                           </td>
                         </tr>
@@ -536,89 +502,46 @@ const Dashboard = () => {
                   </table>
                 </div>
 
-                {/* Mobile cards */}
-                <div className="grid gap-3 lg:hidden">
-                  {leads.map((lead) => (
-                    <div key={lead._id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h3 className="text-sm font-semibold text-slate-900">{lead.name || "-"}</h3>
-                          <p className="mt-0.5 text-xs text-slate-500">{lead.email || "-"}</p>
-                          <p className="text-xs text-slate-500">{lead.phone || "-"}</p>
-                        </div>
-                        <div className="flex flex-col items-end gap-1.5">
-                          <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getSendStatusStyle(lead.send_status)}`}>
-                            {lead.send_status || "not sent"}
-                          </span>
-                          <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getResponseStatusStyle(lead.response_status)}`}>
-                            {lead.response_status || "pending"}
-                          </span>
-                        </div>
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div style={{ padding: "16px 24px", borderTop: "1px solid #1E293B", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+                    <span style={{ fontSize: 12, color: "#4B5563" }}>
+                      Showing {(currentPage - 1) * LEADS_PER_PAGE + 1}–{Math.min(currentPage * LEADS_PER_PAGE, filtered.length)} of {filtered.length}
+                    </span>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <div className="page-btn" style={{ color: currentPage === 1 ? "#374151" : "#94A3B8" }}
+                        onClick={() => currentPage > 1 && setCurrentPage(p => p - 1)}>
+                        <Icon d={ICONS.chevronLeft} size={14} />
                       </div>
-
-                      <div className="mt-3 grid grid-cols-3 gap-2">
-                        <div className="rounded-lg bg-slate-50 p-2.5">
-                          <p className="text-xs text-slate-400">Follow-ups</p>
-                          <p className="mt-0.5 text-sm font-semibold text-slate-900">{lead.followup_count || 0}</p>
-                        </div>
-                        <div className="rounded-lg bg-slate-50 p-2.5">
-                          <p className="text-xs text-slate-400">Last</p>
-                          <p className="mt-0.5 text-xs font-semibold text-slate-900">{formatDate(lead.last_followup_sent_at)}</p>
-                        </div>
-                        <div className="rounded-lg bg-slate-50 p-2.5">
-                          <p className="text-xs text-slate-400">Next</p>
-                          <p className="mt-0.5 text-xs font-semibold text-slate-900">{formatDate(lead.next_followup_at)}</p>
-                        </div>
-                      </div>
-
-                      <div className="mt-3 grid gap-2">
-                        <div className="grid grid-cols-2 gap-2">
-                          <select
-                            value={leadSchedules[lead._id]?.channel || "email"}
-                            onChange={(e) => updateLeadSchedule(lead._id, "channel", e.target.value)}
-                            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs outline-none"
-                          >
-                            <option value="email">Email</option>
-                            <option value="sms">SMS</option>
-                            <option value="both">Both</option>
-                          </select>
-                          <select
-                            value={leadSchedules[lead._id]?.interval_days || 2}
-                            onChange={(e) => updateLeadSchedule(lead._id, "interval_days", Number(e.target.value))}
-                            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs outline-none"
-                          >
-                            {[2, 3, 4, 5, 6, 7].map((d) => (
-                              <option key={d} value={d}>{d} days</option>
-                            ))}
-                          </select>
-                        </div>
-                        <button
-                          onClick={() => handleStartFollowup(lead._id)}
-                          className="inline-flex items-center justify-center rounded-lg bg-violet-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-violet-700"
-                        >
-                          Start Follow-ups
-                        </button>
+                      {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                        const p = i + 1;
+                        return (
+                          <div key={p} className={`page-btn${currentPage === p ? " active-page" : ""}`}
+                            style={{ color: currentPage === p ? "white" : "#6B7280" }}
+                            onClick={() => setCurrentPage(p)}>
+                            {p}
+                          </div>
+                        );
+                      })}
+                      {totalPages > 7 && <span style={{ color: "#4B5563", fontSize: 12 }}>...</span>}
+                      <div className="page-btn" style={{ color: currentPage === totalPages ? "#374151" : "#94A3B8" }}
+                        onClick={() => currentPage < totalPages && setCurrentPage(p => p + 1)}>
+                        <Icon d={ICONS.chevronRight} size={14} />
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
               </>
             )}
           </div>
-        </div>
-
+        )}
       </div>
 
-      {/* AI floating button */}
-      <button
-        onClick={() => setIsAIAssistOpen(true)}
-        className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-violet-600 text-white shadow-lg shadow-violet-200 transition hover:bg-violet-700 sm:bottom-6 sm:right-6 sm:h-16 sm:w-16"
-        aria-label="Open AI Assistant"
-        title="Open AI Assistant"
-      >
-        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-        </svg>
+      {/* ── AI Floating Button ── */}
+      <button onClick={() => setIsAIAssistOpen(true)} aria-label="Open AI Assistant"
+        style={{ position: "fixed", bottom: 24, right: 24, zIndex: 40, width: 56, height: 56, borderRadius: "50%", background: "linear-gradient(135deg, #7C3AED, #4F46E5)", border: "none", color: "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 32px #6D28D944" }}
+        className="action-btn">
+        <Icon d={ICONS.ai} size={22} />
       </button>
 
       <AIMessageBox isOpen={isAIAssistOpen} onClose={() => setIsAIAssistOpen(false)} />
