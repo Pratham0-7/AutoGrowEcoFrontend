@@ -129,7 +129,12 @@ const Dashboard = () => {
         setLeads(sorted);
         setLeadSchedules((prev) => {
           const updated = { ...prev };
-          sorted.forEach((l) => { if (!updated[l._id]) updated[l._id] = { channel: "email", interval_days: 2 }; });
+          sorted.forEach((l) => {
+            updated[l._id] = {
+              channel: l.pref_channel || "email",
+              interval_days: l.pref_interval_days || 2,
+            };
+          });
           return updated;
         });
       } else alert(data.error);
@@ -187,8 +192,16 @@ const Dashboard = () => {
     } catch (e) { console.error(e); alert("Failed to start follow-up"); }
   };
 
-  const updateLeadSchedule = (id, field, value) =>
-    setLeadSchedules((prev) => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
+  const updateLeadSchedule = (id, field, value) => {
+    const updated = { ...leadSchedules[id], [field]: value };
+    setLeadSchedules((prev) => ({ ...prev, [id]: updated }));
+    // Persist to DB — marks this lead as individual (excluded from future bulk sends)
+    fetch(`${API_BASE_URL}/lead_schedule/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ channel: updated.channel, interval_days: updated.interval_days }),
+    }).catch((e) => console.error("Failed to save lead schedule:", e));
+  };
 
   // filtered + paginated
   const filtered = leads.filter((l) =>
@@ -454,7 +467,12 @@ const Dashboard = () => {
                               <div style={{ width: 34, height: 34, borderRadius: "50%", background: avatarColor(lead.name), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: "white", flexShrink: 0 }}>
                                 {getInitial(lead.name)}
                               </div>
-                              <span style={{ fontWeight: 700, color: "#E2E8F0", whiteSpace: "nowrap" }}>{lead.name || "—"}</span>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                <span style={{ fontWeight: 700, color: "#E2E8F0", whiteSpace: "nowrap" }}>{lead.name || "—"}</span>
+                                {lead.is_individual_followup && (
+                                  <span style={{ fontSize: 9, fontWeight: 700, color: "#A78BFA", background: "#1E1B4B", border: "1px solid #4C1D95", borderRadius: 4, padding: "1px 5px", letterSpacing: 0.5 }}>INDIVIDUAL</span>
+                                )}
+                              </div>
                             </div>
                           </td>
                           <td style={{ padding: "14px 16px" }}>
