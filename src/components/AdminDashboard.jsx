@@ -69,6 +69,10 @@ export default function AdminDashboard() {
   const lastCheckedAt = useRef(new Date().toISOString());
   const notifPanelRef = useRef(null);
 
+  // Delete confirmation
+  const [deleteTarget, setDeleteTarget] = useState(null); // { user_id, name, email }
+  const [deleting, setDeleting] = useState(false);
+
   // Search / filter
   const [search, setSearch] = useState("");
 
@@ -175,6 +179,31 @@ export default function AdminDashboard() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  // ── delete handler ───────────────────────────────────────────────────────
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/delete_user/${deleteTarget.user_id}`, {
+        method: "DELETE",
+        headers: authHeaders(pin),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setUsers((prev) => prev.filter((u) => u.user_id !== deleteTarget.user_id));
+        setStats((prev) => prev ? { ...prev, total_users: Math.max(0, prev.total_users - 1), total_companies: Math.max(0, prev.total_companies - (data.company_deleted || 0)) } : prev);
+      } else {
+        alert(data.error || "Delete failed");
+      }
+    } catch (e) {
+      alert("Delete failed: " + e.message);
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
+    }
+  };
 
   // ── filtered list ────────────────────────────────────────────────────────
 
@@ -345,6 +374,7 @@ export default function AdminDashboard() {
                     <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">SMS</th>
                     <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Status</th>
                     <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Registered</th>
+                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -393,6 +423,14 @@ export default function AdminDashboard() {
                       <td className="whitespace-nowrap px-5 py-3 text-slate-500">
                         {fmtDate(u.created_at)}
                       </td>
+                      <td className="px-5 py-3">
+                        <button
+                          onClick={() => setDeleteTarget({ user_id: u.user_id, name: u.name, email: u.email })}
+                          className="rounded-lg border border-red-200 px-2.5 py-1 text-xs font-medium text-red-500 transition hover:bg-red-50"
+                        >
+                          Delete
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -401,6 +439,34 @@ export default function AdminDashboard() {
           )}
         </div>
       </main>
+
+      {/* Delete confirmation modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <h2 className="text-base font-bold text-slate-900">Delete account?</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              This will permanently delete <strong>{deleteTarget.name || deleteTarget.email}</strong> and all their data — company, leads, messages, and campaigns. This cannot be undone.
+            </p>
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600 disabled:opacity-50"
+              >
+                {deleting ? "Deleting…" : "Delete everything"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
