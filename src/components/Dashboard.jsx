@@ -27,6 +27,7 @@ const ICONS = {
   plus: "M12 4v16m8-8H4",
   chevronLeft: "M15 19l-7-7 7-7",
   chevronRight: "M9 5l7 7-7 7",
+  link: "M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1",
 };
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -51,8 +52,8 @@ const avatarColor = (name) => AVATAR_COLORS[(name?.charCodeAt(0) || 0) % AVATAR_
 const SendBadge = ({ status }) => {
   const map = {
     "email sent": { label: "Email", bg: "#1E3A5F", color: "#60A5FA", border: "#2563EB33" },
-    "sms sent": { label: "SMS", bg: "#2D1B69", color: "#A78BFA", border: "#7C3AED33" },
-    "both sent": { label: "Both", bg: "#0F172A", color: "#E2E8F0", border: "#334155" },
+    "sms sent":   { label: "SMS",   bg: "#2D1B69", color: "#A78BFA", border: "#7C3AED33" },
+    "both sent":  { label: "Both",  bg: "#0F172A", color: "#E2E8F0", border: "#334155"   },
   };
   const s = map[status] || { label: "Not Sent", bg: "#1E293B", color: "#64748B", border: "#334155" };
   return (
@@ -66,7 +67,7 @@ const SendBadge = ({ status }) => {
 const ReplyBadge = ({ status }) => {
   const map = {
     yes: { label: "Yes", bg: "#052E16", color: "#4ADE80", border: "#16A34A44", dot: "#22C55E" },
-    no: { label: "No", bg: "#2D0A0A", color: "#F87171", border: "#DC262644", dot: "#EF4444" },
+    no:  { label: "No",  bg: "#2D0A0A", color: "#F87171", border: "#DC262644", dot: "#EF4444" },
   };
   const s = map[status] || { label: "Pending", bg: "#1C1505", color: "#FCD34D", border: "#D9770644", dot: "#F59E0B" };
   return (
@@ -98,31 +99,258 @@ const StatCard = ({ label, value, accent, icon, trend }) => (
   </div>
 );
 
+// ─── Google Sheet Card ────────────────────────────────────────────────────────
+const GoogleSheetCard = ({ companyId, userId, apiBase }) => {
+  const [sheetUrl, setSheetUrl]     = useState("");
+  const [inputUrl, setInputUrl]     = useState("");
+  const [status, setStatus]         = useState(null); // { type: "success"|"error", msg }
+  const [syncing, setSyncing]       = useState(false);
+  const [connected, setConnected]   = useState(false);
+  const [lastSynced, setLastSynced] = useState(null);
+
+  // Load saved state from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(`gsheet_${companyId}`);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setConnected(true);
+        setSheetUrl(parsed.url || "");
+        setInputUrl(parsed.url || "");
+        setLastSynced(parsed.lastSynced || null);
+      } catch (_) {}
+    }
+  }, [companyId]);
+
+  // Auto-sync every 20 minutes when connected
+  useEffect(() => {
+    if (!connected) return;
+    const iv = setInterval(() => handleSync(true), 20 * 60 * 1000);
+    return () => clearInterval(iv);
+  }, [connected]);
+
+  const handleConnect = async () => {
+    if (!inputUrl.trim()) {
+      setStatus({ type: "error", msg: "Please paste a Google Sheet URL" });
+      return;
+    }
+    setSyncing(true);
+    setStatus(null);
+    try {
+      const res = await fetch(`${apiBase}/connect_gsheet`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_id: companyId,
+          user_id: userId,
+          sheet_url: inputUrl.trim(),
+          access_token: null, // public sheets only
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const now = new Date().toISOString();
+        setConnected(true);
+        setSheetUrl(inputUrl.trim());
+        setLastSynced(now);
+        localStorage.setItem(
+          `gsheet_${companyId}`,
+          JSON.stringify({ url: inputUrl.trim(), lastSynced: now })
+        );
+        setStatus({ type: "success", msg: data.message });
+      } else {
+        setStatus({ type: "error", msg: data.error || "Connection failed" });
+      }
+    } catch (e) {
+      setStatus({ type: "error", msg: "Could not reach server" });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleSync = async (silent = false) => {
+    setSyncing(true);
+    if (!silent) setStatus(null);
+    try {
+      const res = await fetch(`${apiBase}/sync_gsheet/${companyId}`, { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        const now = new Date().toISOString();
+        setLastSynced(now);
+        localStorage.setItem(
+          `gsheet_${companyId}`,
+          JSON.stringify({ url: sheetUrl, lastSynced: now })
+        );
+        if (!silent) setStatus({ type: "success", msg: data.message });
+      } else {
+        if (!silent) setStatus({ type: "error", msg: data.error || "Sync failed" });
+      }
+    } catch (e) {
+      if (!silent) setStatus({ type: "error", msg: "Could not reach server" });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleDisconnect = () => {
+    localStorage.removeItem(`gsheet_${companyId}`);
+    setConnected(false);
+    setSheetUrl("");
+    setInputUrl("");
+    setLastSynced(null);
+    setStatus(null);
+  };
+
+  const formatLastSynced = (iso) => {
+    if (!iso) return "never";
+    return new Date(iso).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+  };
+
+  return (
+    <div style={{ background: "#0F172A", border: "1px solid #1E293B", borderRadius: 20, overflow: "hidden" }}>
+
+      {/* Header */}
+      <div style={{ padding: "16px 24px", borderBottom: "1px solid #1E293B", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ background: "#0D2A1A", border: "1px solid #14532D44", borderRadius: 10, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>
+            📊
+          </div>
+          <div>
+            <h2 style={{ fontSize: 14, fontWeight: 700, color: "#E2E8F0", margin: 0 }}>Google Sheets</h2>
+            <p style={{ fontSize: 12, color: "#4B5563", margin: 0 }}>
+              {connected
+                ? `Auto-syncs every 20 min · Last synced: ${formatLastSynced(lastSynced)}`
+                : "Connect a public sheet to import & sync leads automatically"}
+            </p>
+          </div>
+        </div>
+
+        {/* Connected state actions */}
+        {connected && (
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              onClick={() => handleSync(false)}
+              disabled={syncing}
+              className="action-btn"
+              style={{
+                background: syncing ? "#1E293B" : "linear-gradient(135deg, #065F46, #047857)",
+                color: syncing ? "#4B5563" : "white",
+                border: "none", borderRadius: 10,
+                padding: "8px 16px", fontSize: 13, fontWeight: 700,
+                cursor: syncing ? "not-allowed" : "pointer",
+                display: "flex", alignItems: "center", gap: 6,
+              }}>
+              <span style={{ display: "inline-block", animation: syncing ? "spin 1s linear infinite" : "none" }}>↻</span>
+              {syncing ? "Syncing…" : "Sync Now"}
+            </button>
+            <button
+              onClick={handleDisconnect}
+              className="action-btn"
+              style={{ background: "#1E293B", color: "#94A3B8", border: "1px solid #334155", borderRadius: 10, padding: "8px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+              Disconnect
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Body */}
+      <div style={{ padding: 24 }}>
+        {!connected ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+            {/* Instructions */}
+            <div style={{ background: "#0F2027", border: "1px solid #1E3A5F", borderRadius: 12, padding: "12px 16px", fontSize: 12, color: "#60A5FA", lineHeight: 1.7 }}>
+              <b style={{ color: "#93C5FD" }}>Before connecting:</b> Open your Google Sheet → Share → Change to{" "}
+              <b style={{ color: "#93C5FD" }}>"Anyone with the link → Viewer"</b>.
+              Your sheet must have columns named <b style={{ color: "#93C5FD" }}>name</b>,{" "}
+              <b style={{ color: "#93C5FD" }}>email</b>, and <b style={{ color: "#93C5FD" }}>phone</b>.
+            </div>
+
+            <input
+              value={inputUrl}
+              onChange={(e) => setInputUrl(e.target.value)}
+              placeholder="https://docs.google.com/spreadsheets/d/..."
+              className="age-input"
+              style={{ width: "100%", borderRadius: 12, padding: "12px 16px", fontSize: 13 }}
+            />
+
+            <button
+              onClick={handleConnect}
+              disabled={syncing}
+              className="action-btn"
+              style={{
+                alignSelf: "flex-start",
+                background: syncing ? "#1E293B" : "linear-gradient(135deg, #166534, #15803D)",
+                color: syncing ? "#4B5563" : "white",
+                border: "none", borderRadius: 12,
+                padding: "11px 24px", fontSize: 14, fontWeight: 700,
+                cursor: syncing ? "not-allowed" : "pointer",
+              }}>
+              {syncing ? "Connecting…" : "Connect Sheet"}
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ color: "#4ADE80", fontSize: 18 }}>✓</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <span style={{ fontSize: 13, color: "#94A3B8", fontWeight: 500 }}>Connected sheet</span>
+              <a
+                href={sheetUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: 12, color: "#60A5FA", textDecoration: "none", wordBreak: "break-all" }}>
+                {sheetUrl}
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* Status message */}
+        {status && (
+          <div style={{
+            marginTop: 14,
+            background: status.type === "success" ? "#052E16" : "#2D0A0A",
+            border: `1px solid ${status.type === "success" ? "#16A34A44" : "#DC262644"}`,
+            borderRadius: 10, padding: "12px 16px", fontSize: 13,
+            color: status.type === "success" ? "#4ADE80" : "#F87171",
+            display: "flex", alignItems: "center", gap: 8,
+          }}>
+            <span>{status.type === "success" ? "✓" : "✗"}</span>
+            {status.msg}
+          </div>
+        )}
+      </div>
+
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+};
+
 // ─── main dashboard ───────────────────────────────────────────────────────────
 const Dashboard = () => {
   const { isLoaded, isSignedIn, user } = useUser();
 
-  const [file, setFile] = useState(null);
-  const [leads, setLeads] = useState([]);
-  const [intervalDays, setIntervalDays] = useState(2);
+  const [file, setFile]                       = useState(null);
+  const [leads, setLeads]                     = useState([]);
+  const [intervalDays, setIntervalDays]       = useState(2);
   const [duplicateWarnings, setDuplicateWarnings] = useState([]);
-  const [emailSubject, setEmailSubject] = useState("Follow-up from AGE");
+  const [emailSubject, setEmailSubject]       = useState("Follow-up from AGE");
   const [messageTemplate, setMessageTemplate] = useState("");
-  const [isAIAssistOpen, setIsAIAssistOpen] = useState(false);
-  const [leadSchedules, setLeadSchedules] = useState({});
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [activeSection, setActiveSection] = useState("leads"); // leads | campaign | upload
+  const [isAIAssistOpen, setIsAIAssistOpen]   = useState(false);
+  const [leadSchedules, setLeadSchedules]     = useState({});
+  const [searchQuery, setSearchQuery]         = useState("");
+  const [currentPage, setCurrentPage]         = useState(1);
+  const [activeSection, setActiveSection]     = useState("leads");
   const LEADS_PER_PAGE = 10;
 
-  const company_id = localStorage.getItem("company_id");
-  const user_id = localStorage.getItem("user_id");
+  const company_id   = localStorage.getItem("company_id");
+  const user_id      = localStorage.getItem("user_id");
   const company_name = localStorage.getItem("company_name");
   const name = user?.fullName || user?.firstName || user?.primaryEmailAddress?.emailAddress || "User";
 
   const fetchLeads = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/get_leads/${company_id}`);
+      const res  = await fetch(`${API_BASE_URL}/get_leads/${company_id}`);
       const data = await res.json();
       if (res.ok) {
         const sorted = sortLeads(data);
@@ -131,7 +359,7 @@ const Dashboard = () => {
           const updated = { ...prev };
           sorted.forEach((l) => {
             updated[l._id] = {
-              channel: l.pref_channel || "email",
+              channel:       l.pref_channel       || "email",
               interval_days: l.pref_interval_days || 2,
             };
           });
@@ -155,12 +383,18 @@ const Dashboard = () => {
     if (!file) { alert("Please select a file"); return; }
     if (!company_id || !user_id) { alert("Missing login details."); return; }
     const formData = new FormData();
-    formData.append("file", file); formData.append("company_id", company_id); formData.append("user_id", user_id);
+    formData.append("file", file);
+    formData.append("company_id", company_id);
+    formData.append("user_id", user_id);
     try {
-      const res = await fetch(`${API_BASE_URL}/upload_leads`, { method: "POST", body: formData });
+      const res  = await fetch(`${API_BASE_URL}/upload_leads`, { method: "POST", body: formData });
       const data = await res.json();
-      if (res.ok) { alert(data.message); setDuplicateWarnings(data.duplicates || []); setFile(null); fetchLeads(); }
-      else alert(data.error);
+      if (res.ok) {
+        alert(data.message);
+        setDuplicateWarnings(data.duplicates || []);
+        setFile(null);
+        fetchLeads();
+      } else alert(data.error);
     } catch (e) { console.error(e); alert("Upload failed"); }
   };
 
@@ -169,7 +403,8 @@ const Dashboard = () => {
     if (!messageTemplate.trim()) { alert("Please generate or enter a message first."); return; }
     try {
       const res = await fetch(`${API_BASE_URL}/send_bulk/${company_id}`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type, interval_days: Number(intervalDays), subject: emailSubject, message: messageTemplate }),
       });
       const data = await res.json();
@@ -183,8 +418,14 @@ const Dashboard = () => {
     if (!messageTemplate.trim()) { alert("Please enter message template"); return; }
     try {
       const res = await fetch(`${API_BASE_URL}/start_followup/${leadId}`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject: emailSubject, message: messageTemplate, channel: cfg.channel || "email", interval_days: Number(cfg.interval_days || 2) }),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject:       emailSubject,
+          message:       messageTemplate,
+          channel:       cfg.channel       || "email",
+          interval_days: Number(cfg.interval_days || 2),
+        }),
       });
       const data = await res.json();
       if (res.ok) { alert("Follow-ups started"); fetchLeads(); }
@@ -195,7 +436,6 @@ const Dashboard = () => {
   const updateLeadSchedule = (id, field, value) => {
     const updated = { ...leadSchedules[id], [field]: value };
     setLeadSchedules((prev) => ({ ...prev, [id]: updated }));
-    // Persist to DB — marks this lead as individual (excluded from future bulk sends)
     fetch(`${API_BASE_URL}/lead_schedule/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -208,11 +448,11 @@ const Dashboard = () => {
     !searchQuery || [l.name, l.email, l.phone].some((v) => v?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
   const totalPages = Math.max(1, Math.ceil(filtered.length / LEADS_PER_PAGE));
-  const paginated = filtered.slice((currentPage - 1) * LEADS_PER_PAGE, currentPage * LEADS_PER_PAGE);
+  const paginated  = filtered.slice((currentPage - 1) * LEADS_PER_PAGE, currentPage * LEADS_PER_PAGE);
 
-  const totalLeads = leads.length;
-  const sentLeads = leads.filter((l) => l.send_status && l.send_status !== "not sent").length;
-  const yesLeads = leads.filter((l) => l.response_status === "yes").length;
+  const totalLeads   = leads.length;
+  const sentLeads    = leads.filter((l) => l.send_status && l.send_status !== "not sent").length;
+  const yesLeads     = leads.filter((l) => l.response_status === "yes").length;
   const pendingLeads = leads.filter((l) => !l.response_status || l.response_status === "pending" || l.response_status === "no reply").length;
 
   if (!isLoaded) return (
@@ -264,9 +504,9 @@ const Dashboard = () => {
             {/* Nav */}
             <nav style={{ display: "flex", gap: 4, alignItems: "center" }}>
               {[
-                { key: "leads", label: "Lead List" },
-                { key: "campaign", label: "Campaign" },
-                { key: "upload", label: "Upload" },
+                { key: "leads",    label: "Lead List" },
+                { key: "campaign", label: "Campaign"  },
+                { key: "upload",   label: "Upload"    },
               ].map(({ key, label }) => (
                 <div key={key} onClick={() => setActiveSection(key)}
                   className={`nav-item${activeSection === key ? " active" : ""}`}>
@@ -282,7 +522,7 @@ const Dashboard = () => {
                 Live
               </div>
               <span style={{ fontSize: 13, color: "#6B7280" }}>Hi, <span style={{ color: "#E2E8F0", fontWeight: 600 }}>{name}</span></span>
-              <div style={{ borderRadius: "50%", ring: 2 }}><UserButton /></div>
+              <div style={{ borderRadius: "50%" }}><UserButton /></div>
             </div>
           </div>
         </div>
@@ -293,53 +533,60 @@ const Dashboard = () => {
         {/* ── STAT CARDS ── */}
         {leads.length > 0 && (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
-            <StatCard label="Total Leads" value={totalLeads} accent="#818CF8" icon={ICONS.users} trend={`${filtered.length} matching`} />
-            <StatCard label="Sent" value={sentLeads} accent="#60A5FA" icon={ICONS.mail} trend={`${Math.round(sentLeads / totalLeads * 100) || 0}% of leads`} />
-            <StatCard label="Replied Yes" value={yesLeads} accent="#4ADE80" icon={ICONS.check} trend={`${Math.round(yesLeads / totalLeads * 100) || 0}% conversion`} />
-            <StatCard label="Pending" value={pendingLeads} accent="#FCD34D" icon={ICONS.clock} trend={`${pendingLeads} need follow-up`} />
+            <StatCard label="Total Leads"  value={totalLeads}   accent="#818CF8" icon={ICONS.users} trend={`${filtered.length} matching`} />
+            <StatCard label="Sent"         value={sentLeads}    accent="#60A5FA" icon={ICONS.mail}  trend={`${Math.round(sentLeads / totalLeads * 100) || 0}% of leads`} />
+            <StatCard label="Replied Yes"  value={yesLeads}     accent="#4ADE80" icon={ICONS.check} trend={`${Math.round(yesLeads / totalLeads * 100) || 0}% conversion`} />
+            <StatCard label="Pending"      value={pendingLeads} accent="#FCD34D" icon={ICONS.clock} trend={`${pendingLeads} need follow-up`} />
           </div>
         )}
 
         {/* ══ UPLOAD SECTION ══ */}
         {activeSection === "upload" && (
-          <div style={{ background: "#0F172A", border: "1px solid #1E293B", borderRadius: 20, overflow: "hidden" }}>
-            <div style={{ padding: "16px 24px", borderBottom: "1px solid #1E293B", display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ background: "#1E3A5F", borderRadius: 10, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", color: "#60A5FA" }}>
-                <Icon d={ICONS.upload} size={16} />
-              </div>
-              <div>
-                <h2 style={{ fontSize: 14, fontWeight: 700, color: "#E2E8F0", margin: 0 }}>Upload Leads</h2>
-                <p style={{ fontSize: 12, color: "#4B5563", margin: 0 }}>CSV or Excel files accepted</p>
-              </div>
-            </div>
-            <div style={{ padding: 24 }}>
-              <form onSubmit={handleUpload} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-                <input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => setFile(e.target.files[0])}
-                  className="age-input"
-                  style={{ flex: 1, minWidth: 240, borderRadius: 12, padding: "10px 14px", fontSize: 13 }} />
-                <button type="submit" className="action-btn"
-                  style={{ background: "linear-gradient(135deg, #6D28D9, #4F46E5)", color: "white", border: "none", borderRadius: 12, padding: "11px 24px", fontSize: 14, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
-                  Upload Leads
-                </button>
-              </form>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-              {duplicateWarnings.length > 0 && (
-                <div style={{ marginTop: 20, background: "#1C1505", border: "1px solid #D9770644", borderRadius: 12, padding: 16 }}>
-                  <h3 style={{ fontSize: 13, fontWeight: 700, color: "#FCD34D", margin: "0 0 4px" }}>⚠ Duplicate Leads Found</h3>
-                  <p style={{ fontSize: 12, color: "#92400E", margin: "0 0 12px" }}>These were already uploaded.</p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {duplicateWarnings.map((d, i) => (
-                      <div key={i} style={{ background: "#0F172A", border: "1px solid #1E293B", borderRadius: 8, padding: 12, fontSize: 12, color: "#94A3B8", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-                        <span><b style={{ color: "#CBD5E1" }}>Name:</b> {d.name || "—"}</span>
-                        <span><b style={{ color: "#CBD5E1" }}>Email:</b> {d.email || "—"}</span>
-                        <span><b style={{ color: "#CBD5E1" }}>Phone:</b> {d.phone || "—"}</span>
-                        <span style={{ color: "#FCD34D" }}>Uploaded by: {d.already_uploaded_by}</span>
-                      </div>
-                    ))}
-                  </div>
+            {/* File upload card */}
+            <div style={{ background: "#0F172A", border: "1px solid #1E293B", borderRadius: 20, overflow: "hidden" }}>
+              <div style={{ padding: "16px 24px", borderBottom: "1px solid #1E293B", display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ background: "#1E3A5F", borderRadius: 10, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", color: "#60A5FA" }}>
+                  <Icon d={ICONS.upload} size={16} />
                 </div>
-              )}
+                <div>
+                  <h2 style={{ fontSize: 14, fontWeight: 700, color: "#E2E8F0", margin: 0 }}>Upload File</h2>
+                  <p style={{ fontSize: 12, color: "#4B5563", margin: 0 }}>CSV or Excel files accepted</p>
+                </div>
+              </div>
+              <div style={{ padding: 24 }}>
+                <form onSubmit={handleUpload} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                  <input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => setFile(e.target.files[0])}
+                    className="age-input"
+                    style={{ flex: 1, minWidth: 240, borderRadius: 12, padding: "10px 14px", fontSize: 13 }} />
+                  <button type="submit" className="action-btn"
+                    style={{ background: "linear-gradient(135deg, #6D28D9, #4F46E5)", color: "white", border: "none", borderRadius: 12, padding: "11px 24px", fontSize: 14, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+                    Upload Leads
+                  </button>
+                </form>
+
+                {duplicateWarnings.length > 0 && (
+                  <div style={{ marginTop: 20, background: "#1C1505", border: "1px solid #D9770644", borderRadius: 12, padding: 16 }}>
+                    <h3 style={{ fontSize: 13, fontWeight: 700, color: "#FCD34D", margin: "0 0 4px" }}>⚠ Duplicate Leads Found</h3>
+                    <p style={{ fontSize: 12, color: "#92400E", margin: "0 0 12px" }}>These were already uploaded.</p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {duplicateWarnings.map((d, i) => (
+                        <div key={i} style={{ background: "#0F172A", border: "1px solid #1E293B", borderRadius: 8, padding: 12, fontSize: 12, color: "#94A3B8", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                          <span><b style={{ color: "#CBD5E1" }}>Name:</b> {d.name || "—"}</span>
+                          <span><b style={{ color: "#CBD5E1" }}>Email:</b> {d.email || "—"}</span>
+                          <span><b style={{ color: "#CBD5E1" }}>Phone:</b> {d.phone || "—"}</span>
+                          <span style={{ color: "#FCD34D" }}>Uploaded by: {d.already_uploaded_by}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
+
+            {/* Google Sheets card */}
+            <GoogleSheetCard companyId={company_id} userId={user_id} apiBase={API_BASE_URL} />
           </div>
         )}
 
@@ -383,9 +630,9 @@ const Dashboard = () => {
 
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                   {[
-                    { type: "email", label: "Email All", bg: "linear-gradient(135deg, #1D4ED8, #1E40AF)" },
-                    { type: "sms", label: "SMS All", bg: "linear-gradient(135deg, #6D28D9, #4C1D95)" },
-                    { type: "both", label: "Both Channels", bg: "linear-gradient(135deg, #0F172A, #1E293B)", border: "1px solid #334155" },
+                    { type: "email", label: "Email All",     bg: "linear-gradient(135deg, #1D4ED8, #1E40AF)" },
+                    { type: "sms",   label: "SMS All",       bg: "linear-gradient(135deg, #6D28D9, #4C1D95)" },
+                    { type: "both",  label: "Both Channels", bg: "linear-gradient(135deg, #0F172A, #1E293B)", border: "1px solid #334155" },
                   ].map(({ type, label, bg, border }) => (
                     <button key={type} onClick={() => handleBulkSend(type)} className="action-btn"
                       style={{ background: bg, color: "white", border: border || "none", borderRadius: 12, padding: "12px 20px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
@@ -413,7 +660,6 @@ const Dashboard = () => {
                 </h2>
               </div>
               <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                {/* Search */}
                 <div style={{ position: "relative" }}>
                   <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#4B5563" }}>
                     <Icon d={ICONS.search} size={14} />
@@ -425,8 +671,9 @@ const Dashboard = () => {
                 <button style={{ background: "#1E293B", border: "1px solid #334155", color: "#94A3B8", borderRadius: 10, padding: "8px 14px", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontWeight: 500 }}>
                   <Icon d={ICONS.filter} size={13} /> Filter
                 </button>
-                <button style={{ background: "linear-gradient(135deg, #6D28D9, #4F46E5)", border: "none", color: "white", borderRadius: 10, padding: "8px 14px", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontWeight: 600 }}
-                  onClick={() => setActiveSection("upload")}>
+                <button
+                  onClick={() => setActiveSection("upload")}
+                  style={{ background: "linear-gradient(135deg, #6D28D9, #4F46E5)", border: "none", color: "white", borderRadius: 10, padding: "8px 14px", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontWeight: 600 }}>
                   <Icon d={ICONS.plus} size={13} /> Import
                 </button>
               </div>
@@ -436,7 +683,7 @@ const Dashboard = () => {
               <div style={{ padding: "64px 24px", textAlign: "center" }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
                 <p style={{ fontSize: 14, color: "#4B5563", fontWeight: 500 }}>No leads uploaded yet</p>
-                <p style={{ fontSize: 12, color: "#374151", marginTop: 4 }}>Upload a CSV or Excel file to get started</p>
+                <p style={{ fontSize: 12, color: "#374151", marginTop: 4 }}>Upload a CSV / Excel file or connect a Google Sheet</p>
                 <button onClick={() => setActiveSection("upload")} className="action-btn"
                   style={{ marginTop: 16, background: "linear-gradient(135deg, #6D28D9, #4F46E5)", border: "none", color: "white", borderRadius: 12, padding: "10px 24px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                   Upload Leads
@@ -444,12 +691,12 @@ const Dashboard = () => {
               </div>
             ) : (
               <>
-                {/* ── Desktop Table ── */}
+                {/* Desktop table */}
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                     <thead>
                       <tr style={{ background: "#030712" }}>
-                        {["SL", "Name", "Contact", "Sent Via", "Reply", "Follow-ups", "Last Sent", "Next", "Channel", "Gap", "Action"].map((h) => (
+                        {["SL","Name","Contact","Sent Via","Reply","Follow-ups","Last Sent","Next","Channel","Gap","Action"].map((h) => (
                           <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#4B5563", textTransform: "uppercase", letterSpacing: 1, whiteSpace: "nowrap", borderBottom: "1px solid #1E293B" }}>
                             {h}
                           </th>
@@ -469,9 +716,14 @@ const Dashboard = () => {
                               </div>
                               <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                                 <span style={{ fontWeight: 700, color: "#E2E8F0", whiteSpace: "nowrap" }}>{lead.name || "—"}</span>
-                                {lead.is_individual_followup && (
-                                  <span style={{ fontSize: 9, fontWeight: 700, color: "#A78BFA", background: "#1E1B4B", border: "1px solid #4C1D95", borderRadius: 4, padding: "1px 5px", letterSpacing: 0.5 }}>INDIVIDUAL</span>
-                                )}
+                                <div style={{ display: "flex", gap: 4 }}>
+                                  {lead.is_individual_followup && (
+                                    <span style={{ fontSize: 9, fontWeight: 700, color: "#A78BFA", background: "#1E1B4B", border: "1px solid #4C1D95", borderRadius: 4, padding: "1px 5px", letterSpacing: 0.5 }}>INDIVIDUAL</span>
+                                  )}
+                                  {lead.source === "google_sheets" && (
+                                    <span style={{ fontSize: 9, fontWeight: 700, color: "#4ADE80", background: "#052E16", border: "1px solid #16A34A44", borderRadius: 4, padding: "1px 5px", letterSpacing: 0.5 }}>SHEET</span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </td>
