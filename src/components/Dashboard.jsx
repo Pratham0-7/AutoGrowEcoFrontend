@@ -38,6 +38,9 @@ const ICONS = {
   calendar:     "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
   arrowRight:   "M14 5l7 7m0 0l-7 7m7-7H3",
   activity:     "M22 12h-4l-3 9L9 3l-3 9H2",
+  star:         "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",
+  minus:        "M20 12H4",
+  userPlus:     "M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z",
 };
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -528,6 +531,17 @@ const Dashboard = () => {
     } catch { alert("Failed to start follow-up"); }
   };
 
+  const markIndividual = async (leadId, value) => {
+    try {
+      await fetch(`${API_BASE_URL}/mark_individual/${leadId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ individual: value }),
+      });
+      fetchLeads();
+    } catch (e) { console.error(e); }
+  };
+
   const updateLeadSchedule = (id, field, value) => {
     const updated = { ...leadSchedules[id], [field]: value };
     setLeadSchedules((prev) => ({ ...prev, [id]: updated }));
@@ -569,20 +583,24 @@ const Dashboard = () => {
     .sort((a, b) => new Date(b.last_followup_sent_at || 0) - new Date(a.last_followup_sent_at || 0))
     .slice(0, 8);
 
+  const individualLeads = leads.filter((l) => l.is_individual_followup);
+
   const navItems = [
-    { key: "overview",  label: "Overview",  icon: ICONS.home },
-    { key: "contacts",  label: "Contacts",  icon: ICONS.users },
-    { key: "pipeline",  label: "Pipeline",  icon: ICONS.pipeline },
-    { key: "campaign",  label: "Campaigns", icon: ICONS.mail },
-    { key: "import",    label: "Import",    icon: ICONS.upload },
+    { key: "overview",    label: "Overview",    icon: ICONS.home },
+    { key: "contacts",    label: "Contacts",    icon: ICONS.users },
+    { key: "individual",  label: "Individual",  icon: ICONS.star },
+    { key: "pipeline",    label: "Pipeline",    icon: ICONS.pipeline },
+    { key: "campaign",    label: "Campaigns",   icon: ICONS.mail },
+    { key: "import",      label: "Import",      icon: ICONS.upload },
   ];
 
   const sectionSubtitle = {
-    overview:  `${totalLeads} total leads · ${convRate}% conversion`,
-    contacts:  `${filtered.length} of ${totalLeads} contacts`,
-    pipeline:  "Visual deal stages",
-    campaign:  "Email & SMS outreach",
-    import:    "Import leads from CSV or Google Sheets",
+    overview:   `${totalLeads} total leads · ${convRate}% conversion`,
+    contacts:   `${filtered.length} of ${totalLeads} contacts`,
+    individual: `${individualLeads.length} personal-touch sequences`,
+    pipeline:   "Visual deal stages",
+    campaign:   "Email & SMS outreach",
+    import:     "Import leads from CSV or Google Sheets",
   };
 
   if (!isLoaded) return (
@@ -646,8 +664,9 @@ const Dashboard = () => {
               className={`sidebar-item${activeSection === key ? " active" : ""}`}>
               <Icon d={icon} size={15} />
               <span>{label}</span>
-              {key === "contacts" && totalLeads > 0 && <span className="sidebar-badge">{totalLeads}</span>}
-              {key === "pipeline" && pipeline.interested.length > 0 && <span className="sidebar-badge" style={{ background: "#052E16", color: "#4ADE80" }}>{pipeline.interested.length}</span>}
+              {key === "contacts"   && totalLeads > 0           && <span className="sidebar-badge">{totalLeads - individualLeads.length}</span>}
+              {key === "individual" && individualLeads.length > 0 && <span className="sidebar-badge" style={{ background: "#1C1505", color: "#FCD34D" }}>{individualLeads.length}</span>}
+              {key === "pipeline"  && pipeline.interested.length > 0 && <span className="sidebar-badge" style={{ background: "#052E16", color: "#4ADE80" }}>{pipeline.interested.length}</span>}
             </div>
           ))}
 
@@ -878,7 +897,7 @@ const Dashboard = () => {
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                       <thead>
                         <tr style={{ background: "#070D16" }}>
-                          {["#", "Contact", "Channel", "Reply Status", "Follow-ups", "Last Sent", "Next", "Schedule", ""].map((h) => (
+                          {["#", "Contact", "Channel", "Reply Status", "Follow-ups", "Last Sent", "Next", "Schedule", "", ""].map((h) => (
                             <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: 1, whiteSpace: "nowrap", borderBottom: "1px solid #1E293B" }}>
                               {h}
                             </th>
@@ -940,6 +959,25 @@ const Dashboard = () => {
                                 Follow-up ▶
                               </button>
                             </td>
+                            <td style={{ padding: "12px 12px" }} onClick={(e) => e.stopPropagation()}>
+                              {lead.is_individual_followup ? (
+                                <button
+                                  onClick={() => setActiveSection("individual")}
+                                  title="In Individual pool — click to view"
+                                  style={{ background: "#1C1505", border: "1px solid #D9770644", color: "#FCD34D", borderRadius: 8, width: 30, height: 30, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "inherit" }}>
+                                  <Icon d={ICONS.star} size={12} />
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => markIndividual(lead._id, true)}
+                                  title="Add to Individual pool"
+                                  style={{ background: "#0D1117", border: "1px solid #1E293B", color: "#4B5563", borderRadius: 8, width: 30, height: 30, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "inherit", transition: "all .15s" }}
+                                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#FCD34D"; e.currentTarget.style.color = "#FCD34D"; }}
+                                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1E293B"; e.currentTarget.style.color = "#4B5563"; }}>
+                                  <Icon d={ICONS.plus} size={12} />
+                                </button>
+                              )}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -968,6 +1006,126 @@ const Dashboard = () => {
                   )}
                 </>
               )}
+            </div>
+          )}
+
+          {/* ══ INDIVIDUAL ══ */}
+          {activeSection === "individual" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+              {/* Info banner */}
+              <div style={{ background: "#1C1505", border: "1px solid #D9770633", borderRadius: 14, padding: "14px 18px", display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <div style={{ color: "#FCD34D", flexShrink: 0, marginTop: 1 }}><Icon d={ICONS.star} size={15} /></div>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: "#FCD34D", margin: "0 0 3px" }}>Individual follow-up sequences</p>
+                  <p style={{ fontSize: 12, color: "#78350F", margin: 0, lineHeight: 1.6 }}>
+                    These leads get a personal-touch sequence. They are <b style={{ color: "#FCD34D" }}>automatically excluded from bulk campaigns</b> — you'll never accidentally blast someone in this pool. Configure each lead's channel and gap below, then start the sequence.
+                  </p>
+                </div>
+              </div>
+
+              {/* Table */}
+              <div style={{ background: "#0D1117", border: "1px solid #1E293B", borderRadius: 16, overflow: "hidden" }}>
+                <div style={{ padding: "14px 20px", borderBottom: "1px solid #1E293B", display: "flex", alignItems: "center", gap: 8 }}>
+                  <h2 style={{ fontSize: 14, fontWeight: 700, color: "#F1F5F9", margin: 0 }}>Individual Pool</h2>
+                  <span style={{ background: "#1C1505", color: "#FCD34D", border: "1px solid #D9770633", borderRadius: 100, padding: "2px 9px", fontSize: 11, fontWeight: 700 }}>
+                    {individualLeads.length}
+                  </span>
+                  <p style={{ fontSize: 11, color: "#374151", margin: "0 0 0 auto" }}>
+                    Add leads from the Contacts tab using the <span style={{ color: "#FCD34D" }}>★ +</span> button
+                  </p>
+                </div>
+
+                {individualLeads.length === 0 ? (
+                  <div style={{ padding: "60px 24px", textAlign: "center" }}>
+                    <div style={{ fontSize: 32, marginBottom: 10 }}>★</div>
+                    <p style={{ fontSize: 14, color: "#4B5563", fontWeight: 500, margin: "0 0 4px" }}>No individual leads yet</p>
+                    <p style={{ fontSize: 12, color: "#374151", margin: "0 0 16px" }}>Go to Contacts and click the <b style={{ color: "#FCD34D" }}>+</b> button on any row to add a lead here.</p>
+                    <button onClick={() => setActiveSection("contacts")} className="crm-btn-primary">Go to Contacts</button>
+                  </div>
+                ) : (
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                      <thead>
+                        <tr style={{ background: "#070D16" }}>
+                          {["Contact", "Status", "Follow-ups", "Last Sent", "Next Follow-up", "Channel", "Gap", "Action", "Remove"].map((h) => (
+                            <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: 1, whiteSpace: "nowrap", borderBottom: "1px solid #1E293B" }}>
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {individualLeads.map((lead) => (
+                          <tr key={lead._id} className="lead-row" onClick={() => setSelectedLead(lead)}
+                            style={{ borderBottom: "1px solid #0A0F1C" }}>
+                            <td style={{ padding: "12px 16px" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                <div style={{ width: 32, height: 32, borderRadius: "50%", background: avatarColor(lead.name), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "white", flexShrink: 0 }}>
+                                  {getInitial(lead.name)}
+                                </div>
+                                <div>
+                                  <p style={{ fontSize: 13, fontWeight: 700, color: "#E2E8F0", margin: 0 }}>{lead.name || "—"}</p>
+                                  <p style={{ fontSize: 11, color: "#374151", margin: 0 }}>{lead.email || lead.phone || "—"}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td style={{ padding: "12px 16px" }}>
+                              <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                                <SendBadge status={lead.send_status} />
+                                <ReplyBadge status={lead.response_status} />
+                              </div>
+                            </td>
+                            <td style={{ padding: "12px 16px", textAlign: "center" }}>
+                              <span style={{ background: "#1E1B4B", color: "#818CF8", border: "1px solid #312E81", borderRadius: 8, padding: "3px 10px", fontWeight: 700, fontSize: 12 }}>
+                                {lead.followup_count || 0}
+                              </span>
+                            </td>
+                            <td style={{ padding: "12px 16px", color: "#4B5563", fontSize: 11, whiteSpace: "nowrap" }}>{formatDate(lead.last_followup_sent_at)}</td>
+                            <td style={{ padding: "12px 16px", fontSize: 11, whiteSpace: "nowrap" }}>
+                              {lead.next_followup_at
+                                ? <span style={{ color: "#FCD34D" }}>{formatDate(lead.next_followup_at)}</span>
+                                : <span style={{ color: "#374151" }}>Not started</span>}
+                            </td>
+                            <td style={{ padding: "12px 16px" }} onClick={(e) => e.stopPropagation()}>
+                              <select value={leadSchedules[lead._id]?.channel || "email"}
+                                onChange={(e) => updateLeadSchedule(lead._id, "channel", e.target.value)}
+                                className="crm-input" style={{ borderRadius: 7, padding: "5px 8px", fontSize: 11, minWidth: 72 }}>
+                                <option value="email">Email</option>
+                                <option value="sms">SMS</option>
+                                <option value="both">Both</option>
+                              </select>
+                            </td>
+                            <td style={{ padding: "12px 16px" }} onClick={(e) => e.stopPropagation()}>
+                              <select value={leadSchedules[lead._id]?.interval_days || 2}
+                                onChange={(e) => updateLeadSchedule(lead._id, "interval_days", Number(e.target.value))}
+                                className="crm-input" style={{ borderRadius: 7, padding: "5px 8px", fontSize: 11, minWidth: 62 }}>
+                                {[2, 3, 4, 5, 6, 7].map((d) => <option key={d} value={d}>{d}d</option>)}
+                              </select>
+                            </td>
+                            <td style={{ padding: "12px 16px" }} onClick={(e) => e.stopPropagation()}>
+                              <button onClick={() => handleStartFollowup(lead._id)} className="crm-btn-sm"
+                                style={{ background: "linear-gradient(135deg, #92400E, #B45309)", color: "white", border: "none", whiteSpace: "nowrap" }}>
+                                {lead.next_followup_at ? "Re-start ▶" : "Start ▶"}
+                              </button>
+                            </td>
+                            <td style={{ padding: "12px 16px" }} onClick={(e) => e.stopPropagation()}>
+                              <button
+                                onClick={() => markIndividual(lead._id, false)}
+                                title="Remove from Individual pool"
+                                style={{ background: "#0D1117", border: "1px solid #1E293B", color: "#4B5563", borderRadius: 8, width: 30, height: 30, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "inherit", transition: "all .15s" }}
+                                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#EF4444"; e.currentTarget.style.color = "#EF4444"; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1E293B"; e.currentTarget.style.color = "#4B5563"; }}>
+                                <Icon d={ICONS.minus} size={12} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -1047,12 +1205,23 @@ const Dashboard = () => {
               </div>
 
               {/* Campaign stats */}
+              {individualLeads.length > 0 && (
+                <div style={{ background: "#1C1505", border: "1px solid #D9770633", borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10 }}>
+                  <Icon d={ICONS.star} size={14} style={{ color: "#FCD34D", flexShrink: 0 }} />
+                  <p style={{ fontSize: 12, color: "#92400E", margin: 0 }}>
+                    <span style={{ color: "#FCD34D", fontWeight: 700 }}>{individualLeads.length} individual lead{individualLeads.length > 1 ? "s" : ""}</span> will be automatically skipped — they have personal-touch sequences running.
+                  </p>
+                  <button onClick={() => setActiveSection("individual")} style={{ marginLeft: "auto", background: "transparent", border: "none", color: "#FCD34D", fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontFamily: "inherit", whiteSpace: "nowrap", padding: 0 }}>
+                    View <Icon d={ICONS.arrowRight} size={10} />
+                  </button>
+                </div>
+              )}
               {totalLeads > 0 && (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
                   {[
-                    { label: "Will Receive Email", value: leads.filter(l => !l.send_status || l.send_status === "not sent").length, color: "#60A5FA" },
-                    { label: "Already Sent",        value: sentLeads,  color: "#818CF8" },
-                    { label: "Interested Replies",  value: yesLeads,   color: "#4ADE80" },
+                    { label: "Will Receive (Bulk)", value: leads.filter(l => (!l.send_status || l.send_status === "not sent") && !l.is_individual_followup).length, color: "#60A5FA" },
+                    { label: "Already Sent",         value: sentLeads,  color: "#818CF8" },
+                    { label: "Interested Replies",   value: yesLeads,   color: "#4ADE80" },
                   ].map(({ label, value, color }) => (
                     <div key={label} style={{ background: "#0D1117", border: "1px solid #1E293B", borderRadius: 12, padding: "14px 18px" }}>
                       <p style={{ fontSize: 10, color: "#374151", margin: "0 0 6px", textTransform: "uppercase", letterSpacing: 1 }}>{label}</p>
