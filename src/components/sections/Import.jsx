@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Icon from "../shared/Icon";
 import { ICONS } from "../shared/icons";
-import GoogleSheetCard from "../components/GoogleSheetCard";
+import GoogleSheetCard from "../GoogleSheetCard";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
