@@ -18,7 +18,7 @@ export default function BookDemo() {
         <p className="mt-3 text-sm text-slate-400 leading-relaxed">
           Your account is pending approval. Our team will review your details and activate your account shortly.
           <br className="hidden sm:block" />
-          In the meantime, book a demo to see AutoGrowth Eco in action.
+          In the meantime, book a demo to see AGE in action.
         </p>
 
         {/* Status badge */}
@@ -31,7 +31,7 @@ export default function BookDemo() {
         <div className="mt-10 rounded-2xl border border-slate-800 bg-slate-900 p-6">
           <h2 className="text-base font-semibold text-white">Book a Demo</h2>
           <p className="mt-1.5 text-sm text-slate-400">
-            See how AutoGrowth Eco can automate your lead outreach and follow-ups.
+            See how AGE can automate your lead outreach and follow-ups.
           </p>
           <a
             href="https://calendly.com/076pandeypratham/30min"
