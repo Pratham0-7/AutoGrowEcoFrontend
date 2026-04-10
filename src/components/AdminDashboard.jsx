@@ -73,6 +73,31 @@ export default function AdminDashboard() {
   const [deleteTarget, setDeleteTarget] = useState(null); // { user_id, name, email }
   const [deleting, setDeleting] = useState(false);
 
+  // Approve
+  const [approvingId, setApprovingId] = useState(null);
+
+  const approveUser = async (user_id) => {
+    setApprovingId(user_id);
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/approve_user/${user_id}`, {
+        method: "POST",
+        headers: authHeaders(pin),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setUsers((prev) =>
+          prev.map((u) => u.user_id === user_id ? { ...u, approved: true } : u)
+        );
+      } else {
+        alert(data.error || "Approval failed");
+      }
+    } catch (e) {
+      alert("Approval failed: " + e.message);
+    } finally {
+      setApprovingId(null);
+    }
+  };
+
   // Search / filter
   const [search, setSearch] = useState("");
 
@@ -372,7 +397,8 @@ export default function AdminDashboard() {
                     <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Plan</th>
                     <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Leads</th>
                     <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">SMS</th>
-                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Status</th>
+                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Approval</th>
+                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Onboarding</th>
                     <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Registered</th>
                     <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400"></th>
                   </tr>
@@ -407,19 +433,42 @@ export default function AdminDashboard() {
                           <span className="text-xs text-slate-400">Not set</span>
                         )}
                       </td>
+                      {/* Approval status + approve button */}
+                      <td className="px-5 py-3">
+                        {u.approved ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                            Approved
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => approveUser(u.user_id)}
+                            disabled={approvingId === u.user_id || !u.details_submitted}
+                            title={!u.details_submitted ? "User hasn't submitted details yet" : "Approve this user"}
+                            className="rounded-lg border border-emerald-300 px-2.5 py-1 text-xs font-medium text-emerald-600 transition hover:bg-emerald-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            {approvingId === u.user_id ? "…" : "Approve"}
+                          </button>
+                        )}
+                      </td>
+
+                      {/* Onboarding status */}
                       <td className="px-5 py-3">
                         {u.onboarding_completed ? (
                           <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                            Active
+                            Done
                           </span>
-                        ) : (
+                        ) : u.details_submitted ? (
                           <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600">
                             <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
                             Pending
                           </span>
+                        ) : (
+                          <span className="text-xs text-slate-400">No details</span>
                         )}
                       </td>
+
                       <td className="whitespace-nowrap px-5 py-3 text-slate-500">
                         {fmtDate(u.created_at)}
                       </td>
