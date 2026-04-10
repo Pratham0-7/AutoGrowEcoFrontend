@@ -296,7 +296,6 @@ const Contacts = ({
                               gap: 5,
                             }}
                           >
-                            <Icon d={ICONS.chevronRight} size={13} />
                             <span style={{ fontWeight: 700, color: "#E2E8F0" }}>
                               {lead.name || "—"}
                             </span>
@@ -563,6 +562,7 @@ const Contacts = ({
                     currentPage < totalPages && setCurrentPage((p) => p + 1)
                   }
                 >
+                  <Icon d={ICONS.chevronRight} size={13} />
                 </div>
               </div>
             </div>
