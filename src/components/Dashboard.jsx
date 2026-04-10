@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useUser, UserButton } from "@clerk/clerk-react";
 import AIMessageBox from "./AIMessageBox";
-import "./styles.css";
+import "./style.css";
 import { useLeads } from "./hooks/useLeads";
 import Icon from "./shared/Icon";
 import { ICONS } from "./shared/icons";
