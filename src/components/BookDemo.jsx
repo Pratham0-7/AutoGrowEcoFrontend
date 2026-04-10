@@ -34,7 +34,7 @@ export default function BookDemo() {
             See how AutoGrowth Eco can automate your lead outreach and follow-ups.
           </p>
           <a
-            href="https://calendly.com"
+            href="https://calendly.com/076pandeypratham/30min"
             target="_blank"
             rel="noopener noreferrer"
             className="mt-4 inline-block w-full rounded-xl bg-white py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
