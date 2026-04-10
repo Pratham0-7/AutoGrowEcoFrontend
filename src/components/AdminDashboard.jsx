@@ -443,8 +443,8 @@ export default function AdminDashboard() {
                         ) : (
                           <button
                             onClick={() => approveUser(u.user_id)}
-                            disabled={approvingId === u.user_id || !u.details_submitted}
-                            title={!u.details_submitted ? "User hasn't submitted details yet" : "Approve this user"}
+                            disabled={approvingId === u.user_id}
+                            title="Approve this user"
                             className="rounded-lg border border-emerald-300 px-2.5 py-1 text-xs font-medium text-emerald-600 transition hover:bg-emerald-50 disabled:opacity-40 disabled:cursor-not-allowed"
                           >
                             {approvingId === u.user_id ? "…" : "Approve"}
@@ -459,13 +459,11 @@ export default function AdminDashboard() {
                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                             Done
                           </span>
-                        ) : u.details_submitted ? (
+                        ) : (
                           <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600">
                             <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
                             Pending
                           </span>
-                        ) : (
-                          <span className="text-xs text-slate-400">No details</span>
                         )}
                       </td>
 

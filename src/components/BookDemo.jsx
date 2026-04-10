@@ -13,7 +13,7 @@ export default function BookDemo() {
           </svg>
         </div>
 
-        <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">AutoGrowth Eco</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Automated Growth Ecosystem</p>
         <h1 className="mt-3 text-3xl font-bold text-white">You're on the list</h1>
         <p className="mt-3 text-sm text-slate-400 leading-relaxed">
           Your account is pending approval. Our team will review your details and activate your account shortly.

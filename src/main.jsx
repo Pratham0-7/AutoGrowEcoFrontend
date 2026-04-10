@@ -11,10 +11,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ClerkProvider
       publishableKey={clerkPubKey}
-      signUpForceRedirectUrl="/register-details"
+      signUpForceRedirectUrl="/book-demo"
       signInForceRedirectUrl="/dashboard"
       signInFallbackRedirectUrl="/dashboard"
-      signUpFallbackRedirectUrl="/register-details"
+      signUpFallbackRedirectUrl="/book-demo"
       afterSignOutUrl="/"
     >
       <BrowserRouter>
