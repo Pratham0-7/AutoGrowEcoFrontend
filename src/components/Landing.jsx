@@ -7,6 +7,7 @@ import Navbar from "./Navbar";
 import WhyAGE from "./WhyPage";
 import WhyItWorks from "./WhyItWorks";
 import FutureFeatures from "./FutureFeatures";
+import Pricing from "./Pricing";
 import { useNavigate } from "react-router-dom";
 
 const Footer = () => {
@@ -81,6 +82,7 @@ const Landing = () => {
         <Solution />
         <Results />
         <FutureFeatures />
+        <Pricing />
       </main>
       <Footer />
     </div>
