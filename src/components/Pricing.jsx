@@ -31,7 +31,7 @@ const plans = [
     popular: false,
     accent: "violet",
     features: [
-      "Up to 500 contacts",
+      "Up to 500 active follow-up contacts",
       "2 users",
       "1 active sequence",
       "Pre-built follow-up templates",
@@ -51,7 +51,7 @@ const plans = [
     popular: true,
     accent: "violet",
     features: [
-      "Up to 2,000 contacts",
+      "Up to 2,000 active follow-up contacts",
       "5 users",
       "5 active sequences",
       "Pre-built + customizable templates",
@@ -72,7 +72,7 @@ const plans = [
     popular: false,
     accent: "blue",
     features: [
-      "Unlimited contacts",
+      "Up to 5,000 active follow-up contacts",
       "15 users",
       "Unlimited sequences",
       "Full template access + build your own",
