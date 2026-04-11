@@ -38,6 +38,20 @@ const Navbar = () => {
           </span>
         </button>
 
+        {/* Nav links */}
+        <div className="hidden items-center gap-1 sm:flex">
+          <button
+            onClick={() => navigate("/pricing")}
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-300 ${
+              scrolled
+                ? "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                : "text-white/70 hover:bg-white/10 hover:text-white"
+            }`}
+          >
+            Pricing
+          </button>
+        </div>
+
         {/* Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
           <button

@@ -116,7 +116,7 @@ const PlanCard = ({ plan, delay }) => {
       className={`relative flex flex-col rounded-2xl border p-7 ${
         plan.popular
           ? "border-violet-500/40 bg-violet-600/10"
-          : "border-white/5 bg-white/[0.03]"
+          : "border-white/5 bg-white/3"
       }`}
     >
       {/* Popular badge */}
@@ -135,7 +135,8 @@ const PlanCard = ({ plan, delay }) => {
       <p className="text-sm font-semibold uppercase tracking-widest text-slate-400">{plan.name}</p>
 
       {/* Price */}
-      <div className="mt-3 flex items-end gap-1">
+      <p className="mt-3 text-xs font-medium uppercase tracking-widest text-slate-500">Starting at</p>
+      <div className="mt-1 flex items-end gap-1">
         <span className="text-5xl font-black text-white">{plan.price}</span>
         <span className="mb-1.5 text-base text-slate-400">{plan.period}</span>
       </div>
@@ -180,7 +181,7 @@ const Pricing = () => {
   return (
     <section className="relative bg-slate-950 py-24 sm:py-32">
       {/* Top divider */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-white/10 to-transparent" />
 
       {/* Background glows */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
