@@ -58,7 +58,7 @@ const Footer = () => {
 
         {/* Bottom bar */}
         <div className="mt-10 flex flex-col items-center justify-between gap-2 border-t border-white/5 pt-6 text-xs text-slate-600 sm:flex-row">
-          <p>© {new Date().getFullYear()} AutoGrowthEco. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Automated Growth Ecosystem. All rights reserved.</p>
           <p>
             Built by{" "}
             <span className="font-medium text-slate-400">Pratham Pandey</span>
