@@ -214,7 +214,7 @@ const Pricing = () => {
           </h2>
 
           <p className="mt-4 text-base leading-relaxed text-slate-400">
-            Every plan includes a full onboarding session. We handle the setup — you focus on closing.
+            Every plan includes a full onboarding session. We handle the setup. You focus on closing.
           </p>
         </div>
 
