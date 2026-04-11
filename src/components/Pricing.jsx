@@ -23,7 +23,8 @@ const CheckIcon = () => (
 const plans = [
   {
     name: "Solo",
-    price: "$59",
+    price: "$199",
+    foundingPrice: "$119",
     period: "/month",
     commitment: "3 month minimum",
     tagline: "For small teams just getting started with follow-up automation.",
@@ -42,7 +43,8 @@ const plans = [
   },
   {
     name: "Team",
-    price: "$99",
+    price: "$499",
+    foundingPrice: "$299",
     period: "/month",
     commitment: "3 month minimum",
     tagline: "For growing teams who want full control over their follow-up pipeline.",
@@ -62,7 +64,8 @@ const plans = [
   },
   {
     name: "Agency",
-    price: "$299",
+    price: "$999",
+    foundingPrice: "$599",
     period: "/month",
     commitment: "6 month minimum",
     tagline: "For agencies managing multiple clients and high lead volumes.",
@@ -136,9 +139,12 @@ const PlanCard = ({ plan, delay }) => {
 
       {/* Price */}
       <p className="mt-3 text-xs font-medium uppercase tracking-widest text-slate-500">Starting at</p>
-      <div className="mt-1 flex items-end gap-1">
-        <span className="text-5xl font-black text-white">{plan.price}</span>
-        <span className="mb-1.5 text-base text-slate-400">{plan.period}</span>
+      <div className="mt-1 flex items-end gap-2">
+        <span className="text-5xl font-black text-white">{plan.foundingPrice}</span>
+        <div className="mb-1.5 flex flex-col items-start">
+          <span className="text-sm font-medium text-slate-500 line-through">{plan.price}</span>
+          <span className="text-base text-slate-400">{plan.period}</span>
+        </div>
       </div>
       <p className="mt-1 text-xs text-slate-500">{plan.commitment}</p>
 
@@ -218,8 +224,20 @@ const Pricing = () => {
           </p>
         </div>
 
+        {/* Early Access Banner */}
+        <div className="mt-10 flex items-center justify-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-5 py-3.5 text-sm text-amber-300/90">
+          <svg className="h-4 w-4 shrink-0 text-amber-400/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+          </svg>
+          <span>
+            <span className="font-semibold text-amber-300">Early Access</span>
+            {" — "}Join as a founding client and lock in 40% off your first 3 months.{" "}
+            <span className="text-amber-400/60">Limited spots available.</span>
+          </span>
+        </div>
+
         {/* Plan cards */}
-        <div className="mt-14 grid gap-6 sm:grid-cols-3">
+        <div className="mt-8 grid gap-6 sm:grid-cols-3">
           {plans.map((plan, i) => (
             <PlanCard key={plan.name} plan={plan} delay={i * 100} />
           ))}
