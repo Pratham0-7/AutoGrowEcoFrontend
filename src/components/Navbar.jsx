@@ -88,7 +88,7 @@ const Navbar = () => {
           <span className={`text-sm font-semibold tracking-tight transition-colors duration-300 ${
             scrolled ? "text-slate-900" : "text-white"
           }`}>
-            AGE
+            Automated Growth Ecosystem
           </span>
         </button>
 
