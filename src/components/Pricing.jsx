@@ -246,7 +246,7 @@ const Pricing = () => {
               <div>
                 <p className="font-semibold text-white">WhatsApp Add-on</p>
                 <p className="mt-1 text-sm leading-relaxed text-slate-400">
-                  Add WhatsApp to any plan and reach leads on the channel they actually respond to.{" "}
+                  Add WhatsApp to any plan and follow up on the most personal channel your leads use.{" "}
                   <span className="text-slate-500">Available on all plans.</span>
                 </p>
               </div>
