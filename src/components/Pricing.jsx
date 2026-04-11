@@ -142,7 +142,7 @@ const PlanCard = ({ plan, delay }) => {
       <div className="mt-1 flex items-end gap-2">
         <span className="text-5xl font-black text-white">{plan.foundingPrice}</span>
         <div className="mb-1.5 flex flex-col items-start">
-          <span className="text-sm font-medium text-slate-500 line-through">{plan.price}</span>
+          <span className="text-sm font-bold text-slate-300 line-through">{plan.price}</span>
           <span className="text-base text-slate-400">{plan.period}</span>
         </div>
       </div>
