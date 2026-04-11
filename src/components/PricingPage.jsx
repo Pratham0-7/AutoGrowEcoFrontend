@@ -22,7 +22,7 @@ const Footer = () => {
           </div>
         </div>
         <div className="mt-8 border-t border-white/5 pt-6 text-center text-xs text-slate-600">
-          © {new Date().getFullYear()} AutoGrowthEco. All rights reserved.
+          © {new Date().getFullYear()} Automated Growth Ecosystem. All rights reserved.
         </div>
       </div>
     </footer>
