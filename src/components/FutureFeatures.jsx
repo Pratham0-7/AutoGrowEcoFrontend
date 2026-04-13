@@ -43,21 +43,21 @@ const features = [
 
 const FutureFeatures = () => {
   return (
-    <section className="relative bg-slate-950 py-24">
+    <section className="relative bg-[#1A2E35] py-24">
       {/* top divider */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-white/10 to-transparent" />
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mx-auto max-w-2xl text-center">
-          <span className="inline-block rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-violet-400">
+          <span className="inline-block rounded-full border border-[#0F5E6E]/50 bg-[#0F5E6E]/20 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-[#2D8FA2]">
             What's coming
           </span>
           <h2 className="mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">
             The full growth stack,{" "}
-            <span className="text-violet-400">in one place.</span>
+            <span className="text-[#2D8FA2]">in one place.</span>
           </h2>
-          <p className="mt-4 text-base leading-7 text-slate-400">
+          <p className="mt-4 text-base leading-7 text-white/50">
             AGE is growing. Here's what we're building next — so you can automate
             every stage of your pipeline, not just follow-ups.
           </p>
@@ -68,37 +68,37 @@ const FutureFeatures = () => {
           {features.map((f, i) => (
             <div
               key={i}
-              className="group relative flex flex-col gap-4 rounded-2xl border border-white/5 bg-white/[0.03] p-6 transition hover:border-violet-500/30 hover:bg-white/[0.06]"
+              className="group relative flex flex-col gap-4 rounded-2xl border border-white/5 bg-white/[0.03] p-6 transition hover:border-[#0F5E6E]/40 hover:bg-[#0F5E6E]/5"
             >
               {/* Coming soon badge */}
               <div className="absolute right-4 top-4">
-                <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+                <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-white/30">
                   Soon
                 </span>
               </div>
 
               {/* Icon */}
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-violet-500/20 bg-violet-500/10 text-violet-400 transition group-hover:border-violet-500/40 group-hover:bg-violet-500/20">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#0F5E6E]/30 bg-[#0F5E6E]/15 text-[#2D8FA2] transition group-hover:border-[#0F5E6E]/50 group-hover:bg-[#0F5E6E]/25">
                 {f.icon}
               </div>
 
               {/* Text */}
               <div>
                 <p className="font-semibold text-white">{f.label}</p>
-                <p className="mt-2 text-sm leading-6 text-slate-400">{f.description}</p>
+                <p className="mt-2 text-sm leading-6 text-white/50">{f.description}</p>
               </div>
             </div>
           ))}
         </div>
 
         {/* Bottom note */}
-        <p className="mt-12 text-center text-xs text-slate-600">
+        <p className="mt-12 text-center text-xs text-white/25">
           Features are built based on what our users need most. Got a request?{" "}
           <a
             href="https://calendly.com/076pandeypratham/30min"
             target="_blank"
             rel="noreferrer"
-            className="text-slate-400 underline underline-offset-2 transition hover:text-white"
+            className="text-white/40 underline underline-offset-2 transition hover:text-white/70"
           >
             Talk to us.
           </a>

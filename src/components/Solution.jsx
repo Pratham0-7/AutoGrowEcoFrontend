@@ -19,7 +19,7 @@ const features = [
     tag: "Personalization",
     title: "Context-aware messages",
     description: "Generate messages that feel personal, not automated — tailored using basic lead data and context you provide.",
-    color: "violet",
+    color: "teal",
     icon: (
       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
@@ -63,10 +63,10 @@ const features = [
 ];
 
 const colorMap = {
-  violet: { icon: "bg-violet-500/15 text-violet-400 border-violet-500/20", tag: "text-violet-400 bg-violet-500/10 border-violet-500/20" },
-  blue:   { icon: "bg-blue-500/15 text-blue-400 border-blue-500/20",     tag: "text-blue-400 bg-blue-500/10 border-blue-500/20" },
-  emerald:{ icon: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20", tag: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
-  amber:  { icon: "bg-amber-500/15 text-amber-400 border-amber-500/20",  tag: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
+  teal:   { icon: "bg-[#0F5E6E]/10 text-[#0F5E6E] border-[#0F5E6E]/20", tag: "text-[#0F5E6E] bg-[#0F5E6E]/5 border-[#0F5E6E]/20" },
+  blue:   { icon: "bg-blue-50 text-blue-600 border-blue-200",             tag: "text-blue-600 bg-blue-50 border-blue-200" },
+  emerald:{ icon: "bg-emerald-50 text-emerald-600 border-emerald-200",     tag: "text-emerald-600 bg-emerald-50 border-emerald-200" },
+  amber:  { icon: "bg-amber-50 text-amber-600 border-amber-200",           tag: "text-amber-600 bg-amber-50 border-amber-200" },
 };
 
 const FeatureCard = ({ feature, delay }) => {
@@ -81,7 +81,7 @@ const FeatureCard = ({ feature, delay }) => {
         transform: inView ? "translateY(0)" : "translateY(28px)",
         transition: `opacity 0.6s ease ${delay}ms, transform 0.6s ease ${delay}ms`,
       }}
-      className="group rounded-2xl border border-white/5 bg-white/3 p-6 hover:border-white/10 hover:bg-white/5 transition-colors duration-300"
+      className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:border-[#0F5E6E]/20 hover:shadow-md transition-all duration-300"
     >
       <div className={`mb-4 inline-flex items-center justify-center rounded-xl border p-2.5 ${c.icon}`}>
         {feature.icon}
@@ -91,11 +91,11 @@ const FeatureCard = ({ feature, delay }) => {
         {feature.tag}
       </span>
 
-      <h3 className="mt-3 text-base font-semibold text-white">
+      <h3 className="mt-3 text-base font-semibold text-[#1A2E35]">
         {feature.title}
       </h3>
 
-      <p className="mt-2 text-sm leading-relaxed text-slate-400">
+      <p className="mt-2 text-sm leading-relaxed text-[#6B7280]">
         {feature.description}
       </p>
     </div>
@@ -106,12 +106,12 @@ const Solution = () => {
   const [headerRef, headerInView] = useInView(0.2);
 
   return (
-    <section className="relative bg-slate-950 py-24 sm:py-32">
-      <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-white/10 to-transparent" />
+    <section className="relative bg-[#FFFBF5] py-24 sm:py-32">
+      <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent" />
 
       {/* Subtle center glow */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="h-96 w-96 rounded-full bg-violet-600/10 blur-3xl" />
+        <div className="h-96 w-96 rounded-full bg-[#0F5E6E]/5 blur-3xl" />
       </div>
 
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -126,19 +126,19 @@ const Solution = () => {
           }}
           className="mx-auto max-w-2xl text-center"
         >
-          <div className="inline-flex items-center gap-2 rounded-full border border-violet-500/20 bg-violet-500/10 px-4 py-1.5 text-sm font-medium text-violet-300">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#0F5E6E]/20 bg-[#0F5E6E]/5 px-4 py-1.5 text-sm font-medium text-[#0F5E6E]">
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
             </svg>
             The Solution
           </div>
 
-          <h2 className="mt-5 text-4xl font-bold tracking-tight text-white sm:text-5xl">
+          <h2 className="mt-5 text-4xl font-bold tracking-tight text-[#1A2E35] sm:text-5xl">
             Stay consistent without{" "}
-            <span className="text-violet-400">extra effort</span>
+            <span className="text-[#0F5E6E]">extra effort</span>
           </h2>
 
-          <p className="mt-4 text-lg text-slate-400">
+          <p className="mt-4 text-lg text-[#6B7280]">
             AGE works in the background so your follow-ups never depend on memory or manual work.
           </p>
         </div>

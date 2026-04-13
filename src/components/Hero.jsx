@@ -26,7 +26,7 @@ const Hero = () => {
         .hero-anim-5 { animation: fadeUp 0.7s ease 0.62s forwards;   opacity: 0; }
         .blob-float  { animation: floatBlob 9s ease-in-out infinite; }
         .gradient-text {
-          background: linear-gradient(135deg, #a78bfa, #818cf8, #a78bfa);
+          background: linear-gradient(135deg, #2D8FA2, #0F5E6E, #2D8FA2);
           background-size: 200% auto;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -35,13 +35,13 @@ const Hero = () => {
         }
       `}</style>
 
-      <section className="relative flex min-h-screen items-center overflow-hidden bg-slate-950">
+      <section className="relative flex min-h-screen items-center overflow-hidden bg-[#1A2E35]">
 
         {/* Blobs */}
         <div className="pointer-events-none absolute inset-0">
-          <div className="blob-float absolute left-1/2 -top-40 h-160 w-240 -translate-x-1/2 rounded-full bg-violet-600/20 blur-3xl" />
-          <div className="absolute -left-40 top-1/2 h-80 w-80 -translate-y-1/2 rounded-full bg-indigo-700/15 blur-3xl" />
-          <div className="absolute -right-40 top-1/3 h-80 w-80 rounded-full bg-violet-900/20 blur-3xl" />
+          <div className="blob-float absolute left-1/2 -top-40 h-160 w-240 -translate-x-1/2 rounded-full bg-[#0F5E6E]/25 blur-3xl" />
+          <div className="absolute -left-40 top-1/2 h-80 w-80 -translate-y-1/2 rounded-full bg-[#0F5E6E]/10 blur-3xl" />
+          <div className="absolute -right-40 top-1/3 h-80 w-80 rounded-full bg-[#0F5E6E]/15 blur-3xl" />
         </div>
 
         {/* Grid texture */}
@@ -54,17 +54,17 @@ const Hero = () => {
           }}
         />
 
-        {/* Bottom fade to black */}
-        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-40 bg-linear-to-t from-slate-950 to-transparent" />
+        {/* Bottom fade */}
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-40 bg-linear-to-t from-[#FFFBF5] to-transparent" />
 
         {/* Content */}
         <div className="relative mx-auto w-full max-w-5xl px-4 py-32 text-center sm:px-6 lg:px-8">
 
           {/* Badge */}
-          <div className="hero-anim-1 inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-300 backdrop-blur-sm">
+          <div className="hero-anim-1 inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white/70 backdrop-blur-sm">
             <span className="relative flex h-2 w-2 shrink-0">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-400" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#E8563A] opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#E8563A]" />
             </span>
             Lead Follow-Up Automation · Built for Sales Teams
           </div>
@@ -76,7 +76,7 @@ const Hero = () => {
           </h1>
 
           {/* Sub */}
-          <p className="hero-anim-3 mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-slate-400 sm:text-xl">
+          <p className="hero-anim-3 mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/60 sm:text-xl">
             AGE sends automatic, personalized follow-ups so your team stays consistent,
             responds on time, and closes more deals.
           </p>
@@ -85,7 +85,7 @@ const Hero = () => {
           <div className="hero-anim-4 mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <button
               onClick={() => navigate("/sign-up")}
-              className="group inline-flex items-center gap-2 rounded-xl bg-violet-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-violet-950/60 transition hover:bg-violet-500"
+              className="group inline-flex items-center gap-2 rounded-xl bg-[#E8563A] px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#E8563A]/30 transition hover:bg-[#d14b30]"
             >
               Get Started Free
               <svg
@@ -100,7 +100,7 @@ const Hero = () => {
               onClick={() => window.open("https://calendly.com/076pandeypratham/30min", "_blank")}
               className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/10"
             >
-              <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="h-4 w-4 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
               </svg>
               Book a Demo
@@ -111,27 +111,27 @@ const Hero = () => {
           <div className="hero-anim-5 mx-auto mt-20 flex max-w-md flex-wrap items-center justify-center gap-x-10 gap-y-8">
             <div className="text-center">
               <p className="text-3xl font-bold text-white">70%</p>
-              <p className="mt-1 text-xs font-medium uppercase tracking-widest text-slate-500">leads go cold</p>
+              <p className="mt-1 text-xs font-medium uppercase tracking-widest text-white/40">leads go cold</p>
             </div>
 
             <div className="hidden h-10 w-px bg-white/10 sm:block" />
 
             <div className="text-center">
               <p className="text-3xl font-bold text-white">3×</p>
-              <p className="mt-1 text-xs font-medium uppercase tracking-widest text-slate-500">more replies</p>
+              <p className="mt-1 text-xs font-medium uppercase tracking-widest text-white/40">more replies</p>
             </div>
 
             <div className="hidden h-10 w-px bg-white/10 sm:block" />
 
             <div className="text-center">
               <p className="text-3xl font-bold text-white">24/7</p>
-              <p className="mt-1 text-xs font-medium uppercase tracking-widest text-slate-500">auto follow-ups</p>
+              <p className="mt-1 text-xs font-medium uppercase tracking-widest text-white/40">auto follow-ups</p>
             </div>
           </div>
 
           {/* Scroll hint */}
           <div className="hero-anim-5 mt-20 flex justify-center">
-            <div className="flex flex-col items-center gap-1.5 text-xs text-slate-600">
+            <div className="flex flex-col items-center gap-1.5 text-xs text-white/25">
               <svg className="h-4 w-4 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
               </svg>

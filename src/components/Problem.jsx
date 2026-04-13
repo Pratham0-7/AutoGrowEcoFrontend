@@ -74,25 +74,25 @@ const ProblemCard = ({ problem, delay }) => {
         transform: inView ? "translateY(0)" : "translateY(28px)",
         transition: `opacity 0.6s ease ${delay}ms, transform 0.6s ease ${delay}ms`,
       }}
-      className="group relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.03] p-6 hover:border-rose-500/20 hover:bg-rose-500/[0.04] transition-colors duration-300"
+      className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:border-rose-300 hover:shadow-md transition-all duration-300"
     >
       {/* Number watermark */}
-      <span className="absolute right-4 top-3 text-5xl font-black text-white/[0.04] select-none group-hover:text-rose-500/10 transition-colors duration-300">
+      <span className="absolute right-4 top-3 text-5xl font-black text-[#1A2E35]/5 select-none group-hover:text-rose-500/10 transition-colors duration-300">
         {problem.number}
       </span>
 
       {/* Icon */}
-      <div className="mb-4 inline-flex items-center justify-center rounded-xl border border-rose-500/20 bg-rose-500/10 p-2.5 text-rose-400">
+      <div className="mb-4 inline-flex items-center justify-center rounded-xl border border-rose-200 bg-rose-50 p-2.5 text-rose-500">
         {problem.icon}
       </div>
 
       {/* Title */}
-      <h3 className="text-base font-semibold text-white">
+      <h3 className="text-base font-semibold text-[#1A2E35]">
         {problem.title}
       </h3>
 
       {/* Description */}
-      <p className="mt-2.5 text-sm leading-relaxed text-slate-400">
+      <p className="mt-2.5 text-sm leading-relaxed text-[#6B7280]">
         {problem.description}
       </p>
     </div>
@@ -103,9 +103,9 @@ const Problem = () => {
   const [headerRef, headerInView] = useInView(0.2);
 
   return (
-    <section className="relative bg-slate-950 py-24 sm:py-32">
+    <section className="relative bg-[#FFFBF5] py-24 sm:py-32">
       {/* Subtle top separator */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent" />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
@@ -119,18 +119,18 @@ const Problem = () => {
           }}
           className="mx-auto max-w-2xl text-center"
         >
-          <div className="inline-flex items-center gap-2 rounded-full border border-rose-500/20 bg-rose-500/10 px-4 py-1.5 text-sm font-medium text-rose-400">
+          <div className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-4 py-1.5 text-sm font-medium text-rose-500">
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
             </svg>
             The Problem
           </div>
 
-          <h2 className="mt-5 text-4xl font-bold tracking-tight text-white sm:text-5xl">
+          <h2 className="mt-5 text-4xl font-bold tracking-tight text-[#1A2E35] sm:text-5xl">
             Why your leads go cold
           </h2>
 
-          <p className="mt-4 text-lg text-slate-400">
+          <p className="mt-4 text-lg text-[#6B7280]">
             It's rarely a lack of leads. It's inconsistent follow-up — and it's costing you deals every week.
           </p>
         </div>
@@ -144,11 +144,10 @@ const Problem = () => {
 
         {/* Bottom callout */}
         <div
-          className="mx-auto mt-16 max-w-2xl rounded-2xl border border-rose-500/15 bg-rose-500/[0.05] px-6 py-5 text-center"
-          style={{ opacity: 1 }}
+          className="mx-auto mt-16 max-w-2xl rounded-2xl border border-rose-200 bg-rose-50 px-6 py-5 text-center"
         >
-          <p className="text-sm text-slate-300">
-            <span className="font-semibold text-rose-400">The result?</span>{" "}
+          <p className="text-sm text-[#1A2E35]">
+            <span className="font-semibold text-rose-500">The result?</span>{" "}
             Warm leads turn cold. Good conversations go nowhere. Revenue gets left on the table — not because of a bad product, but because of a broken process.
           </p>
         </div>

@@ -71,16 +71,16 @@ const bottomPills = [
 ];
 
 const SourceLine = ({ children }) => (
-  <p className="mt-3 text-xs leading-relaxed text-slate-400">{children}</p>
+  <p className="mt-3 text-xs leading-relaxed text-[#6B7280]">{children}</p>
 );
 
-const SimpleBarChart = ({ data, maxValue, colorClass = "bg-violet-600" }) => {
+const SimpleBarChart = ({ data, maxValue, colorClass = "bg-[#0F5E6E]" }) => {
   return (
     <div className="mt-6">
       <div className="flex h-56 items-end gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 pb-4 pt-6">
         {data.map((item) => (
           <div key={item.label} className="flex flex-1 flex-col items-center justify-end gap-3">
-            <span className="text-sm font-bold text-slate-900">
+            <span className="text-sm font-bold text-[#1A2E35]">
               {item.display || item.value}
             </span>
 
@@ -91,7 +91,7 @@ const SimpleBarChart = ({ data, maxValue, colorClass = "bg-violet-600" }) => {
               />
             </div>
 
-            <span className="text-center text-xs font-medium text-slate-500">
+            <span className="text-center text-xs font-medium text-[#6B7280]">
               {item.label}
             </span>
           </div>
@@ -107,7 +107,7 @@ const WhyItWorks = () => {
   const [statsRef, statsInView] = useInView(0.1);
 
   return (
-    <section className="relative bg-white py-24 sm:py-32">
+    <section className="relative bg-[#FFFBF5] py-24 sm:py-32">
       <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent" />
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -120,7 +120,7 @@ const WhyItWorks = () => {
           }}
           className="mx-auto max-w-3xl text-center"
         >
-          <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-4 py-1.5 text-sm font-medium text-violet-600">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#0F5E6E]/20 bg-[#0F5E6E]/5 px-4 py-1.5 text-sm font-medium text-[#0F5E6E]">
             <svg
               className="h-3.5 w-3.5"
               fill="none"
@@ -137,11 +137,11 @@ const WhyItWorks = () => {
             Why it works
           </div>
 
-          <h2 className="mt-5 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-            The numbers behind <span className="text-violet-600">missed conversions.</span>
+          <h2 className="mt-5 text-4xl font-bold tracking-tight text-[#1A2E35] sm:text-5xl">
+            The numbers behind <span className="text-[#0F5E6E]">missed conversions.</span>
           </h2>
 
-          <p className="mt-4 text-lg text-slate-500">
+          <p className="mt-4 text-lg text-[#6B7280]">
             AGE is built around what actually moves leads: fast response, repeated follow-up,
             and consistent outreach across channels.
           </p>
@@ -158,13 +158,13 @@ const WhyItWorks = () => {
         >
           <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-200 px-8 py-6">
-              <p className="text-sm font-semibold uppercase tracking-widest text-violet-600">
+              <p className="text-sm font-semibold uppercase tracking-widest text-[#0F5E6E]">
                 Response speed
               </p>
-              <h3 className="mt-2 text-2xl font-bold text-slate-900">
+              <h3 className="mt-2 text-2xl font-bold text-[#1A2E35]">
                 Fast follow-up wins more leads
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-500">
+              <p className="mt-2 text-sm leading-relaxed text-[#6B7280]">
                 Conversion performance is far stronger when outreach happens in the first five minutes.
               </p>
             </div>
@@ -174,7 +174,7 @@ const WhyItWorks = () => {
               <SourceLine>Source: InsideSales research</SourceLine>
             </div>
 
-            <div className="border-t border-slate-200 bg-violet-600 px-8 py-4 text-center">
+            <div className="border-t border-slate-200 bg-[#0F5E6E] px-8 py-4 text-center">
               <p className="text-sm font-medium text-white">
                 The faster the first follow-up, the higher the conversion potential.
               </p>
@@ -183,13 +183,13 @@ const WhyItWorks = () => {
 
           <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-200 px-8 py-6">
-              <p className="text-sm font-semibold uppercase tracking-widest text-violet-600">
+              <p className="text-sm font-semibold uppercase tracking-widest text-[#0F5E6E]">
                 Follow-up depth
               </p>
-              <h3 className="mt-2 text-2xl font-bold text-slate-900">
+              <h3 className="mt-2 text-2xl font-bold text-[#1A2E35]">
                 One message is rarely enough
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-500">
+              <p className="mt-2 text-sm leading-relaxed text-[#6B7280]">
                 New prospects usually need repeated touchpoints before they convert or book a meeting.
               </p>
             </div>
@@ -198,15 +198,15 @@ const WhyItWorks = () => {
               <SimpleBarChart
                 data={touchpointBars}
                 maxValue={8}
-                colorClass="bg-violet-500"
+                colorClass="bg-[#0F5E6E]/70"
               />
-              <p className="mt-4 text-sm leading-relaxed text-slate-500">
+              <p className="mt-4 text-sm leading-relaxed text-[#6B7280]">
                 AGE keeps the sequence going so your team does not stop after the first attempt.
               </p>
               <SourceLine>Source: RAIN Group</SourceLine>
             </div>
 
-            <div className="border-t border-slate-200 bg-violet-600 px-8 py-4 text-center">
+            <div className="border-t border-slate-200 bg-[#0F5E6E] px-8 py-4 text-center">
               <p className="text-sm font-medium text-white">
                 Repeated touchpoints beat one-off outreach.
               </p>
@@ -226,15 +226,15 @@ const WhyItWorks = () => {
           {statCards.map((card) => (
             <div
               key={card.title}
-              className="rounded-3xl border border-slate-200 bg-slate-50 p-6"
+              className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
             >
-              <p className="text-3xl font-bold tracking-tight text-violet-600">
+              <p className="text-3xl font-bold tracking-tight text-[#0F5E6E]">
                 {card.value}
               </p>
-              <h4 className="mt-3 text-base font-semibold text-slate-900">
+              <h4 className="mt-3 text-base font-semibold text-[#1A2E35]">
                 {card.title}
               </h4>
-              <p className="mt-2 text-sm leading-relaxed text-slate-500">
+              <p className="mt-2 text-sm leading-relaxed text-[#6B7280]">
                 {card.desc}
               </p>
               <SourceLine>{card.source}</SourceLine>
@@ -246,9 +246,9 @@ const WhyItWorks = () => {
           {bottomPills.map((pill) => (
             <span
               key={pill}
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-600"
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-[#1A2E35]"
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-violet-500" />
+              <span className="h-1.5 w-1.5 rounded-full bg-[#0F5E6E]" />
               {pill}
             </span>
           ))}
