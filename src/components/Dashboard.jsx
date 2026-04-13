@@ -12,6 +12,7 @@ import Individual from "./sections/Individual";
 import Pipeline   from "./sections/Pipeline";
 import Campaign   from "./sections/Campaign";
 import Import     from "./sections/Import";
+import Sequences  from "./sections/Sequences";
 
 const NAV_ITEMS = [
   { key: "overview",   label: "Overview",   icon: ICONS.home     },
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { key: "individual", label: "Individual", icon: ICONS.star     },
   { key: "pipeline",   label: "Pipeline",   icon: ICONS.pipeline },
   { key: "campaign",   label: "Campaigns",  icon: ICONS.mail     },
+  { key: "sequences",  label: "Sequences",  icon: ICONS.zap      },
   { key: "import",     label: "Import",     icon: ICONS.upload   },
 ];
 
@@ -28,6 +30,7 @@ const SECTION_SUBTITLE = (total, indCount, filtered, convRate) => ({
   individual: `${indCount} personal-touch sequences`,
   pipeline:   "Visual deal stages",
   campaign:   "Email & SMS outreach",
+  sequences:  "12-step · 75-day automated follow-up",
   import:     "Import leads from CSV or Google Sheets",
 });
 
@@ -143,6 +146,7 @@ const Dashboard = () => {
           {activeSection === "individual" && <Individual leads={individualLeads} leadSchedules={leadSchedules} updateLeadSchedule={updateLeadSchedule} onSelectLead={setSelectedLead} onStartFollowup={startFollowup} onRemove={(id) => markIndividual(id, false)} onGoToContacts={() => navigate("contacts")} />}
           {activeSection === "pipeline"   && <Pipeline   leads={leads} onSelectLead={setSelectedLead} />}
           {activeSection === "campaign"   && <Campaign   leads={leads} individualLeads={individualLeads} emailSubject={emailSubject} setEmailSubject={setEmailSubject} messageTemplate={messageTemplate} setMessageTemplate={setMessageTemplate} companyId={company_id} fetchLeads={fetchLeads} onViewIndividual={() => navigate("individual")} onOpenAI={() => setIsAIAssistOpen(true)} />}
+          {activeSection === "sequences"  && <Sequences  leads={leads} companyId={company_id} fetchLeads={fetchLeads} />}
           {activeSection === "import"     && <Import     companyId={company_id} userId={user_id} fetchLeads={fetchLeads} />}
         </main>
       </div>
