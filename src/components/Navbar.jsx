@@ -32,20 +32,18 @@ const Navbar = () => {
           : "bg-transparent"
       }`}
     >
-      {/* Desktop bar */}
-      <div className="mx-auto hidden max-w-7xl grid-cols-3 items-center px-6 py-5 md:grid lg:px-8">
-        {/* Left */}
+      {/* Desktop */}
+      <div className="mx-auto hidden max-w-7xl grid-cols-3 items-center px-6 py-4 md:grid lg:px-8">
         <div className="flex items-center gap-1">
           <button onClick={() => go("/pricing")} className={linkCls}>
             Pricing
           </button>
         </div>
 
-        {/* Center */}
         <div className="flex justify-center">
-          <button onClick={() => go("/")} className="flex items-center gap-3">
+          <button onClick={() => go("/")} className="flex items-center gap-2.5">
             <div
-              className={`flex h-12 w-12 items-center justify-center rounded-2xl text-lg font-bold transition-all duration-300 ${
+              className={`flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold transition-all duration-300 ${
                 scrolled
                   ? "bg-[#0F5E6E] text-white"
                   : "bg-white/5 text-white/70"
@@ -63,7 +61,6 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Right */}
         <div className="flex items-center justify-end gap-3">
           <button onClick={() => go("/sign-in")} className={linkCls}>
             Login
@@ -71,7 +68,7 @@ const Navbar = () => {
 
           <button
             onClick={() => go("/sign-up")}
-            className={`rounded-2xl px-6 py-3 text-sm font-semibold transition-all duration-300 ${
+            className={`rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-300 ${
               scrolled
                 ? "bg-[#E8563A] text-white shadow-sm hover:bg-[#d14b30]"
                 : "border border-white/5 bg-white/5 text-white/65 hover:bg-white/10 hover:text-white/85"
@@ -82,11 +79,11 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile bar */}
+      {/* Mobile */}
       <div className="flex items-center justify-between px-4 py-4 md:hidden">
         <button onClick={() => go("/")} className="flex items-center gap-2">
           <div
-            className={`flex h-9 w-9 items-center justify-center rounded-xl text-xs font-bold transition-all duration-300 ${
+            className={`flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold transition-all duration-300 ${
               scrolled
                 ? "bg-[#0F5E6E] text-white"
                 : "bg-white/5 text-white/70"

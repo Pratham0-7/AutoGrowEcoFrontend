@@ -54,7 +54,6 @@ const Hero = () => {
         />
 
         {/* Softer bottom fade */}
-        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#FFFBF5] to-transparent" />
 
         {/* Content */}
         <div className="relative mx-auto w-full max-w-5xl px-4 py-20 text-center sm:px-6 lg:px-8">
