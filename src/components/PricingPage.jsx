@@ -31,9 +31,9 @@ const Footer = () => {
 
 const PricingPage = () => {
   return (
-    <div className="bg-[#FFFBF5] text-[#1A2E35]">
-      <Navbar />
-      <main>
+    <div className="bg-[#FFFBF5] text-[#1A2E35] min-h-screen">
+      <Navbar variant="light" />
+      <main className="pt-20">
         <Pricing />
       </main>
       <Footer />
