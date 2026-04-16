@@ -75,13 +75,13 @@ const GoogleSheetCard = ({ companyId, userId }) => {
     : "never";
 
   return (
-    <div style={{ background: "#0D1117", border: "1px solid #1E293B", borderRadius: 16, overflow: "hidden" }}>
-      <div style={{ padding: "16px 20px", borderBottom: "1px solid #1E293B", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+    <div style={{ background: "#142830", border: "1px solid #1E3D47", borderRadius: 16, overflow: "hidden" }}>
+      <div style={{ padding: "16px 20px", borderBottom: "1px solid #1E3D47", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ background: "#0D2A1A", border: "1px solid #14532D44", borderRadius: 10, width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>📊</div>
           <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#E2E8F0", margin: 0 }}>Google Sheets</p>
-            <p style={{ fontSize: 11, color: "#4B5563", margin: 0 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF", margin: 0 }}>Google Sheets</p>
+            <p style={{ fontSize: 11, color: "#6B8E95", margin: 0 }}>
               {connected ? `Auto-syncs every 20 min · Last: ${fmtTime(lastSynced)}` : "Connect a public sheet to sync leads automatically"}
             </p>
           </div>
@@ -119,9 +119,9 @@ const GoogleSheetCard = ({ companyId, userId }) => {
           </div>
         ) : (
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ color: "#4ADE80", fontSize: 16 }}>✓</span>
+            <span style={{ color: "#22C55E", fontSize: 16 }}>✓</span>
             <div>
-              <p style={{ fontSize: 12, color: "#64748B", margin: "0 0 2px" }}>Connected sheet</p>
+              <p style={{ fontSize: 12, color: "#6B8E95", margin: "0 0 2px" }}>Connected sheet</p>
               <a href={sheetUrl} target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: 12, color: "#60A5FA", textDecoration: "none", wordBreak: "break-all" }}>
                 {sheetUrl}
@@ -133,10 +133,10 @@ const GoogleSheetCard = ({ companyId, userId }) => {
         {status && (
           <div style={{
             marginTop: 12,
-            background: status.type === "success" ? "#052E16" : "#2D0A0A",
-            border: `1px solid ${status.type === "success" ? "#16A34A44" : "#DC262644"}`,
+            background: status.type === "success" ? "#0D3D20" : "#2D0A0A",
+            border: `1px solid ${status.type === "success" ? "#22C55E44" : "#DC262644"}`,
             borderRadius: 10, padding: "10px 14px", fontSize: 12,
-            color: status.type === "success" ? "#4ADE80" : "#F87171",
+            color: status.type === "success" ? "#22C55E" : "#EF4444",
             display: "flex", alignItems: "center", gap: 8,
           }}>
             <span>{status.type === "success" ? "✓" : "✗"}</span>

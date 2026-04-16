@@ -16,13 +16,13 @@ const Individual = ({ leads, leadSchedules, updateLeadSchedule, onStartFollowup,
       </div>
     </div>
 
-    <div style={{ background: "#0D1117", border: "1px solid #1E293B", borderRadius: 16, overflow: "hidden" }}>
-      <div style={{ padding: "14px 20px", borderBottom: "1px solid #1E293B", display: "flex", alignItems: "center", gap: 8 }}>
-        <h2 style={{ fontSize: 14, fontWeight: 700, color: "#F1F5F9", margin: 0 }}>Individual Pool</h2>
+    <div style={{ background: "#142830", border: "1px solid #1E3D47", borderRadius: 16, overflow: "hidden" }}>
+      <div style={{ padding: "14px 20px", borderBottom: "1px solid #1E3D47", display: "flex", alignItems: "center", gap: 8 }}>
+        <h2 style={{ fontSize: 14, fontWeight: 700, color: "#FFFFFF", margin: 0 }}>Individual Pool</h2>
         <span style={{ background: "#1C1505", color: "#FCD34D", border: "1px solid #D9770633", borderRadius: 100, padding: "2px 9px", fontSize: 11, fontWeight: 700 }}>
           {leads.length}
         </span>
-        <p style={{ fontSize: 11, color: "#374151", margin: "0 0 0 auto" }}>
+        <p style={{ fontSize: 11, color: "#6B8E95", margin: "0 0 0 auto" }}>
           Add from Contacts using the <span style={{ color: "#FCD34D" }}>★ +</span> button
         </p>
       </div>
@@ -30,31 +30,31 @@ const Individual = ({ leads, leadSchedules, updateLeadSchedule, onStartFollowup,
       {leads.length === 0 ? (
         <div style={{ padding: "60px 24px", textAlign: "center" }}>
           <div style={{ fontSize: 32, marginBottom: 10 }}>★</div>
-          <p style={{ fontSize: 14, color: "#4B5563", fontWeight: 500, margin: "0 0 4px" }}>No individual leads yet</p>
-          <p style={{ fontSize: 12, color: "#374151", margin: "0 0 16px" }}>Go to Contacts and click the <b style={{ color: "#FCD34D" }}>+</b> on any row.</p>
+          <p style={{ fontSize: 14, color: "#6B8E95", fontWeight: 500, margin: "0 0 4px" }}>No individual leads yet</p>
+          <p style={{ fontSize: 12, color: "#6B8E95", margin: "0 0 16px" }}>Go to Contacts and click the <b style={{ color: "#FCD34D" }}>+</b> on any row.</p>
           <button onClick={onGoToContacts} className="crm-btn-primary">Go to Contacts</button>
         </div>
       ) : (
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
             <thead>
-              <tr style={{ background: "#070D16" }}>
+              <tr style={{ background: "#0D1F24" }}>
                 {["Contact","Status","Follow-ups","Last Sent","Next","Channel","Gap","Action","Remove"].map((h) => (
-                  <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: 1, whiteSpace: "nowrap", borderBottom: "1px solid #1E293B" }}>{h}</th>
+                  <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1, whiteSpace: "nowrap", borderBottom: "1px solid #1E3D47" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {leads.map((lead) => (
-                <tr key={lead._id} className="lead-row" onClick={() => onSelectLead(lead)} style={{ borderBottom: "1px solid #0A0F1C" }}>
+                <tr key={lead._id} className="lead-row" onClick={() => onSelectLead(lead)} style={{ borderBottom: "1px solid #1E3D47" }}>
                   <td style={{ padding: "12px 16px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <div style={{ width: 32, height: 32, borderRadius: "50%", background: avatarColor(lead.name), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "white", flexShrink: 0 }}>
                         {getInitial(lead.name)}
                       </div>
                       <div>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: "#E2E8F0", margin: 0 }}>{lead.name || "—"}</p>
-                        <p style={{ fontSize: 11, color: "#374151", margin: 0 }}>{lead.email || lead.phone || "—"}</p>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF", margin: 0 }}>{lead.name || "—"}</p>
+                        <p style={{ fontSize: 11, color: "#6B8E95", margin: 0 }}>{lead.email || lead.phone || "—"}</p>
                       </div>
                     </div>
                   </td>
@@ -65,13 +65,13 @@ const Individual = ({ leads, leadSchedules, updateLeadSchedule, onStartFollowup,
                     </div>
                   </td>
                   <td style={{ padding: "12px 16px", textAlign: "center" }}>
-                    <span style={{ background: "#1E1B4B", color: "#818CF8", border: "1px solid #312E81", borderRadius: 8, padding: "3px 10px", fontWeight: 700 }}>{lead.followup_count || 0}</span>
+                    <span style={{ background: "#123B45", color: "#9FE6F2", border: "1px solid #1A8A9E44", borderRadius: 8, padding: "3px 10px", fontWeight: 700 }}>{lead.followup_count || 0}</span>
                   </td>
-                  <td style={{ padding: "12px 16px", color: "#4B5563", fontSize: 11, whiteSpace: "nowrap" }}>{formatDate(lead.last_followup_sent_at)}</td>
+                  <td style={{ padding: "12px 16px", color: "#6B8E95", fontSize: 11, whiteSpace: "nowrap" }}>{formatDate(lead.last_followup_sent_at)}</td>
                   <td style={{ padding: "12px 16px", fontSize: 11, whiteSpace: "nowrap" }}>
                     {lead.next_followup_at
                       ? <span style={{ color: "#FCD34D" }}>{formatDate(lead.next_followup_at)}</span>
-                      : <span style={{ color: "#374151" }}>Not started</span>}
+                      : <span style={{ color: "#6B8E95" }}>Not started</span>}
                   </td>
                   <td style={{ padding: "12px 16px" }} onClick={(e) => e.stopPropagation()}>
                     <select value={leadSchedules[lead._id]?.channel || "email"}
@@ -97,9 +97,9 @@ const Individual = ({ leads, leadSchedules, updateLeadSchedule, onStartFollowup,
                   </td>
                   <td style={{ padding: "12px 16px" }} onClick={(e) => e.stopPropagation()}>
                     <button onClick={() => onRemove(lead._id)}
-                      style={{ background: "#0D1117", border: "1px solid #1E293B", color: "#4B5563", borderRadius: 8, width: 30, height: 30, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all .15s" }}
+                      style={{ background: "#142830", border: "1px solid #1E3D47", color: "#6B8E95", borderRadius: 8, width: 30, height: 30, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all .15s" }}
                       onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#EF4444"; e.currentTarget.style.color = "#EF4444"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1E293B"; e.currentTarget.style.color = "#4B5563"; }}>
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1E3D47"; e.currentTarget.style.color = "#6B8E95"; }}>
                       <Icon d={ICONS.minus} size={12} />
                     </button>
                   </td>

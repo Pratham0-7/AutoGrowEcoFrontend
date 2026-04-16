@@ -52,8 +52,8 @@ const Contacts = ({
   return (
     <div
       style={{
-        background: "#0D1117",
-        border: "1px solid #1E293B",
+        background: "#142830",
+        border: "1px solid #1E3D47",
         borderRadius: 16,
         overflow: "hidden",
       }}
@@ -61,7 +61,7 @@ const Contacts = ({
       <div
         style={{
           padding: "14px 20px",
-          borderBottom: "1px solid #1E293B",
+          borderBottom: "1px solid #1E3D47",
           display: "flex",
           gap: 10,
           alignItems: "center",
@@ -74,7 +74,7 @@ const Contacts = ({
             style={{
               fontSize: 14,
               fontWeight: 700,
-              color: "#F1F5F9",
+              color: "#FFFFFF",
               margin: 0,
             }}
           >
@@ -82,9 +82,9 @@ const Contacts = ({
           </h2>
           <span
             style={{
-              background: "#1E1B4B",
-              color: "#818CF8",
-              border: "1px solid #312E81",
+              background: "#123B45",
+              color: "#9FE6F2",
+              border: "1px solid #1A8A9E44",
               borderRadius: 100,
               padding: "2px 9px",
               fontSize: 11,
@@ -109,7 +109,7 @@ const Contacts = ({
                 left: 10,
                 top: "50%",
                 transform: "translateY(-50%)",
-                color: "#374151",
+                color: "#6B8E95",
               }}
             >
               <Icon d={ICONS.search} size={13} />
@@ -183,14 +183,14 @@ const Contacts = ({
           <p
             style={{
               fontSize: 14,
-              color: "#4B5563",
+              color: "#6B8E95",
               fontWeight: 500,
               margin: "0 0 4px",
             }}
           >
             No contacts yet
           </p>
-          <p style={{ fontSize: 12, color: "#374151", margin: "0 0 16px" }}>
+          <p style={{ fontSize: 12, color: "#6B8E95", margin: "0 0 16px" }}>
             Upload a CSV / Excel file or connect Google Sheets
           </p>
           <button onClick={onGoToImport} className="crm-btn-primary">
@@ -208,7 +208,7 @@ const Contacts = ({
               }}
             >
               <thead>
-                <tr style={{ background: "#070D16" }}>
+                <tr style={{ background: "#0D1F24" }}>
                   {[
                     "#",
                     "Contact",
@@ -228,11 +228,11 @@ const Contacts = ({
                         textAlign: "left",
                         fontSize: 10,
                         fontWeight: 700,
-                        color: "#374151",
+                        color: "#6B8E95",
                         textTransform: "uppercase",
                         letterSpacing: 1,
                         whiteSpace: "nowrap",
-                        borderBottom: "1px solid #1E293B",
+                        borderBottom: "1px solid #1E3D47",
                       }}
                     >
                       {h}
@@ -247,14 +247,14 @@ const Contacts = ({
                     className="lead-row"
                     onClick={() => onSelectLead(lead)}
                     style={{
-                      borderBottom: "1px solid #0A0F1C",
+                      borderBottom: "1px solid #1E3D47",
                       opacity: lead.is_individual_followup ? 0.45 : 1,
                     }}
                   >
                     <td
                       style={{
                         padding: "12px 16px",
-                        color: "#374151",
+                        color: "#6B8E95",
                         fontWeight: 600,
                         fontSize: 11,
                       }}
@@ -304,9 +304,9 @@ const Contacts = ({
                                 style={{
                                   fontSize: 8,
                                   fontWeight: 700,
-                                  color: "#A78BFA",
-                                  background: "#1E1B4B",
-                                  border: "1px solid #4C1D95",
+                                  color: "#9FE6F2",
+                                  background: "#123B45",
+                                  border: "1px solid #1A8A9E44",
                                   borderRadius: 3,
                                   padding: "1px 4px",
                                 }}
@@ -332,7 +332,7 @@ const Contacts = ({
                           <div
                             style={{
                               fontSize: 11,
-                              color: "#374151",
+                              color: "#6B8E95",
                               marginTop: 1,
                             }}
                           >
@@ -350,9 +350,9 @@ const Contacts = ({
                     <td style={{ padding: "12px 16px", textAlign: "center" }}>
                       <span
                         style={{
-                          background: "#1E1B4B",
-                          color: "#818CF8",
-                          border: "1px solid #312E81",
+                          background: "#123B45",
+                          color: "#9FE6F2",
+                          border: "1px solid #1A8A9E44",
                           borderRadius: 8,
                           padding: "3px 10px",
                           fontWeight: 700,
@@ -365,7 +365,7 @@ const Contacts = ({
                     <td
                       style={{
                         padding: "12px 16px",
-                        color: "#4B5563",
+                        color: "#6B8E95",
                         fontSize: 11,
                         whiteSpace: "nowrap",
                       }}
@@ -375,7 +375,7 @@ const Contacts = ({
                     <td
                       style={{
                         padding: "12px 16px",
-                        color: "#4B5563",
+                        color: "#6B8E95",
                         fontSize: 11,
                         whiteSpace: "nowrap",
                       }}
@@ -448,7 +448,7 @@ const Contacts = ({
                         className="crm-btn-sm"
                         style={{
                           background:
-                            "linear-gradient(135deg, #6D28D9, #4F46E5)",
+                            "#1A8A9E",
                           color: "white",
                           border: "none",
                           whiteSpace: "nowrap",
@@ -484,9 +484,9 @@ const Contacts = ({
                           onClick={() => onMarkIndividual(lead._id, true)}
                           title="Add to Individual"
                           style={{
-                            background: "#0D1117",
-                            border: "1px solid #1E293B",
-                            color: "#4B5563",
+                            background: "#142830",
+                            border: "1px solid #1E3D47",
+                            color: "#6B8E95",
                             borderRadius: 8,
                             width: 30,
                             height: 30,
@@ -501,8 +501,8 @@ const Contacts = ({
                             e.currentTarget.style.color = "#FCD34D";
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.borderColor = "#1E293B";
-                            e.currentTarget.style.color = "#4B5563";
+                            e.currentTarget.style.borderColor = "#1E3D47";
+                            e.currentTarget.style.color = "#6B8E95";
                           }}
                         >
                           <Icon d={ICONS.plus} size={12} />
@@ -519,7 +519,7 @@ const Contacts = ({
             <div
               style={{
                 padding: "12px 20px",
-                borderTop: "1px solid #1E293B",
+                borderTop: "1px solid #1E3D47",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -527,7 +527,7 @@ const Contacts = ({
                 gap: 10,
               }}
             >
-              <span style={{ fontSize: 11, color: "#374151" }}>
+              <span style={{ fontSize: 11, color: "#6B8E95" }}>
                 {(currentPage - 1) * LEADS_PER_PAGE + 1}–
                 {Math.min(currentPage * LEADS_PER_PAGE, filtered.length)} of{" "}
                 {filtered.length}
@@ -554,7 +554,7 @@ const Contacts = ({
                   </div>
                 ))}
                 {totalPages > 7 && (
-                  <span style={{ color: "#374151", fontSize: 12 }}>…</span>
+                  <span style={{ color: "#6B8E95", fontSize: 12 }}>…</span>
                 )}
                 <div
                   className="page-btn"

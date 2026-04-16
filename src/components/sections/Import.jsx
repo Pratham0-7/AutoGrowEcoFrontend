@@ -32,14 +32,14 @@ const Import = ({ companyId, userId, fetchLeads }) => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ background: "#0D1117", border: "1px solid #1E293B", borderRadius: 16, overflow: "hidden" }}>
-        <div style={{ padding: "14px 20px", borderBottom: "1px solid #1E293B", display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ background: "#142830", border: "1px solid #1E3D47", borderRadius: 16, overflow: "hidden" }}>
+        <div style={{ padding: "14px 20px", borderBottom: "1px solid #1E3D47", display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ background: "#1E3A5F", borderRadius: 10, width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", color: "#60A5FA", flexShrink: 0 }}>
             <Icon d={ICONS.upload} size={15} />
           </div>
           <div>
-            <h2 style={{ fontSize: 13, fontWeight: 700, color: "#E2E8F0", margin: 0 }}>Upload File</h2>
-            <p style={{ fontSize: 11, color: "#374151", margin: 0 }}>CSV or Excel — columns: name, email, phone</p>
+            <h2 style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF", margin: 0 }}>Upload File</h2>
+            <p style={{ fontSize: 11, color: "#6B8E95", margin: 0 }}>CSV or Excel — columns: name, email, phone</p>
           </div>
         </div>
         <div style={{ padding: 22 }}>
@@ -52,10 +52,10 @@ const Import = ({ companyId, userId, fetchLeads }) => {
           {uploadStatus && (
             <div style={{
               marginTop: 14,
-              background: uploadStatus.type === "success" ? "#052E16" : uploadStatus.type === "loading" ? "#0A0F1C" : "#2D0A0A",
-              border: `1px solid ${uploadStatus.type === "success" ? "#16A34A44" : uploadStatus.type === "loading" ? "#1E293B" : "#DC262644"}`,
+              background: uploadStatus.type === "success" ? "#0D3D20" : uploadStatus.type === "loading" ? "#142830" : "#2D0A0A",
+              border: `1px solid ${uploadStatus.type === "success" ? "#22C55E44" : uploadStatus.type === "loading" ? "#1E3D47" : "#DC262644"}`,
               borderRadius: 10, padding: "10px 14px", fontSize: 12,
-              color: uploadStatus.type === "success" ? "#4ADE80" : uploadStatus.type === "loading" ? "#94A3B8" : "#F87171",
+              color: uploadStatus.type === "success" ? "#22C55E" : uploadStatus.type === "loading" ? "#6B8E95" : "#EF4444",
               display: "flex", gap: 8,
             }}>
               <span>{uploadStatus.type === "success" ? "✓" : uploadStatus.type === "loading" ? "⟳" : "✗"}</span>
@@ -69,10 +69,10 @@ const Import = ({ companyId, userId, fetchLeads }) => {
               <p style={{ fontSize: 11, color: "#78350F", margin: "0 0 10px" }}>These contacts already exist.</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
                 {duplicateWarnings.map((d, i) => (
-                  <div key={i} style={{ background: "#0D1117", border: "1px solid #1E293B", borderRadius: 8, padding: 10, fontSize: 11, color: "#94A3B8", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4 }}>
-                    <span><b style={{ color: "#CBD5E1" }}>Name:</b> {d.name || "—"}</span>
-                    <span><b style={{ color: "#CBD5E1" }}>Email:</b> {d.email || "—"}</span>
-                    <span><b style={{ color: "#CBD5E1" }}>Phone:</b> {d.phone || "—"}</span>
+                  <div key={i} style={{ background: "#142830", border: "1px solid #1E3D47", borderRadius: 8, padding: 10, fontSize: 11, color: "#6B8E95", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4 }}>
+                    <span><b style={{ color: "#FFFFFF" }}>Name:</b> {d.name || "—"}</span>
+                    <span><b style={{ color: "#FFFFFF" }}>Email:</b> {d.email || "—"}</span>
+                    <span><b style={{ color: "#FFFFFF" }}>Phone:</b> {d.phone || "—"}</span>
                     <span style={{ color: "#FCD34D" }}>By: {d.already_uploaded_by}</span>
                   </div>
                 ))}
