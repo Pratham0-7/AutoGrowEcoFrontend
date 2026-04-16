@@ -34,7 +34,7 @@ const NAV_ITEMS = [
   { key: "contacts", label: "Contacts", icon: ICONS.users },
   { key: "individual", label: "Individual", icon: ICONS.star },
   { key: "pipeline", label: "Pipeline", icon: ICONS.pipeline },
-  { key: "campaign", label: "Campaigns", icon: ICONS.mail },
+  { key: "campaign", label: "One Time Send", icon: ICONS.mail },
   { key: "sequences", label: "Sequences", icon: ICONS.zap },
   { key: "import", label: "Import", icon: ICONS.upload },
 ];
