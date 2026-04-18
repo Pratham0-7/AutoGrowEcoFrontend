@@ -48,11 +48,12 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
     .slice(0, 8);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <div className="overview-container" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div
+        className="stat-cards-grid"
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
           gap: 14,
         }}
       >
@@ -97,7 +98,7 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
         />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+      <div className="overview-grid-2" style={{ gap: 14 }}>
         <div
           style={{
             background: THEME.panel,
@@ -321,9 +322,10 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
       </div>
 
       <div
+        className="action-cards-grid"
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
           gap: 12,
         }}
       >
