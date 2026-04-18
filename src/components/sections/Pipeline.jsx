@@ -25,13 +25,13 @@ const PipelineCard = ({ lead, onClick }) => (
 );
 
 const PipelineColumn = ({ title, color, bg, leads, onLeadClick }) => (
-  <div className="pipeline-col" style={{ background: "#0D1F24", border: "1px solid #1E3D47", borderRadius: 14, padding: 14, minWidth: 220, flex: 1 }}>
+  <div style={{ background: "#0D1F24", border: "1px solid #1E3D47", borderRadius: 14, padding: 14, minWidth: 220, flex: 1 }}>
     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
       <div style={{ width: 9, height: 9, borderRadius: "50%", background: color, flexShrink: 0 }} />
       <span style={{ fontSize: 12, fontWeight: 700, color: "#FFFFFF" }}>{title}</span>
       <span style={{ background: bg, color, borderRadius: 100, padding: "1px 8px", fontSize: 10, fontWeight: 700, marginLeft: "auto" }}>{leads.length}</span>
     </div>
-    <div className="pipeline-col-inner" style={{ maxHeight: "calc(100vh - 280px)", overflowY: "auto" }}>
+    <div style={{ maxHeight: "calc(100vh - 280px)", overflowY: "auto" }}>
       {leads.length === 0
         ? <div style={{ textAlign: "center", padding: "28px 12px", color: "#6B8E95", fontSize: 11 }}>No leads here</div>
         : leads.map((l) => <PipelineCard key={l._id} lead={l} onClick={onLeadClick} />)
@@ -50,7 +50,7 @@ const Pipeline = ({ leads, onSelectLead }) => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="pipeline-cols" style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 8 }}>
+      <div style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 8 }}>
         <PipelineColumn title="New"        color="#6B8E95" bg="#1E3D47"  leads={pipeline.new}        onLeadClick={onSelectLead} />
         <PipelineColumn title="Contacted"  color="#60A5FA" bg="#1E3A5F"  leads={pipeline.contacted}  onLeadClick={onSelectLead} />
         <PipelineColumn title="Interested" color="#22C55E" bg="#0D3D20"  leads={pipeline.interested} onLeadClick={onSelectLead} />

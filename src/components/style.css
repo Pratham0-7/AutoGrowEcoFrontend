@@ -112,10 +112,4 @@
   .overview-grid-2 { grid-template-columns: 1fr !important; }
   .dashboard-header { padding: 0 14px !important; }
   .dashboard-main-content { padding: 14px !important; }
-  .pipeline-cols { flex-direction: column !important; overflow-x: visible !important; }
-  .pipeline-col { min-width: 0 !important; }
-  .pipeline-col-inner { max-height: 220px !important; }
-  .overview-container { overflow-x: hidden; }
-  .stat-cards-grid { grid-template-columns: repeat(2, 1fr) !important; }
-  .action-cards-grid { grid-template-columns: repeat(2, 1fr) !important; }
 }
