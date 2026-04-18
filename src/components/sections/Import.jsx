@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Icon from "../shared/Icon";
 import { ICONS } from "../shared/icons";
 import GoogleSheetCard from "../GoogleSheetCard";
@@ -9,6 +9,16 @@ const Import = ({ companyId, userId, fetchLeads }) => {
   const [file, setFile]                           = useState(null);
   const [uploadStatus, setUploadStatus]           = useState(null);
   const [duplicateWarnings, setDuplicateWarnings] = useState([]);
+  const [sequences, setSequences]                 = useState([]);
+  const [selectedSeqId, setSelectedSeqId]         = useState("");
+
+  useEffect(() => {
+    if (!companyId) return;
+    fetch(`${API_BASE_URL}/campaigns/sequence/${companyId}`)
+      .then((r) => r.json())
+      .then((d) => setSequences(d.sequences || []))
+      .catch(() => {});
+  }, [companyId]);
 
   const handleUpload = async (e) => {
     e.preventDefault();
@@ -17,12 +27,15 @@ const Import = ({ companyId, userId, fetchLeads }) => {
     formData.append("file", file);
     formData.append("company_id", companyId);
     formData.append("user_id", userId);
+    if (selectedSeqId) formData.append("campaign_id", selectedSeqId);
     setUploadStatus({ type: "loading", msg: "Uploading…" });
     try {
       const res  = await fetch(`${API_BASE_URL}/upload_leads`, { method: "POST", body: formData });
       const data = await res.json();
       if (res.ok) {
-        setUploadStatus({ type: "success", msg: data.message });
+        const seqName = sequences.find((s) => s._id === selectedSeqId)?.name;
+        const enrollMsg = seqName ? ` · enrolled in "${seqName}"` : "";
+        setUploadStatus({ type: "success", msg: data.message + enrollMsg });
         setDuplicateWarnings(data.duplicates || []);
         setFile(null);
         fetchLeads();
@@ -43,10 +56,34 @@ const Import = ({ companyId, userId, fetchLeads }) => {
           </div>
         </div>
         <div style={{ padding: 22 }}>
-          <form onSubmit={handleUpload} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-            <input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => setFile(e.target.files[0])}
-              className="crm-input" style={{ flex: 1, minWidth: 200, borderRadius: 10, padding: "9px 13px", fontSize: 12 }} />
-            <button type="submit" className="crm-btn-primary">Upload Leads</button>
+          <form onSubmit={handleUpload} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+              <input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => setFile(e.target.files[0])}
+                className="crm-input" style={{ flex: 1, minWidth: 200, borderRadius: 10, padding: "9px 13px", fontSize: 12 }} />
+              <button type="submit" className="crm-btn-primary">Upload Leads</button>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <label style={{ fontSize: 11, color: "#6B8E95", whiteSpace: "nowrap", flexShrink: 0 }}>
+                Auto-enroll in sequence
+              </label>
+              <select
+                value={selectedSeqId}
+                onChange={(e) => setSelectedSeqId(e.target.value)}
+                className="crm-input"
+                style={{ flex: 1, borderRadius: 8, padding: "8px 10px", fontSize: 12 }}
+              >
+                <option value="">— None (import only) —</option>
+                {sequences.map((s) => (
+                  <option key={s._id} value={s._id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
+            {selectedSeqId && (
+              <p style={{ fontSize: 11, color: "#9FE6F2", margin: 0 }}>
+                New leads will start at Step 1 immediately. Existing leads in the sequence are unaffected.
+              </p>
+            )}
           </form>
 
           {uploadStatus && (

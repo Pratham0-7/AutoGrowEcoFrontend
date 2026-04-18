@@ -67,7 +67,9 @@ const LeadDetailPanel = ({ lead, onClose, leadSchedules, updateLeadSchedule, han
               </div>
               <div>
                 <p style={{ fontSize: 10, color: "#6B8E95", margin: "0 0 4px" }}>Next Follow-up</p>
-                <p style={{ fontSize: 12, fontWeight: 600, color: "#FCD34D", margin: 0 }}>{formatDate(lead.next_followup_at)}</p>
+                <p style={{ fontSize: 12, fontWeight: 600, color: lead.next_followup_at && lead.campaign_id ? "#FCD34D" : "#6B8E95", margin: 0 }}>
+                  {lead.next_followup_at && lead.campaign_id ? formatDate(lead.next_followup_at) : "—"}
+                </p>
               </div>
               <div>
                 <p style={{ fontSize: 10, color: "#6B8E95", margin: "0 0 4px" }}>Campaign ID</p>

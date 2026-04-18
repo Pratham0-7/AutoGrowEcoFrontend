@@ -12,6 +12,21 @@ export const SendBadge = ({ status }) => {
   );
 };
 
+export const BounceBadge = ({ type }) => {
+  const label = type === "complaint" ? "Complaint" : type === "transient" ? "Soft Bounce" : "Bounced";
+  return (
+    <span style={{
+      background: "rgba(239,68,68,.12)", color: "#F87171",
+      border: "1px solid rgba(239,68,68,.25)", display: "inline-flex",
+      alignItems: "center", gap: 5, borderRadius: 100,
+      padding: "2px 10px", fontSize: 11, fontWeight: 600, whiteSpace: "nowrap",
+    }}>
+      <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#F87171", display: "inline-block", flexShrink: 0 }} />
+      {label}
+    </span>
+  );
+};
+
 export const ReplyBadge = ({ status }) => {
   const map = {
     yes: { label: "Interested", bg: "#0D3D20", color: "#22C55E", border: "#22C55E44", dot: "#22C55E" },

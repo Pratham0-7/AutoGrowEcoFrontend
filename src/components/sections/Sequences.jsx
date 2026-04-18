@@ -270,7 +270,9 @@ const Sequences = ({ leads, companyId, fetchLeads }) => {
   const [expandedStep, setExpandedStep] = useState(null);
   const [editingStep, setEditingStep] = useState({});
   const [enrollOpen, setEnrollOpen] = useState(false);
+  const [enrollSearch, setEnrollSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState([]);
+  const [killConfirm, setKillConfirm] = useState(false);
   const [approveStep, setApproveStep] = useState(1);
   const [approveMode, setApproveMode] = useState("recommended");
   const [customGapDays, setCustomGapDays] = useState(1);
@@ -414,6 +416,24 @@ const Sequences = ({ leads, companyId, fetchLeads }) => {
         setTimeout(() => setStatus(null), 4000);
       } else {
         setStatus({ type: "error", msg: d.error || "Enroll failed" });
+      }
+    } catch {
+      setStatus({ type: "error", msg: "Network error" });
+    }
+  };
+
+  const handleKill = async () => {
+    setStatus({ type: "loading", msg: "Deleting sequence…" });
+    try {
+      const r = await fetch(`${API}/campaigns/${selectedSeq._id}`, { method: "DELETE" });
+      const d = await r.json();
+      if (r.ok) {
+        setKillConfirm(false);
+        if (typeof fetchLeads === "function") fetchLeads();
+        await loadSequences();
+        goList();
+      } else {
+        setStatus({ type: "error", msg: d.error || "Failed to delete sequence" });
       }
     } catch {
       setStatus({ type: "error", msg: "Network error" });
@@ -951,6 +971,18 @@ const Sequences = ({ leads, companyId, fetchLeads }) => {
               >
                 <Icon d={ICONS.userPlus} size={13} /> Enroll Leads
               </button>
+              <button
+                onClick={() => setKillConfirm(true)}
+                title="Delete this sequence and unenroll all leads"
+                style={{
+                  background: "rgba(239,68,68,.12)", border: "1px solid rgba(239,68,68,.25)",
+                  borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 700,
+                  cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
+                  color: "#F87171", fontFamily: "inherit",
+                }}
+              >
+                <Icon d={ICONS.x} size={12} /> Kill
+              </button>
             </div>
           </div>
 
@@ -1257,6 +1289,52 @@ const Sequences = ({ leads, companyId, fetchLeads }) => {
           )}
         </div>
 
+        {/* Kill Confirm Modal */}
+        {killConfirm && (
+          <div
+            style={{
+              position: "fixed", inset: 0, background: "#000000BB",
+              zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
+            }}
+            onClick={(e) => { if (e.target === e.currentTarget) setKillConfirm(false); }}
+          >
+            <div style={{
+              background: THEME.panel, border: "1px solid rgba(239,68,68,.3)",
+              borderRadius: 16, width: "100%", maxWidth: 380, padding: 24,
+              display: "flex", flexDirection: "column", gap: 16,
+            }}>
+              <p style={{ fontSize: 14, fontWeight: 700, color: "#F87171", margin: 0 }}>Kill sequence?</p>
+              <p style={{ fontSize: 12, color: THEME.muted, margin: 0, lineHeight: 1.6 }}>
+                This will permanently delete <strong style={{ color: THEME.text }}>{selectedSeq.name}</strong> and stop all pending emails.
+                Leads will be unenrolled but their history is kept.
+              </p>
+              <StatusMsg s={status} />
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  onClick={() => setKillConfirm(false)}
+                  style={{
+                    flex: 1, background: THEME.panelAlt, border: `1px solid ${THEME.border}`,
+                    borderRadius: 9, padding: "9px 0", fontSize: 12, fontWeight: 600,
+                    color: THEME.muted, cursor: "pointer", fontFamily: "inherit",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleKill}
+                  style={{
+                    flex: 1, background: "rgba(239,68,68,.15)", border: "1px solid rgba(239,68,68,.3)",
+                    borderRadius: 9, padding: "9px 0", fontSize: 12, fontWeight: 700,
+                    color: "#F87171", cursor: "pointer", fontFamily: "inherit",
+                  }}
+                >
+                  Yes, kill it
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Enroll Modal */}
         {enrollOpen && (
           <div
@@ -1292,13 +1370,27 @@ const Sequences = ({ leads, companyId, fetchLeads }) => {
                 </button>
               </div>
 
+              <div style={{ padding: "10px 20px", borderBottom: `1px solid ${THEME.border}` }}>
+                <input
+                  type="text"
+                  placeholder="Search by name or email…"
+                  value={enrollSearch}
+                  onChange={(e) => setEnrollSearch(e.target.value)}
+                  className="crm-input"
+                  style={{ width: "100%", borderRadius: 8, padding: "8px 12px", fontSize: 12, boxSizing: "border-box" }}
+                />
+              </div>
+
               <div style={{ overflowY: "auto", flex: 1 }}>
                 {enrollableLeads.length === 0 ? (
                   <p style={{ color: THEME.muted, fontSize: 12, padding: "24px 20px", textAlign: "center" }}>
                     No leads available to enroll. All leads are either already in this sequence or assigned to individual follow-up.
                   </p>
                 ) : (
-                  enrollableLeads.map((lead) => {
+                  enrollableLeads.filter((lead) => {
+                    const q = enrollSearch.toLowerCase();
+                    return !q || [lead.name, lead.email].some((v) => v?.toLowerCase().includes(q));
+                  }).map((lead) => {
                     const checked = selectedIds.includes(lead._id);
                     return (
                       <div

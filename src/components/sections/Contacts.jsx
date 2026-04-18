@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Icon from "../shared/Icon";
 import { ICONS } from "../shared/icons";
-import { SendBadge, ReplyBadge } from "../shared/Badges";
+import { SendBadge, ReplyBadge, BounceBadge } from "../shared/Badges";
 import { formatDate, avatarColor, getInitial } from "../shared/helpers";
 
 const LEADS_PER_PAGE = 12;
@@ -34,7 +34,7 @@ const Contacts = ({
     const matchReply =
       filterReplyStatus === "all" || l.response_status === filterReplyStatus;
     return matchSearch && matchSend && matchReply;
-  });
+  }).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / LEADS_PER_PAGE));
   const paginated = filtered.slice(
@@ -342,7 +342,9 @@ const Contacts = ({
                       </div>
                     </td>
                     <td style={{ padding: "12px 16px" }}>
-                      <SendBadge status={lead.send_status} />
+                      {lead.email_bounced
+                        ? <BounceBadge type={lead.bounce_type} />
+                        : <SendBadge status={lead.send_status} />}
                     </td>
                     <td style={{ padding: "12px 16px" }}>
                       <ReplyBadge status={lead.response_status} />
