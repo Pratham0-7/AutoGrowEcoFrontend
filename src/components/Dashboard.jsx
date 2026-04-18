@@ -67,7 +67,6 @@ const Dashboard = () => {
   const [emailSubject, setEmailSubject] = useState("Follow-up from AGE");
   const [messageTemplate, setMessageTemplate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const isReady = isLoaded && isSignedIn && !!company_id && !!user_id;
   const {
@@ -94,7 +93,6 @@ const Dashboard = () => {
   const navigate = (section) => {
     setActiveSection(section);
     setCurrentPage(1);
-    setSidebarOpen(false);
   };
 
   if (!isLoaded)
@@ -131,17 +129,17 @@ const Dashboard = () => {
         color: THEME.text,
       }}
     >
-      <div
-        className={`sidebar-overlay${sidebarOpen ? " open" : ""}`}
-        onClick={() => setSidebarOpen(false)}
-      />
       <aside
-        className={`sidebar${sidebarOpen ? " open" : ""}`}
         style={{
+          width: 220,
           background: THEME.panelAlt,
           borderRight: `1px solid ${THEME.border}`,
           display: "flex",
           flexDirection: "column",
+          flexShrink: 0,
+          position: "sticky",
+          top: 0,
+          height: "100vh",
           overflow: "hidden",
         }}
       >
@@ -151,7 +149,7 @@ const Dashboard = () => {
             borderBottom: `1px solid ${THEME.border}`,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 10, width: "100%" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div
               style={{
                 background: THEME.teal,
@@ -170,7 +168,7 @@ const Dashboard = () => {
             >
               AGE
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div>
               <p
                 style={{
                   fontSize: 9,
@@ -199,26 +197,6 @@ const Dashboard = () => {
                 {company_name || "Workspace"}
               </p>
             </div>
-            <button
-              className="sidebar-close-btn"
-              onClick={() => setSidebarOpen(false)}
-              style={{
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                color: THEME.muted,
-                padding: 4,
-                flexShrink: 0,
-                lineHeight: 0,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </button>
           </div>
         </div>
 
@@ -394,7 +372,6 @@ const Dashboard = () => {
         }}
       >
         <header
-          className="dashboard-header"
           style={{
             background: THEME.page,
             borderBottom: `1px solid ${THEME.border}`,
@@ -409,40 +386,30 @@ const Dashboard = () => {
             flexShrink: 0,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <button
-              className="hamburger-btn"
-              onClick={() => setSidebarOpen(true)}
+          <div>
+            <h1
+              style={{
+                fontSize: 15,
+                fontWeight: 700,
+                color: THEME.text,
+                margin: 0,
+              }}
             >
-              <span /><span /><span />
-            </button>
-            <div>
-              <h1
-                style={{
-                  fontSize: 15,
-                  fontWeight: 700,
-                  color: THEME.text,
-                  margin: 0,
-                }}
-              >
-                {NAV_ITEMS.find((n) => n.key === activeSection)?.label}
-              </h1>
-              <p
-                className="header-subtitle"
-                style={{
-                  fontSize: 10,
-                  color: THEME.muted,
-                  margin: 0,
-                }}
-              >
-                {subtitles[activeSection]}
-              </p>
-            </div>
+              {NAV_ITEMS.find((n) => n.key === activeSection)?.label}
+            </h1>
+            <p
+              style={{
+                fontSize: 10,
+                color: THEME.muted,
+                margin: 0,
+              }}
+            >
+              {subtitles[activeSection]}
+            </p>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div
-              className="header-live-badge"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -491,7 +458,7 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <main className="dashboard-main-content" style={{ padding: 24, flex: 1 }}>
+        <main style={{ padding: 24, flex: 1 }}>
           {activeSection === "overview" && (
             <Overview
               leads={leads}
