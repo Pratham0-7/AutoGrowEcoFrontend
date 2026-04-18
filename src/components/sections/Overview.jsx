@@ -97,7 +97,7 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
         />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+      <div className="overview-grid-2" style={{ gap: 14 }}>
         <div
           style={{
             background: THEME.panel,
