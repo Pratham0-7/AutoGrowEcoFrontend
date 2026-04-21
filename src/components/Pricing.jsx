@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const useInView = (threshold = 0.12) => {
   const ref = useRef(null);
@@ -166,7 +167,7 @@ const PlanCard = ({ plan, delay }) => {
 
       {/* CTA */}
       <button
-        onClick={() => window.open("https://calendly.com/076pandeypratham/30min", "_blank")}
+        onClick={() => navigate("/schedule")}
         className={`mt-8 w-full rounded-xl px-5 py-3 text-sm font-semibold text-white transition-all duration-200 shadow-lg ${
           plan.popular
             ? `${a.cta}`
@@ -180,6 +181,7 @@ const PlanCard = ({ plan, delay }) => {
 };
 
 const Pricing = () => {
+  const navigate = useNavigate();
   const [headerRef, headerInView] = useInView(0.2);
   const [addonRef, addonInView] = useInView(0.2);
   const [noteRef, noteInView] = useInView(0.2);
@@ -276,7 +278,7 @@ const Pricing = () => {
                 <p className="text-xs text-[#6B7280]">/month</p>
               </div>
               <button
-                onClick={() => window.open("https://calendly.com/076pandeypratham/30min", "_blank")}
+                onClick={() => navigate("/schedule")}
                 className="rounded-xl border border-emerald-300 bg-white px-5 py-2.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
               >
                 Add to Plan
@@ -297,7 +299,7 @@ const Pricing = () => {
           All plans include a 10-day onboarding session where we handle DLT registration, channel setup, and sequence configuration.{" "}
           Pricing shown in USD.{" "}
           <button
-            onClick={() => window.open("https://calendly.com/076pandeypratham/30min", "_blank")}
+            onClick={() => navigate("/schedule")}
             className="text-[#0F5E6E] underline underline-offset-2 transition hover:text-[#0F5E6E]/70"
           >
             Book a demo

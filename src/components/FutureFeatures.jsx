@@ -95,9 +95,7 @@ const FutureFeatures = () => {
         <p className="mt-12 text-center text-xs text-white/25">
           Features are built based on what our users need most. Got a request?{" "}
           <a
-            href="https://calendly.com/076pandeypratham/30min"
-            target="_blank"
-            rel="noreferrer"
+            href="/schedule"
             className="text-white/40 underline underline-offset-2 transition hover:text-white/70"
           >
             Talk to us.

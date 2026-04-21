@@ -47,7 +47,7 @@ const Footer = () => {
               Login
             </button>
             <button
-              onClick={() => window.open("https://calendly.com/076pandeypratham/30min", "_blank")}
+              onClick={() => navigate("/schedule")}
               className="transition hover:text-white"
             >
               Book a Demo

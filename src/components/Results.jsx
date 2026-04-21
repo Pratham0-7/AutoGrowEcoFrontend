@@ -168,7 +168,7 @@ const Results = () => {
                 </svg>
               </button>
               <button
-                onClick={() => window.open("https://calendly.com/076pandeypratham/30min", "_blank")}
+                onClick={() => navigate("/schedule")}
                 className="inline-flex items-center justify-center rounded-xl border border-[#0F5E6E]/20 bg-white px-6 py-3 text-sm font-semibold text-[#1A2E35] transition hover:bg-[#FFFBF5] hover:border-[#0F5E6E]/40"
               >
                 Book a Demo

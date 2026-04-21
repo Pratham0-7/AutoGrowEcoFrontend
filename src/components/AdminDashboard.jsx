@@ -76,6 +76,13 @@ export default function AdminDashboard() {
   // Approve
   const [approvingId, setApprovingId] = useState(null);
 
+  // Tabs
+  const [activeTab, setActiveTab] = useState("users");
+
+  // Bookings
+  const [bookings, setBookings] = useState([]);
+  const [bookingsLoading, setBookingsLoading] = useState(false);
+
   const approveUser = async (user_id) => {
     setApprovingId(user_id);
     try {
@@ -181,10 +188,27 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchBookings = async (currentPin) => {
+    if (!currentPin) return;
+    setBookingsLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/bookings`, { headers: authHeaders(currentPin) });
+      if (res.ok) {
+        const data = await res.json();
+        setBookings(data.bookings || []);
+      }
+    } catch {
+      // silent
+    } finally {
+      setBookingsLoading(false);
+    }
+  };
+
   // On pin acquired, load data
   useEffect(() => {
     if (!pin) return;
     fetchAll(pin);
+    fetchBookings(pin);
   }, [pin]);
 
   // Poll every 30 s
@@ -282,9 +306,25 @@ export default function AdminDashboard() {
       {/* Top bar */}
       <header className="border-b border-slate-200 bg-white px-6 py-4 shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <div>
-            <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">AGE</span>
-            <h1 className="mt-0.5 text-xl font-bold text-slate-900">Admin — Registrations</h1>
+          <div className="flex items-center gap-6">
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">AGE</span>
+              <h1 className="mt-0.5 text-xl font-bold text-slate-900">Admin</h1>
+            </div>
+            <div className="flex rounded-xl border border-slate-200 bg-slate-50 p-1 gap-1">
+              <button
+                onClick={() => setActiveTab("users")}
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${activeTab === "users" ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700"}`}
+              >
+                Registrations
+              </button>
+              <button
+                onClick={() => { setActiveTab("bookings"); fetchBookings(pin); }}
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${activeTab === "bookings" ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700"}`}
+              >
+                Bookings {bookings.length > 0 && <span className="ml-1 rounded-full bg-[#0F5E6E] px-1.5 py-0.5 text-[10px] font-bold text-white">{bookings.length}</span>}
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -367,6 +407,73 @@ export default function AdminDashboard() {
             <StatCard label="This Week" value={stats.new_this_week} />
           </div>
         )}
+
+        {/* ── Bookings Tab ── */}
+        {activeTab === "bookings" && (
+          <div>
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-700">{bookings.length} booking{bookings.length !== 1 ? "s" : ""}</p>
+              <button
+                onClick={() => fetchBookings(pin)}
+                disabled={bookingsLoading}
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
+              >
+                {bookingsLoading ? "Loading…" : "Refresh"}
+              </button>
+            </div>
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              {bookingsLoading && bookings.length === 0 ? (
+                <p className="py-12 text-center text-sm text-slate-400">Loading…</p>
+              ) : bookings.length === 0 ? (
+                <p className="py-12 text-center text-sm text-slate-400">No demo bookings yet.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-100 bg-slate-50 text-left">
+                        <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Name</th>
+                        <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Email</th>
+                        <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Company</th>
+                        <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Date</th>
+                        <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Time</th>
+                        <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Message</th>
+                        <th className="px-5 py-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Calendar</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {bookings.map((b) => (
+                        <tr key={b._id} className="transition hover:bg-slate-50">
+                          <td className="px-5 py-3 font-medium text-slate-800">{b.name || "—"}</td>
+                          <td className="px-5 py-3 text-slate-600">{b.email}</td>
+                          <td className="px-5 py-3 text-slate-600">{b.company || <span className="text-slate-400">—</span>}</td>
+                          <td className="whitespace-nowrap px-5 py-3 font-medium text-[#0F5E6E]">{b.date}</td>
+                          <td className="px-5 py-3 text-slate-700">{b.time} IST</td>
+                          <td className="max-w-xs px-5 py-3 text-slate-500 truncate">{b.message || <span className="text-slate-300">—</span>}</td>
+                          <td className="px-5 py-3">
+                            <a
+                              href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`AGE Demo with ${b.name}${b.company ? ` (${b.company})` : ""}`)}&dates=${b.date.replace(/-/g, "")}T${b.time.replace(":", "")}00/${b.date.replace(/-/g, "")}T${String(parseInt(b.time) + (b.time.endsWith("30") ? 0 : 0)).padStart(2,"0")}${b.time.slice(2)}00&ctz=Asia%2FKolkata`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 rounded-lg border border-[#0F5E6E]/30 px-2.5 py-1 text-xs font-medium text-[#0F5E6E] transition hover:bg-[#0F5E6E]/10"
+                            >
+                              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v10zM5 7V5h14v2H5z" />
+                              </svg>
+                              Add
+                            </a>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Users Tab ── */}
+        {activeTab === "users" && <>
 
         {/* Search */}
         <div className="mb-4 flex items-center gap-3">
@@ -485,6 +592,9 @@ export default function AdminDashboard() {
             </div>
           )}
         </div>
+
+        </> /* end users tab */}
+
       </main>
 
       {/* Delete confirmation modal */}

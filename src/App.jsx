@@ -5,6 +5,7 @@ import Landing from "./components/Landing";
 import Dashboard from "./components/Dashboard";
 import Onboarding from "./components/Onboarding";
 import BookDemo from "./components/BookDemo";
+import ScheduleDemo from "./components/ScheduleDemo";
 import AdminDashboard from "./components/AdminDashboard";
 import PricingPage from "./components/PricingPage";
 
@@ -135,6 +136,7 @@ const App = () => {
       />
 
       <Route path="/pricing" element={<PricingPage />} />
+      <Route path="/schedule" element={<ScheduleDemo />} />
       <Route path="/book-demo" element={<ProtectedBookDemo />} />
       <Route path="/onboarding" element={<ProtectedOnboarding />} />
       <Route path="/dashboard" element={<ProtectedDashboard />} />

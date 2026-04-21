@@ -102,9 +102,7 @@ const Hero = () => {
             </button>
 
             <button
-              onClick={() =>
-                window.open("https://calendly.com/076pandeypratham/30min", "_blank")
-              }
+              onClick={() => navigate("/schedule")}
               className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/10"
             >
               <svg

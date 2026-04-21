@@ -18,7 +18,7 @@ const Footer = () => {
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-white/60">
             <button onClick={() => navigate("/")} className="transition hover:text-white">Home</button>
             <button onClick={() => navigate("/sign-up")} className="transition hover:text-white">Get Started</button>
-            <button onClick={() => window.open("https://calendly.com/076pandeypratham/30min", "_blank")} className="transition hover:text-white">Book a Demo</button>
+            <button onClick={() => navigate("/schedule")} className="transition hover:text-white">Book a Demo</button>
           </div>
         </div>
         <div className="mt-8 border-t border-white/10 pt-6 text-center text-xs text-white/30">
