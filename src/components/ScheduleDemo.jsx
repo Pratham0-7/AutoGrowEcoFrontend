@@ -120,7 +120,7 @@ export default function ScheduleDemo() {
     setSubmitting(true);
 
     try {
-      const res = await fetch(`${API_BASE_URL}bookings/book`, {
+      const res = await fetch(`${API_BASE_URL}/bookings/book`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
