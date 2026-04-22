@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -50,6 +50,17 @@ export default function ScheduleDemo() {
     message: "",
     title: "Demo call for AGE",
   });
+
+  const dateScrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  function handleDateScroll() {
+    const el = dateScrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+  }
 
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -233,7 +244,25 @@ export default function ScheduleDemo() {
               1 · Pick a Date
             </p>
 
-            <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+            <div className="relative">
+              {canScrollLeft && (
+                <button
+                  type="button"
+                  onClick={() => dateScrollRef.current?.scrollBy({ left: -200, behavior: "smooth" })}
+                  className="absolute left-0 top-1/2 z-10 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-[#1A2E35] text-white/60 shadow-md hover:text-white transition"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+              )}
+
+              <div
+                ref={dateScrollRef}
+                onScroll={handleDateScroll}
+                className="flex gap-2 overflow-x-auto pb-1 scroll-smooth"
+                style={{ scrollbarWidth: "none" }}
+              >
               {dates.map((d) => {
                 const key = formatDateKey(d);
                 const selected = selectedDate && formatDateKey(selectedDate) === key;
@@ -256,6 +285,19 @@ export default function ScheduleDemo() {
                   </button>
                 );
               })}
+              </div>
+
+              {canScrollRight && (
+                <button
+                  type="button"
+                  onClick={() => dateScrollRef.current?.scrollBy({ left: 200, behavior: "smooth" })}
+                  className="absolute right-0 top-1/2 z-10 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-[#1A2E35] text-white/60 shadow-md hover:text-white transition"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
 
