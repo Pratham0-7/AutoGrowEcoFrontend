@@ -284,18 +284,13 @@ const WhatsApp = ({ leads, companyId }) => {
 
             {/* Manual send */}
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <p style={{ fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1.3, margin: 0 }}>
-                  Manual Send
-                </p>
-                <span style={{ background: "#0D3D20", border: "1px solid #22C55E33", borderRadius: 100, padding: "2px 8px", fontSize: 10, fontWeight: 700, color: "#22C55E" }}>
-                  {interestedWithPhone.length} interested
-                </span>
-              </div>
+              <p style={{ fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1.3, margin: 0 }}>
+                Manual Send
+              </p>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div>
-                  <Label>Interested Lead</Label>
+                  <Label>Select Lead</Label>
                   <select
                     value={selectedLeadId}
                     onChange={(e) => { setSelectedLeadId(e.target.value); setManualPhone(""); setManualName(""); }}
@@ -303,12 +298,19 @@ const WhatsApp = ({ leads, companyId }) => {
                     style={inputStyle}
                   >
                     <option value="">— or enter details below —</option>
-                    {interestedWithPhone.length > 0 ? (
-                      interestedWithPhone.map((l) => (
-                        <option key={l._id} value={l._id}>{l.name} ({l.phone})</option>
-                      ))
-                    ) : (
-                      <option disabled value="">No interested leads with phone numbers yet</option>
+                    {interestedWithPhone.length > 0 && (
+                      <optgroup label="⭐ Interested">
+                        {interestedWithPhone.map((l) => (
+                          <option key={l._id} value={l._id}>{l.name} · {l.phone}</option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {leadsWithPhone.filter((l) => l.response_status !== "yes").length > 0 && (
+                      <optgroup label="All Others">
+                        {leadsWithPhone.filter((l) => l.response_status !== "yes").map((l) => (
+                          <option key={l._id} value={l._id}>{l.name} · {l.phone}</option>
+                        ))}
+                      </optgroup>
                     )}
                   </select>
                 </div>
