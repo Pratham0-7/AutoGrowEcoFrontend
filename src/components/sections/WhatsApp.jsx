@@ -73,19 +73,8 @@ const getLeadPhone = (lead) =>
     ""
   ).trim();
 
-const getLeadStatus = (lead) =>
-  String(
-    lead?.response_status ||
-    lead?.reply_status ||
-    lead?.lead_status ||
-    lead?.status ||
-    ""
-  ).toLowerCase().trim();
-
-const isInterestedLead = (lead) => {
-  const status = getLeadStatus(lead);
-  return status === "yes" || status === "interested";
-};
+const isInterestedLead = (lead) =>
+  String(lead?.response_status || "").toLowerCase().trim() === "yes";
 
 const WhatsApp = ({ leads = [], companyId }) => {
   const [tab, setTab] = useState("send");
@@ -113,38 +102,41 @@ const WhatsApp = ({ leads = [], companyId }) => {
   const [msgPage, setMsgPage] = useState(1);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
-  const leadsWithPhone = useMemo(() => {
-    return leads.filter((lead) => getLeadPhone(lead));
-  }, [leads]);
+  const interestedLeads = useMemo(
+    () => leads.filter((lead) => isInterestedLead(lead)),
+    [leads]
+  );
 
-  const interestedLeads = useMemo(() => {
-    return leadsWithPhone.filter((lead) => isInterestedLead(lead));
-  }, [leadsWithPhone]);
+  const leadsWithPhone = useMemo(
+    () => leads.filter((lead) => getLeadPhone(lead)),
+    [leads]
+  );
 
-  const filteredLeads = useMemo(() => {
+  const searchableLeads = useMemo(() => {
     const q = leadSearch.toLowerCase().trim();
-    const baseList = interestedLeads.length > 0 ? interestedLeads : leadsWithPhone;
 
-    if (!q) return baseList;
-
-    return baseList.filter((lead) => {
-      const name = String(lead?.name || "").toLowerCase();
-      const phone = getLeadPhone(lead).toLowerCase();
-      const company = String(lead?.company || "").toLowerCase();
-      const status = getLeadStatus(lead);
-
-      return (
-        name.includes(q) ||
-        phone.includes(q) ||
-        company.includes(q) ||
-        status.includes(q)
-      );
+    const allSorted = [...leads].sort((a, b) => {
+      const aYes = isInterestedLead(a) ? 1 : 0;
+      const bYes = isInterestedLead(b) ? 1 : 0;
+      if (aYes !== bYes) return bYes - aYes;
+      return (a.name || "").localeCompare(b.name || "");
     });
-  }, [leadSearch, interestedLeads, leadsWithPhone]);
 
-  const selectedLead = useMemo(() => {
-    return leads.find((lead) => lead._id === selectedLeadId);
-  }, [leads, selectedLeadId]);
+    if (!q) return allSorted;
+
+    return allSorted.filter((lead) => {
+      const name = String(lead?.name || "").toLowerCase();
+      const email = String(lead?.email || "").toLowerCase();
+      const phone = getLeadPhone(lead).toLowerCase();
+
+      return name.includes(q) || email.includes(q) || phone.includes(q);
+    });
+  }, [leadSearch, leads]);
+
+  const selectedLead = useMemo(
+    () => leads.find((lead) => lead._id === selectedLeadId),
+    [leads, selectedLeadId]
+  );
 
   const fetchConfig = useCallback(async () => {
     try {
@@ -182,13 +174,6 @@ const WhatsApp = ({ leads = [], companyId }) => {
     if (tab === "history") fetchHistory();
   }, [tab, msgPage, fetchHistory]);
 
-  useEffect(() => {
-    console.log("WA total leads:", leads.length);
-    console.log("WA leads with phone:", leadsWithPhone.length);
-    console.log("WA interested leads:", interestedLeads.length);
-    console.log("WA first lead:", leads[0]);
-  }, [leads, leadsWithPhone, interestedLeads]);
-
   const saveConfig = async () => {
     setConfigStatus({ type: "loading", msg: "Saving..." });
     try {
@@ -214,7 +199,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
     setSelectedLeadId(lead._id);
     setManualPhone(getLeadPhone(lead));
     setManualName(lead.name || "");
-    setLeadSearch(`${lead.name || "Unknown"} · ${getLeadPhone(lead)}`);
+    setLeadSearch(`${lead.name || "Unknown"} · ${lead.email || getLeadPhone(lead)}`);
   };
 
   const clearLeadSelection = () => {
@@ -446,7 +431,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
                   type="text"
                   value={leadSearch}
                   onChange={(e) => setLeadSearch(e.target.value)}
-                  placeholder="Search interested leads by name, phone, or company"
+                  placeholder="Search by name, email, or phone"
                   className="crm-input"
                   style={inputStyle}
                 />
@@ -461,14 +446,12 @@ const WhatsApp = ({ leads = [], companyId }) => {
                   background: "#0F2229",
                 }}
               >
-                {filteredLeads.length === 0 ? (
+                {searchableLeads.length === 0 ? (
                   <div style={{ padding: "12px", fontSize: 12, color: "#6B8E95" }}>
-                    {leadsWithPhone.length === 0
-                      ? "No leads with phone numbers found. Add or import phone numbers to use WhatsApp."
-                      : "No matching leads found."}
+                    No matching leads found.
                   </div>
                 ) : (
-                  filteredLeads.map((lead) => (
+                  searchableLeads.map((lead) => (
                     <button
                       key={lead._id}
                       type="button"
@@ -492,9 +475,14 @@ const WhatsApp = ({ leads = [], companyId }) => {
                             Interested
                           </span>
                         )}
+                        {!getLeadPhone(lead) && (
+                          <span style={{ marginLeft: 8, color: "#F59E0B", fontSize: 11 }}>
+                            No phone
+                          </span>
+                        )}
                       </div>
                       <div style={{ fontSize: 11, color: "#6B8E95" }}>
-                        {getLeadPhone(lead)} {lead.company ? `· ${lead.company}` : ""}
+                        {lead.email || "No email"} {getLeadPhone(lead) ? `· ${getLeadPhone(lead)}` : ""}
                       </div>
                     </button>
                   ))
