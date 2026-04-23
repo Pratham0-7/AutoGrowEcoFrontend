@@ -13,7 +13,7 @@ import Pipeline from "./sections/Pipeline";
 import Campaign from "./sections/Campaign";
 import Import from "./sections/Import";
 import Sequences from "./sections/Sequences";
-
+import WhatsApp from "./sections/WhatsApp";
 
 const THEME = {
   page: "#0D1F24",
@@ -37,7 +37,7 @@ const NAV_ITEMS = [
   { key: "pipeline", label: "Pipeline", icon: ICONS.pipeline },
   { key: "campaign", label: "One Time Send", icon: ICONS.mail },
   { key: "sequences", label: "Sequences", icon: ICONS.zap },
-
+  { key: "whatsapp", label: "WhatsApp", icon: ICONS.whatsapp },
   { key: "import", label: "Import", icon: ICONS.upload },
 ];
 
@@ -48,7 +48,7 @@ const SECTION_SUBTITLE = (total, indCount, filtered, convRate) => ({
   pipeline: "Visual deal stages",
   campaign: "Email-first outreach",
   sequences: "12-step · 75-day automated follow-up",
-
+  whatsapp: "MSG91-powered WhatsApp outreach",
   import: "Import leads from CSV or Google Sheets",
 });
 
@@ -545,6 +545,9 @@ const Dashboard = () => {
           )}
           {activeSection === "sequences" && (
             <Sequences leads={leads} companyId={company_id} fetchLeads={fetchLeads} />
+          )}
+          {activeSection === "whatsapp" && (
+            <WhatsApp leads={leads} companyId={company_id} />
           )}
 
           {activeSection === "import" && (
