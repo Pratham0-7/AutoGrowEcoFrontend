@@ -40,8 +40,9 @@ const WhatsApp = ({ leads, companyId }) => {
   const [tab, setTab] = useState("send");
   const [configOpen, setConfigOpen] = useState(false);
 
-  const [waConfig, setWaConfig] = useState({ wa_auth_key: "", wa_number: "", wa_template_name: "" });
+  const [waConfig, setWaConfig] = useState({ wa_number: "", wa_template_name: "" });
   const [configStatus, setConfigStatus] = useState(null);
+  const [isConfigured, setIsConfigured] = useState(false);
 
   const [selectedLeadId, setSelectedLeadId] = useState("");
   const [manualPhone, setManualPhone] = useState("");
@@ -57,12 +58,18 @@ const WhatsApp = ({ leads, companyId }) => {
   const [msgPage, setMsgPage] = useState(1);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
-  const leadsWithPhone = leads.filter((l) => l.phone);
+  const leadsWithPhone     = leads.filter((l) => l.phone);
+  const interestedLeads    = leads.filter((l) => l.response_status === "yes");
+  const interestedWithPhone = interestedLeads.filter((l) => l.phone);
 
   const fetchConfig = useCallback(async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/whatsapp/config/${companyId}`);
-      if (res.ok) setWaConfig(await res.json());
+      if (res.ok) {
+        const d = await res.json();
+        setWaConfig(d);
+        setIsConfigured(!!d.wa_number);
+      }
     } catch {}
   }, [companyId]);
 
@@ -101,7 +108,12 @@ const WhatsApp = ({ leads, companyId }) => {
         body: JSON.stringify(waConfig),
       });
       const d = await res.json();
-      setConfigStatus(res.ok ? { type: "success", msg: "Settings saved!" } : { type: "error", msg: d.error });
+      if (res.ok) {
+        setConfigStatus({ type: "success", msg: "Settings saved!" });
+        setIsConfigured(!!waConfig.wa_number);
+      } else {
+        setConfigStatus({ type: "error", msg: d.error });
+      }
     } catch {
       setConfigStatus({ type: "error", msg: "Save failed" });
     }
@@ -194,29 +206,16 @@ const WhatsApp = ({ leads, companyId }) => {
         {configOpen && (
           <div style={{ padding: 20, borderBottom: "1px solid #1E3D47", background: "#0F2229", display: "flex", flexDirection: "column", gap: 14 }}>
             <p style={{ fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1.3, margin: 0 }}>WhatsApp Settings</p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div>
-                <Label>Auth Key</Label>
-                <input
-                  type="password"
-                  value={waConfig.wa_auth_key}
-                  onChange={(e) => setWaConfig((p) => ({ ...p, wa_auth_key: e.target.value }))}
-                  placeholder="MSG91 WhatsApp auth key"
-                  className="crm-input"
-                  style={inputStyle}
-                />
-              </div>
-              <div>
-                <Label>Integrated Number (From)</Label>
-                <input
-                  type="text"
-                  value={waConfig.wa_number}
-                  onChange={(e) => setWaConfig((p) => ({ ...p, wa_number: e.target.value }))}
-                  placeholder="91XXXXXXXXXX"
-                  className="crm-input"
-                  style={inputStyle}
-                />
-              </div>
+            <div>
+              <Label>Integrated Number (From)</Label>
+              <input
+                type="text"
+                value={waConfig.wa_number}
+                onChange={(e) => setWaConfig((p) => ({ ...p, wa_number: e.target.value }))}
+                placeholder="91XXXXXXXXXX — your registered WhatsApp business number"
+                className="crm-input"
+                style={inputStyle}
+              />
             </div>
             <div>
               <Label>
@@ -270,15 +269,33 @@ const WhatsApp = ({ leads, companyId }) => {
         {tab === "send" && (
           <div style={{ padding: 22, display: "flex", flexDirection: "column", gap: 22 }}>
 
+            {/* Not-configured warning */}
+            {!isConfigured && (
+              <div style={{ background: "#2A1A05", border: "1px solid #92400E44", borderRadius: 10, padding: "12px 16px", display: "flex", alignItems: "flex-start", gap: 10 }}>
+                <span style={{ fontSize: 14, marginTop: 1 }}>⚠️</span>
+                <div>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: "#FCD34D", margin: "0 0 3px" }}>WhatsApp not configured</p>
+                  <p style={{ fontSize: 12, color: "#92400E", margin: 0 }}>
+                    Click <strong style={{ color: "#FCD34D" }}>Settings</strong> above → enter your WhatsApp integrated number → click <strong style={{ color: "#FCD34D" }}>Save Settings</strong>.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Manual send */}
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <p style={{ fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1.3, margin: 0 }}>
-                Manual Send
-              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <p style={{ fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1.3, margin: 0 }}>
+                  Manual Send
+                </p>
+                <span style={{ background: "#0D3D20", border: "1px solid #22C55E33", borderRadius: 100, padding: "2px 8px", fontSize: 10, fontWeight: 700, color: "#22C55E" }}>
+                  {interestedWithPhone.length} interested
+                </span>
+              </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div>
-                  <Label>Select Lead</Label>
+                  <Label>Interested Lead</Label>
                   <select
                     value={selectedLeadId}
                     onChange={(e) => { setSelectedLeadId(e.target.value); setManualPhone(""); setManualName(""); }}
@@ -286,9 +303,13 @@ const WhatsApp = ({ leads, companyId }) => {
                     style={inputStyle}
                   >
                     <option value="">— or enter details below —</option>
-                    {leadsWithPhone.map((l) => (
-                      <option key={l._id} value={l._id}>{l.name} ({l.phone})</option>
-                    ))}
+                    {interestedWithPhone.length > 0 ? (
+                      interestedWithPhone.map((l) => (
+                        <option key={l._id} value={l._id}>{l.name} ({l.phone})</option>
+                      ))
+                    ) : (
+                      <option disabled value="">No interested leads with phone numbers yet</option>
+                    )}
                   </select>
                 </div>
                 <div>
@@ -444,8 +465,8 @@ const WhatsApp = ({ leads, companyId }) => {
       {/* Stats cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
         {[
-          { label: "Leads with Phone",    value: leadsWithPhone.length,                   color: WA_GREEN },
-          { label: "Leads without Phone", value: leads.length - leadsWithPhone.length,    color: "#F59E0B" },
+          { label: "Interested Leads",    value: interestedLeads.length,                  color: "#22C55E" },
+          { label: "With Phone Number",   value: interestedWithPhone.length,              color: WA_GREEN },
           { label: "WhatsApp Sent",       value: msgTotal,                                color: "#9FE6F2" },
         ].map(({ label, value, color }) => (
           <div key={label} style={{ background: "#142830", border: "1px solid #1E3D47", borderRadius: 12, padding: "14px 18px" }}>
