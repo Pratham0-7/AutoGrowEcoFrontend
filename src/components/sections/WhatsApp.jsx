@@ -1,12 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Icon from "../shared/Icon";
 import { ICONS } from "../shared/icons";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-const WA_GREEN  = "#25D366";
-const WA_DARK   = "#128C7E";
-const WA_BG     = "#0A2419";
+const WA_GREEN = "#25D366";
+const WA_DARK = "#128C7E";
+const WA_BG = "#0A2419";
 const WA_BORDER = "#0F3D2A";
 
 const WaLogo = ({ size = 20, color = WA_GREEN }) => (
@@ -17,33 +17,68 @@ const WaLogo = ({ size = 20, color = WA_GREEN }) => (
 
 const StatusBanner = ({ status }) => {
   if (!status) return null;
+
   const colors = {
     success: { bg: "#0D3D20", border: "#22C55E44", text: "#22C55E", icon: "✓" },
-    loading: { bg: "#142830", border: "#1E3D47",   text: "#6B8E95", icon: "⟳" },
-    error:   { bg: "#2D0A0A", border: "#DC262644", text: "#EF4444", icon: "✗" },
+    loading: { bg: "#142830", border: "#1E3D47", text: "#6B8E95", icon: "⟳" },
+    error: { bg: "#2D0A0A", border: "#DC262644", text: "#EF4444", icon: "✗" },
   };
+
   const c = colors[status.type] || colors.error;
+
   return (
-    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 10, padding: "10px 14px", fontSize: 12, color: c.text, display: "flex", alignItems: "center", gap: 8 }}>
-      <span>{c.icon}</span>{status.msg}
+    <div
+      style={{
+        background: c.bg,
+        border: `1px solid ${c.border}`,
+        borderRadius: 10,
+        padding: "10px 14px",
+        fontSize: 12,
+        color: c.text,
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+      }}
+    >
+      <span>{c.icon}</span>
+      {status.msg}
     </div>
   );
 };
 
 const Label = ({ children }) => (
-  <label style={{ fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1.1, display: "block", marginBottom: 6 }}>
+  <label
+    style={{
+      fontSize: 10,
+      fontWeight: 700,
+      color: "#6B8E95",
+      textTransform: "uppercase",
+      letterSpacing: 1.1,
+      display: "block",
+      marginBottom: 6,
+    }}
+  >
     {children}
   </label>
 );
+
+const isYesLead = (lead) =>
+  lead?.response_status === "yes" ||
+  lead?.status === "yes" ||
+  lead?.lead_status === "yes";
 
 const WhatsApp = ({ leads, companyId }) => {
   const [tab, setTab] = useState("send");
   const [configOpen, setConfigOpen] = useState(false);
 
-  const [waConfig, setWaConfig] = useState({ wa_number: "", wa_template_name: "" });
+  const [waConfig, setWaConfig] = useState({
+    wa_number: "",
+    wa_template_name: "",
+  });
   const [configStatus, setConfigStatus] = useState(null);
   const [isConfigured, setIsConfigured] = useState(false);
 
+  const [leadSearch, setLeadSearch] = useState("");
   const [selectedLeadId, setSelectedLeadId] = useState("");
   const [manualPhone, setManualPhone] = useState("");
   const [manualName, setManualName] = useState("");
@@ -58,9 +93,38 @@ const WhatsApp = ({ leads, companyId }) => {
   const [msgPage, setMsgPage] = useState(1);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
-  const leadsWithPhone     = leads.filter((l) => l.phone);
-  const interestedLeads    = leads.filter((l) => l.response_status === "yes");
-  const interestedWithPhone = interestedLeads.filter((l) => l.phone);
+  const leadsWithPhone = useMemo(
+    () => leads.filter((l) => l.phone && String(l.phone).trim() !== ""),
+    [leads]
+  );
+
+  const interestedLeads = useMemo(
+    () => leadsWithPhone.filter((l) => isYesLead(l)),
+    [leadsWithPhone]
+  );
+
+  const otherLeads = useMemo(
+    () => leadsWithPhone.filter((l) => !isYesLead(l)),
+    [leadsWithPhone]
+  );
+
+  const filteredLeads = useMemo(() => {
+    const q = leadSearch.toLowerCase().trim();
+    if (!q) return leadsWithPhone;
+
+    return leadsWithPhone.filter((l) => {
+      const name = (l.name || "").toLowerCase();
+      const phone = String(l.phone || "");
+      const company = (l.company || "").toLowerCase();
+
+      return name.includes(q) || phone.includes(q) || company.includes(q);
+    });
+  }, [leadSearch, leadsWithPhone]);
+
+  const selectedLead = useMemo(
+    () => leads.find((l) => l._id === selectedLeadId),
+    [leads, selectedLeadId]
+  );
 
   const fetchConfig = useCallback(async () => {
     try {
@@ -88,9 +152,8 @@ const WhatsApp = ({ leads, companyId }) => {
 
   useEffect(() => {
     fetchConfig();
-    // fetch total count for stat card
     fetch(`${API_BASE_URL}/whatsapp/messages/${companyId}?page=1&per_page=1`)
-      .then((r) => r.ok ? r.json() : null)
+      .then((r) => (r.ok ? r.json() : null))
       .then((d) => d && setMsgTotal(d.total))
       .catch(() => {});
   }, [companyId, fetchConfig]);
@@ -100,7 +163,7 @@ const WhatsApp = ({ leads, companyId }) => {
   }, [tab, msgPage, fetchHistory]);
 
   const saveConfig = async () => {
-    setConfigStatus({ type: "loading", msg: "Saving…" });
+    setConfigStatus({ type: "loading", msg: "Saving..." });
     try {
       const res = await fetch(`${API_BASE_URL}/whatsapp/config/${companyId}`, {
         method: "POST",
@@ -108,38 +171,72 @@ const WhatsApp = ({ leads, companyId }) => {
         body: JSON.stringify(waConfig),
       });
       const d = await res.json();
+
       if (res.ok) {
         setConfigStatus({ type: "success", msg: "Settings saved!" });
         setIsConfigured(!!waConfig.wa_number);
       } else {
-        setConfigStatus({ type: "error", msg: d.error });
+        setConfigStatus({ type: "error", msg: d.error || "Save failed" });
       }
     } catch {
       setConfigStatus({ type: "error", msg: "Save failed" });
     }
   };
 
+  const handleLeadPick = (lead) => {
+    setSelectedLeadId(lead._id);
+    setManualPhone(lead.phone || "");
+    setManualName(lead.name || "");
+    setLeadSearch(`${lead.name || "Unknown"} · ${lead.phone || ""}`);
+  };
+
+  const clearLeadSelection = () => {
+    setSelectedLeadId("");
+    setLeadSearch("");
+    setManualPhone("");
+    setManualName("");
+  };
+
   const handleManualSend = async () => {
-    const lead = leads.find((l) => l._id === selectedLeadId);
-    const phone = lead?.phone || manualPhone;
-    const name  = lead?.name  || manualName;
+    const phone = selectedLead?.phone || manualPhone;
+    const name = selectedLead?.name || manualName;
+
     if (!phone || !manualMessage.trim()) {
       setSendStatus({ type: "error", msg: "Phone number and message are required." });
       return;
     }
-    setSendStatus({ type: "loading", msg: "Sending…" });
+
+    setSendStatus({ type: "loading", msg: "Sending..." });
+
     try {
       const res = await fetch(`${API_BASE_URL}/whatsapp/send_manual`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ company_id: companyId, phone, message: manualMessage, lead_id: lead?._id || "", lead_name: name }),
+        body: JSON.stringify({
+          company_id: companyId,
+          phone,
+          message: manualMessage,
+          lead_id: selectedLead?._id || "",
+          lead_name: name,
+        }),
       });
+
       const d = await res.json();
+
       if (res.ok) {
         setSendStatus({ type: "success", msg: "WhatsApp sent!" });
         setManualMessage("");
+        fetch(`${API_BASE_URL}/whatsapp/messages/${companyId}?page=1&per_page=1`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((data) => data && setMsgTotal(data.total))
+          .catch(() => {});
       } else {
-        setSendStatus({ type: "error", msg: d.error });
+        const providerMsg =
+          d?.provider_response?.message ||
+          d?.provider_response?.error ||
+          d?.error ||
+          "Send failed";
+        setSendStatus({ type: "error", msg: providerMsg });
       }
     } catch {
       setSendStatus({ type: "error", msg: "Send failed" });
@@ -147,43 +244,47 @@ const WhatsApp = ({ leads, companyId }) => {
   };
 
   const handleBulkSend = async () => {
-    if (!bulkMessage.trim()) { setBulkStatus({ type: "error", msg: "Please enter a message." }); return; }
-    setBulkStatus({ type: "loading", msg: `Sending to ${leadsWithPhone.length} leads…` });
+    if (!bulkMessage.trim()) {
+      setBulkStatus({ type: "error", msg: "Please enter a message." });
+      return;
+    }
+
+    setBulkStatus({ type: "loading", msg: `Sending to ${leadsWithPhone.length} leads...` });
+
     try {
       const res = await fetch(`${API_BASE_URL}/whatsapp/send_bulk/${companyId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: bulkMessage }),
       });
+
       const d = await res.json();
+
       if (res.ok) {
         setBulkStatus({ type: "success", msg: d.message });
-        // refresh total
         fetch(`${API_BASE_URL}/whatsapp/messages/${companyId}?page=1&per_page=1`)
-          .then((r) => r.ok ? r.json() : null)
+          .then((r) => (r.ok ? r.json() : null))
           .then((data) => data && setMsgTotal(data.total))
           .catch(() => {});
       } else {
-        setBulkStatus({ type: "error", msg: d.error });
+        setBulkStatus({ type: "error", msg: d.error || "Send failed" });
       }
     } catch {
       setBulkStatus({ type: "error", msg: "Send failed" });
     }
   };
 
-  const selectedLead = leads.find((l) => l._id === selectedLeadId);
-
   const inputStyle = {
-    width: "100%", borderRadius: 10, padding: "10px 13px",
-    fontSize: 12, boxSizing: "border-box",
+    width: "100%",
+    borderRadius: 10,
+    padding: "10px 13px",
+    fontSize: 12,
+    boxSizing: "border-box",
   };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {/* Main card */}
       <div style={{ background: "#142830", border: "1px solid #1E3D47", borderRadius: 16, overflow: "hidden" }}>
-
-        {/* Header */}
         <div style={{ padding: "14px 20px", borderBottom: "1px solid #1E3D47", display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ background: WA_BG, border: `1px solid ${WA_BORDER}`, borderRadius: 10, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <WaLogo size={20} />
@@ -196,32 +297,46 @@ const WhatsApp = ({ leads, companyId }) => {
           </div>
           <button
             onClick={() => setConfigOpen((p) => !p)}
-            style={{ marginLeft: "auto", background: "transparent", border: "1px solid #1E3D47", color: "#6B8E95", borderRadius: 8, padding: "5px 14px", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+            style={{
+              marginLeft: "auto",
+              background: "transparent",
+              border: "1px solid #1E3D47",
+              color: "#6B8E95",
+              borderRadius: 8,
+              padding: "5px 14px",
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
           >
             {configOpen ? "Hide Settings" : "Settings"}
           </button>
         </div>
 
-        {/* Config panel */}
         {configOpen && (
           <div style={{ padding: 20, borderBottom: "1px solid #1E3D47", background: "#0F2229", display: "flex", flexDirection: "column", gap: 14 }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1.3, margin: 0 }}>WhatsApp Settings</p>
+            <p style={{ fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1.3, margin: 0 }}>
+              WhatsApp Settings
+            </p>
+
             <div>
               <Label>Integrated Number (From)</Label>
               <input
                 type="text"
                 value={waConfig.wa_number}
                 onChange={(e) => setWaConfig((p) => ({ ...p, wa_number: e.target.value }))}
-                placeholder="91XXXXXXXXXX — your registered WhatsApp business number"
+                placeholder="91XXXXXXXXXX"
                 className="crm-input"
                 style={inputStyle}
               />
             </div>
+
             <div>
               <Label>
-                Template Name&nbsp;
+                Template Name{" "}
                 <span style={{ color: "#3A6B7A", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>
-                  — optional, leave blank to send as plain text
+                  optional, leave blank to send plain text
                 </span>
               </Label>
               <input
@@ -233,15 +348,37 @@ const WhatsApp = ({ leads, companyId }) => {
                 style={inputStyle}
               />
             </div>
+
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <button
                 onClick={saveConfig}
-                style={{ background: WA_DARK, color: "white", border: "none", borderRadius: 8, padding: "8px 18px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                style={{
+                  background: WA_DARK,
+                  color: "white",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "8px 18px",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
               >
                 Save Settings
               </button>
+
               {configStatus && (
-                <span style={{ fontSize: 12, color: configStatus.type === "success" ? "#22C55E" : configStatus.type === "loading" ? "#6B8E95" : "#EF4444" }}>
+                <span
+                  style={{
+                    fontSize: 12,
+                    color:
+                      configStatus.type === "success"
+                        ? "#22C55E"
+                        : configStatus.type === "loading"
+                        ? "#6B8E95"
+                        : "#EF4444",
+                  }}
+                >
                   {configStatus.msg}
                 </span>
               )}
@@ -249,105 +386,167 @@ const WhatsApp = ({ leads, companyId }) => {
           </div>
         )}
 
-        {/* Tabs */}
         <div style={{ display: "flex", borderBottom: "1px solid #1E3D47" }}>
           {[
-            { key: "send",    label: "Send" },
+            { key: "send", label: "Send" },
             { key: "history", label: "Message History" },
           ].map(({ key, label }) => (
             <button
               key={key}
               onClick={() => setTab(key)}
-              style={{ flex: 1, padding: "11px", fontSize: 12, fontWeight: tab === key ? 700 : 500, color: tab === key ? WA_GREEN : "#6B8E95", background: "transparent", border: "none", borderBottom: tab === key ? `2px solid ${WA_GREEN}` : "2px solid transparent", cursor: "pointer", fontFamily: "inherit" }}
+              style={{
+                flex: 1,
+                padding: "11px",
+                fontSize: 12,
+                fontWeight: tab === key ? 700 : 500,
+                color: tab === key ? WA_GREEN : "#6B8E95",
+                background: "transparent",
+                border: "none",
+                borderBottom: tab === key ? `2px solid ${WA_GREEN}` : "2px solid transparent",
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
             >
               {label}
             </button>
           ))}
         </div>
 
-        {/* ── SEND TAB ── */}
         {tab === "send" && (
           <div style={{ padding: 22, display: "flex", flexDirection: "column", gap: 22 }}>
-
-            {/* Not-configured warning */}
             {!isConfigured && (
               <div style={{ background: "#2A1A05", border: "1px solid #92400E44", borderRadius: 10, padding: "12px 16px", display: "flex", alignItems: "flex-start", gap: 10 }}>
                 <span style={{ fontSize: 14, marginTop: 1 }}>⚠️</span>
                 <div>
                   <p style={{ fontSize: 12, fontWeight: 700, color: "#FCD34D", margin: "0 0 3px" }}>WhatsApp not configured</p>
                   <p style={{ fontSize: 12, color: "#92400E", margin: 0 }}>
-                    Click <strong style={{ color: "#FCD34D" }}>Settings</strong> above → enter your WhatsApp integrated number → click <strong style={{ color: "#FCD34D" }}>Save Settings</strong>.
+                    Click Settings above, enter your integrated number, and save.
                   </p>
                 </div>
               </div>
             )}
 
-            {/* Manual send */}
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <p style={{ fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1.3, margin: 0 }}>
                 Manual Send
               </p>
 
+              <div>
+                <Label>Search Lead</Label>
+                <input
+                  type="text"
+                  value={leadSearch}
+                  onChange={(e) => setLeadSearch(e.target.value)}
+                  placeholder="Search by name, phone, or company"
+                  className="crm-input"
+                  style={inputStyle}
+                />
+              </div>
+
+              <div
+                style={{
+                  maxHeight: 220,
+                  overflowY: "auto",
+                  border: "1px solid #1E3D47",
+                  borderRadius: 10,
+                  background: "#0F2229",
+                }}
+              >
+                {filteredLeads.length === 0 ? (
+                  <div style={{ padding: "12px", fontSize: 12, color: "#6B8E95" }}>
+                    No matching leads found.
+                  </div>
+                ) : (
+                  filteredLeads.map((lead) => (
+                    <button
+                      key={lead._id}
+                      type="button"
+                      onClick={() => handleLeadPick(lead)}
+                      style={{
+                        width: "100%",
+                        textAlign: "left",
+                        background: selectedLeadId === lead._id ? "#142830" : "transparent",
+                        border: "none",
+                        color: "#FFFFFF",
+                        padding: "10px 12px",
+                        cursor: "pointer",
+                        borderBottom: "1px solid #1E3D47",
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      <div style={{ fontSize: 12, fontWeight: 600 }}>
+                        {lead.name || "Unknown"}
+                        {isYesLead(lead) && (
+                          <span style={{ marginLeft: 8, color: "#22C55E", fontSize: 11 }}>Interested</span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#6B8E95" }}>
+                        {lead.phone} {lead.company ? `· ${lead.company}` : ""}
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+
+              {selectedLeadId && (
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <button
+                    type="button"
+                    onClick={clearLeadSelection}
+                    style={{
+                      background: "transparent",
+                      border: "1px solid #1E3D47",
+                      color: "#6B8E95",
+                      borderRadius: 8,
+                      padding: "6px 12px",
+                      fontSize: 11,
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    Clear Selection
+                  </button>
+                </div>
+              )}
+
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div>
-                  <Label>Select Lead</Label>
-                  <select
-                    value={selectedLeadId}
-                    onChange={(e) => { setSelectedLeadId(e.target.value); setManualPhone(""); setManualName(""); }}
+                  <Label>Contact Name</Label>
+                  <input
+                    type="text"
+                    value={selectedLeadId ? (selectedLead?.name || "") : manualName}
+                    onChange={(e) => {
+                      if (!selectedLeadId) setManualName(e.target.value);
+                    }}
+                    placeholder="e.g. John Smith"
+                    disabled={!!selectedLeadId}
                     className="crm-input"
-                    style={inputStyle}
-                  >
-                    <option value="">— or enter details below —</option>
-                    {interestedWithPhone.length > 0 && (
-                      <optgroup label="⭐ Interested">
-                        {interestedWithPhone.map((l) => (
-                          <option key={l._id} value={l._id}>{l.name} · {l.phone}</option>
-                        ))}
-                      </optgroup>
-                    )}
-                    {leadsWithPhone.filter((l) => l.response_status !== "yes").length > 0 && (
-                      <optgroup label="All Others">
-                        {leadsWithPhone.filter((l) => l.response_status !== "yes").map((l) => (
-                          <option key={l._id} value={l._id}>{l.name} · {l.phone}</option>
-                        ))}
-                      </optgroup>
-                    )}
-                  </select>
+                    style={{ ...inputStyle, opacity: selectedLeadId ? 0.6 : 1 }}
+                  />
                 </div>
+
                 <div>
                   <Label>Phone Number</Label>
                   <input
                     type="text"
                     value={selectedLeadId ? (selectedLead?.phone || "") : manualPhone}
-                    onChange={(e) => { if (!selectedLeadId) setManualPhone(e.target.value); }}
+                    onChange={(e) => {
+                      if (!selectedLeadId) setManualPhone(e.target.value);
+                    }}
                     placeholder="91XXXXXXXXXX"
                     disabled={!!selectedLeadId}
                     className="crm-input"
-                    style={{ ...inputStyle, opacity: selectedLeadId ? 0.5 : 1 }}
+                    style={{ ...inputStyle, opacity: selectedLeadId ? 0.6 : 1 }}
                   />
                 </div>
               </div>
-
-              {!selectedLeadId && (
-                <div>
-                  <Label>Contact Name <span style={{ color: "#3A6B7A", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(optional)</span></Label>
-                  <input
-                    type="text"
-                    value={manualName}
-                    onChange={(e) => setManualName(e.target.value)}
-                    placeholder="e.g. John Smith"
-                    className="crm-input"
-                    style={inputStyle}
-                  />
-                </div>
-              )}
 
               <div>
                 <Label>Message</Label>
                 <textarea
                   value={manualMessage}
                   onChange={(e) => setManualMessage(e.target.value)}
-                  placeholder="Type your WhatsApp message… Use {{name}} for personalization."
+                  placeholder="Type your WhatsApp message... Use {{name}} for personalization."
                   className="crm-input"
                   style={{ ...inputStyle, minHeight: 100, resize: "vertical" }}
                 />
@@ -356,18 +555,30 @@ const WhatsApp = ({ leads, companyId }) => {
               <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                 <button
                   onClick={handleManualSend}
-                  style={{ background: WA_GREEN, color: "white", border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 7 }}
+                  style={{
+                    background: WA_GREEN,
+                    color: "white",
+                    border: "none",
+                    borderRadius: 10,
+                    padding: "10px 20px",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 7,
+                  }}
                 >
                   <WaLogo size={14} color="white" /> Send WhatsApp
                 </button>
+
                 <StatusBanner status={sendStatus} />
               </div>
             </div>
 
-            {/* Divider */}
             <div style={{ height: 1, background: "#1E3D47" }} />
 
-            {/* Bulk send */}
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <p style={{ fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1.3, margin: 0 }}>
                 Bulk Send — {leadsWithPhone.length} lead{leadsWithPhone.length !== 1 ? "s" : ""} with phone numbers
@@ -378,7 +589,7 @@ const WhatsApp = ({ leads, companyId }) => {
                 <textarea
                   value={bulkMessage}
                   onChange={(e) => setBulkMessage(e.target.value)}
-                  placeholder={`Hi {{name}}, I wanted to reach out about…`}
+                  placeholder="Hi {{name}}, I wanted to reach out about..."
                   className="crm-input"
                   style={{ ...inputStyle, minHeight: 110, resize: "vertical" }}
                 />
@@ -388,21 +599,35 @@ const WhatsApp = ({ leads, companyId }) => {
                 <button
                   onClick={handleBulkSend}
                   disabled={leadsWithPhone.length === 0}
-                  style={{ background: WA_DARK, color: "white", border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 13, fontWeight: 700, cursor: leadsWithPhone.length === 0 ? "not-allowed" : "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 7, opacity: leadsWithPhone.length === 0 ? 0.5 : 1 }}
+                  style={{
+                    background: WA_DARK,
+                    color: "white",
+                    border: "none",
+                    borderRadius: 10,
+                    padding: "10px 20px",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: leadsWithPhone.length === 0 ? "not-allowed" : "pointer",
+                    fontFamily: "inherit",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 7,
+                    opacity: leadsWithPhone.length === 0 ? 0.5 : 1,
+                  }}
                 >
                   <WaLogo size={14} color="white" /> Send to All ({leadsWithPhone.length})
                 </button>
+
                 <StatusBanner status={bulkStatus} />
               </div>
             </div>
           </div>
         )}
 
-        {/* ── HISTORY TAB ── */}
         {tab === "history" && (
           <div style={{ padding: 22 }}>
             {loadingHistory ? (
-              <p style={{ color: "#6B8E95", fontSize: 12, margin: 0 }}>Loading…</p>
+              <p style={{ color: "#6B8E95", fontSize: 12, margin: 0 }}>Loading...</p>
             ) : messages.length === 0 ? (
               <div style={{ textAlign: "center", padding: "48px 20px" }}>
                 <WaLogo size={44} color="#1E3D47" />
@@ -410,7 +635,6 @@ const WhatsApp = ({ leads, companyId }) => {
               </div>
             ) : (
               <>
-                {/* Table header */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 130px 70px 70px", gap: 10, padding: "6px 12px", fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
                   <span>Lead / Message</span>
                   <span>Phone</span>
@@ -428,7 +652,7 @@ const WhatsApp = ({ leads, companyId }) => {
                         {msg.lead_name || "Unknown"}
                       </p>
                       <p style={{ fontSize: 11, color: "#6B8E95", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {msg.message.length > 60 ? msg.message.slice(0, 60) + "…" : msg.message}
+                        {msg.message.length > 60 ? msg.message.slice(0, 60) + "..." : msg.message}
                       </p>
                     </div>
                     <span style={{ fontSize: 11, color: "#9FE6F2", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{msg.phone}</span>
@@ -448,7 +672,9 @@ const WhatsApp = ({ leads, companyId }) => {
                     >
                       <Icon d={ICONS.chevronLeft} size={12} /> Prev
                     </button>
-                    <span style={{ color: "#6B8E95", fontSize: 12 }}>Page {msgPage} of {Math.ceil(msgTotal / 20)}</span>
+                    <span style={{ color: "#6B8E95", fontSize: 12 }}>
+                      Page {msgPage} of {Math.ceil(msgTotal / 20)}
+                    </span>
                     <button
                       onClick={() => setMsgPage((p) => p + 1)}
                       disabled={msgPage * 20 >= msgTotal}
@@ -464,12 +690,11 @@ const WhatsApp = ({ leads, companyId }) => {
         )}
       </div>
 
-      {/* Stats cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
         {[
-          { label: "Interested Leads",    value: interestedLeads.length,                  color: "#22C55E" },
-          { label: "With Phone Number",   value: interestedWithPhone.length,              color: WA_GREEN },
-          { label: "WhatsApp Sent",       value: msgTotal,                                color: "#9FE6F2" },
+          { label: "Interested Leads", value: interestedLeads.length, color: "#22C55E" },
+          { label: "With Phone Number", value: leadsWithPhone.length, color: WA_GREEN },
+          { label: "WhatsApp Sent", value: msgTotal, color: "#9FE6F2" },
         ].map(({ label, value, color }) => (
           <div key={label} style={{ background: "#142830", border: "1px solid #1E3D47", borderRadius: 12, padding: "14px 18px" }}>
             <p style={{ fontSize: 10, color: "#6B8E95", margin: "0 0 6px", textTransform: "uppercase", letterSpacing: 1 }}>{label}</p>
