@@ -62,12 +62,33 @@ const Label = ({ children }) => (
   </label>
 );
 
-const isYesLead = (lead) =>
-  lead?.response_status === "yes" ||
-  lead?.status === "yes" ||
-  lead?.lead_status === "yes";
+const getLeadPhone = (lead) => {
+  return (
+    lead?.phone ||
+    lead?.mobile ||
+    lead?.phone_number ||
+    lead?.contact_number ||
+    lead?.whatsapp ||
+    ""
+  );
+};
 
-const WhatsApp = ({ leads, companyId }) => {
+const getLeadStatus = (lead) => {
+  return (
+    lead?.reply_status ||
+    lead?.response_status ||
+    lead?.status ||
+    lead?.lead_status ||
+    ""
+  );
+};
+
+const isInterestedLead = (lead) => {
+  const value = String(getLeadStatus(lead)).toLowerCase().trim();
+  return value === "interested" || value === "yes";
+};
+
+const WhatsApp = ({ leads = [], companyId }) => {
   const [tab, setTab] = useState("send");
   const [configOpen, setConfigOpen] = useState(false);
 
@@ -93,38 +114,42 @@ const WhatsApp = ({ leads, companyId }) => {
   const [msgPage, setMsgPage] = useState(1);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
-  const leadsWithPhone = useMemo(
-    () => leads.filter((l) => l.phone && String(l.phone).trim() !== ""),
-    [leads]
-  );
+  const leadsWithPhone = useMemo(() => {
+    return leads.filter((lead) => {
+      const phone = getLeadPhone(lead);
+      return phone && String(phone).trim() !== "";
+    });
+  }, [leads]);
 
-  const interestedLeads = useMemo(
-    () => leadsWithPhone.filter((l) => isYesLead(l)),
-    [leadsWithPhone]
-  );
-
-  const otherLeads = useMemo(
-    () => leadsWithPhone.filter((l) => !isYesLead(l)),
-    [leadsWithPhone]
-  );
+  const interestedLeads = useMemo(() => {
+    return leadsWithPhone.filter((lead) => isInterestedLead(lead));
+  }, [leadsWithPhone]);
 
   const filteredLeads = useMemo(() => {
     const q = leadSearch.toLowerCase().trim();
-    if (!q) return leadsWithPhone;
 
-    return leadsWithPhone.filter((l) => {
-      const name = (l.name || "").toLowerCase();
-      const phone = String(l.phone || "");
-      const company = (l.company || "").toLowerCase();
+    const baseList = interestedLeads.length > 0 ? interestedLeads : leadsWithPhone;
 
-      return name.includes(q) || phone.includes(q) || company.includes(q);
+    if (!q) return baseList;
+
+    return baseList.filter((lead) => {
+      const name = String(lead?.name || "").toLowerCase();
+      const phone = String(getLeadPhone(lead) || "");
+      const company = String(lead?.company || "").toLowerCase();
+      const status = String(getLeadStatus(lead) || "").toLowerCase();
+
+      return (
+        name.includes(q) ||
+        phone.includes(q) ||
+        company.includes(q) ||
+        status.includes(q)
+      );
     });
-  }, [leadSearch, leadsWithPhone]);
+  }, [leadSearch, interestedLeads, leadsWithPhone]);
 
-  const selectedLead = useMemo(
-    () => leads.find((l) => l._id === selectedLeadId),
-    [leads, selectedLeadId]
-  );
+  const selectedLead = useMemo(() => {
+    return leads.find((lead) => lead._id === selectedLeadId);
+  }, [leads, selectedLeadId]);
 
   const fetchConfig = useCallback(async () => {
     try {
@@ -162,6 +187,12 @@ const WhatsApp = ({ leads, companyId }) => {
     if (tab === "history") fetchHistory();
   }, [tab, msgPage, fetchHistory]);
 
+  useEffect(() => {
+    console.log("WhatsApp leads sample:", leads.slice(0, 5));
+    console.log("WhatsApp leadsWithPhone:", leadsWithPhone.length);
+    console.log("WhatsApp interestedLeads:", interestedLeads.length);
+  }, [leads, leadsWithPhone, interestedLeads]);
+
   const saveConfig = async () => {
     setConfigStatus({ type: "loading", msg: "Saving..." });
     try {
@@ -185,20 +216,20 @@ const WhatsApp = ({ leads, companyId }) => {
 
   const handleLeadPick = (lead) => {
     setSelectedLeadId(lead._id);
-    setManualPhone(lead.phone || "");
+    setManualPhone(getLeadPhone(lead) || "");
     setManualName(lead.name || "");
-    setLeadSearch(`${lead.name || "Unknown"} · ${lead.phone || ""}`);
+    setLeadSearch(`${lead.name || "Unknown"} · ${getLeadPhone(lead) || ""}`);
   };
 
   const clearLeadSelection = () => {
     setSelectedLeadId("");
-    setLeadSearch("");
     setManualPhone("");
     setManualName("");
+    setLeadSearch("");
   };
 
   const handleManualSend = async () => {
-    const phone = selectedLead?.phone || manualPhone;
+    const phone = selectedLead ? getLeadPhone(selectedLead) : manualPhone;
     const name = selectedLead?.name || manualName;
 
     if (!phone || !manualMessage.trim()) {
@@ -235,7 +266,8 @@ const WhatsApp = ({ leads, companyId }) => {
           d?.provider_response?.message ||
           d?.provider_response?.error ||
           d?.error ||
-          "Send failed";
+          "Unknown response";
+
         setSendStatus({ type: "error", msg: providerMsg });
       }
     } catch {
@@ -292,7 +324,7 @@ const WhatsApp = ({ leads, companyId }) => {
           <div>
             <h2 style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF", margin: 0 }}>WhatsApp</h2>
             <p style={{ fontSize: 11, color: "#6B8E95", margin: 0 }}>
-              MSG91-powered · {leadsWithPhone.length} lead{leadsWithPhone.length !== 1 ? "s" : ""} with phone
+              MSG91-powered · {leadsWithPhone.length} leads with phone
             </p>
           </div>
           <button
@@ -310,7 +342,7 @@ const WhatsApp = ({ leads, companyId }) => {
               fontFamily: "inherit",
             }}
           >
-            {configOpen ? "Hide Settings" : "Settings"}
+            Settings
           </button>
         </div>
 
@@ -333,12 +365,7 @@ const WhatsApp = ({ leads, companyId }) => {
             </div>
 
             <div>
-              <Label>
-                Template Name{" "}
-                <span style={{ color: "#3A6B7A", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>
-                  optional, leave blank to send plain text
-                </span>
-              </Label>
+              <Label>Template Name</Label>
               <input
                 type="text"
                 value={waConfig.wa_template_name}
@@ -367,21 +394,7 @@ const WhatsApp = ({ leads, companyId }) => {
                 Save Settings
               </button>
 
-              {configStatus && (
-                <span
-                  style={{
-                    fontSize: 12,
-                    color:
-                      configStatus.type === "success"
-                        ? "#22C55E"
-                        : configStatus.type === "loading"
-                        ? "#6B8E95"
-                        : "#EF4444",
-                  }}
-                >
-                  {configStatus.msg}
-                </span>
-              )}
+              {configStatus && <StatusBanner status={configStatus} />}
             </div>
           </div>
         )}
@@ -437,7 +450,7 @@ const WhatsApp = ({ leads, companyId }) => {
                   type="text"
                   value={leadSearch}
                   onChange={(e) => setLeadSearch(e.target.value)}
-                  placeholder="Search by name, phone, or company"
+                  placeholder="Search interested leads by name, phone, or company"
                   className="crm-input"
                   style={inputStyle}
                 />
@@ -476,12 +489,14 @@ const WhatsApp = ({ leads, companyId }) => {
                     >
                       <div style={{ fontSize: 12, fontWeight: 600 }}>
                         {lead.name || "Unknown"}
-                        {isYesLead(lead) && (
-                          <span style={{ marginLeft: 8, color: "#22C55E", fontSize: 11 }}>Interested</span>
+                        {isInterestedLead(lead) && (
+                          <span style={{ marginLeft: 8, color: "#22C55E", fontSize: 11 }}>
+                            Interested
+                          </span>
                         )}
                       </div>
                       <div style={{ fontSize: 11, color: "#6B8E95" }}>
-                        {lead.phone} {lead.company ? `· ${lead.company}` : ""}
+                        {getLeadPhone(lead)} {lead.company ? `· ${lead.company}` : ""}
                       </div>
                     </button>
                   ))
@@ -529,7 +544,7 @@ const WhatsApp = ({ leads, companyId }) => {
                   <Label>Phone Number</Label>
                   <input
                     type="text"
-                    value={selectedLeadId ? (selectedLead?.phone || "") : manualPhone}
+                    value={selectedLeadId ? (getLeadPhone(selectedLead) || "") : manualPhone}
                     onChange={(e) => {
                       if (!selectedLeadId) setManualPhone(e.target.value);
                     }}
@@ -581,7 +596,7 @@ const WhatsApp = ({ leads, companyId }) => {
 
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <p style={{ fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1.3, margin: 0 }}>
-                Bulk Send — {leadsWithPhone.length} lead{leadsWithPhone.length !== 1 ? "s" : ""} with phone numbers
+                Bulk Send — {leadsWithPhone.length} leads with phone numbers
               </p>
 
               <div>
@@ -652,7 +667,7 @@ const WhatsApp = ({ leads, companyId }) => {
                         {msg.lead_name || "Unknown"}
                       </p>
                       <p style={{ fontSize: 11, color: "#6B8E95", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {msg.message.length > 60 ? msg.message.slice(0, 60) + "..." : msg.message}
+                        {msg.message.length > 60 ? `${msg.message.slice(0, 60)}...` : msg.message}
                       </p>
                     </div>
                     <span style={{ fontSize: 11, color: "#9FE6F2", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{msg.phone}</span>
