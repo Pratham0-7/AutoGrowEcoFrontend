@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import Icon from "../shared/Icon";
 import { ICONS } from "../shared/icons";
+import ImportPanel from "../shared/ImportPanel";
 
 const API = import.meta.env.VITE_API_BASE_URL;
 
@@ -279,6 +280,7 @@ const Sequences = ({ leads, companyId, fetchLeads }) => {
   const [status, setStatus] = useState(null);
   const [stepStatus, setStepStatus] = useState({});
   const [showAdvancedVars, setShowAdvancedVars] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -961,6 +963,19 @@ const Sequences = ({ leads, companyId, fetchLeads }) => {
               </button>
 
               <button
+                onClick={() => setImportOpen((o) => !o)}
+                style={{
+                  background: importOpen ? "#1E3A5F" : THEME.panelAlt,
+                  color: importOpen ? "#60A5FA" : THEME.muted,
+                  border: `1px solid ${importOpen ? "#1E3A5F" : THEME.border}`,
+                  borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 600,
+                  cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
+                  fontFamily: "inherit",
+                }}
+              >
+                <Icon d={ICONS.upload} size={13} /> Import
+              </button>
+              <button
                 onClick={() => { setEnrollOpen(true); setSelectedIds([]); setStatus(null); }}
                 style={{
                   background: THEME.coral, color: "white", border: "none",
@@ -985,6 +1000,14 @@ const Sequences = ({ leads, companyId, fetchLeads }) => {
               </button>
             </div>
           </div>
+
+          {importOpen && (
+            <ImportPanel
+              companyId={companyId}
+              campaignId={selectedSeq._id}
+              fetchLeads={fetchLeads}
+            />
+          )}
 
           {/* FIX 4: Only show approve panel when manual mode AND leads are enrolled */}
           {!selectedSeq.auto_run && selectedSequenceLeads.length > 0 && (
