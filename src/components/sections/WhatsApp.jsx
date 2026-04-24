@@ -255,8 +255,8 @@ const WhatsApp = ({ leads = [], companyId }) => {
     } catch {}
   }, []);
 
-  const fetchMetaMessages = useCallback(async () => {
-    setLoadingMetaHistory(true);
+  const fetchMetaMessages = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoadingMetaHistory(true);
     try {
       const res = await fetch(`${API_BASE_URL}/whatsapp/meta/messages/${companyId}?page=${metaMsgPage}&per_page=20`);
       if (res.ok) {
@@ -265,7 +265,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
         setMetaMsgTotal(d.total);
       }
     } catch {}
-    setLoadingMetaHistory(false);
+    if (!silent) setLoadingMetaHistory(false);
   }, [companyId, metaMsgPage]);
 
   useEffect(() => {
@@ -285,7 +285,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
     fetchMetaConfig();
     fetchMetaTemplates();
     fetchMetaMessages();
-    const id = setInterval(fetchMetaMessages, 15000);
+    const id = setInterval(() => fetchMetaMessages({ silent: true }), 15000);
     return () => clearInterval(id);
   }, [tab, metaMsgPage, fetchMetaConfig, fetchMetaTemplates, fetchMetaMessages]);
 
