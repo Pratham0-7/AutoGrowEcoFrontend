@@ -28,40 +28,40 @@ const CH_LABEL = { email: "Email", sms: "SMS", both: "Both" };
 
 const BASIC_VARIABLE_FIELDS = [
   {
-    key: "sender_name",
+    key: "your_name",
     label: "Your Name",
     placeholder: "e.g. Pratham",
-    helper: "The name people will see in the message.",
+    helper: "Used for {{your_name}} in the sequence.",
   },
   {
-    key: "company_service",
+    key: "product_service",
     label: "Your Product / Service",
     placeholder: "e.g. Automated Growth Ecosystem (AGE)",
-    helper: "What you are offering.",
+    helper: "Used for {{product_service}}.",
   },
   {
-    key: "value_prop",
+    key: "help_with",
     label: "What do you help with?",
-    placeholder: "e.g. We help businesses automate follow-ups so no lead goes cold",
-    helper: "Write this in simple plain English.",
+    placeholder: "e.g. automating follow-ups so no lead goes cold",
+    helper: "Used for {{help_with}}.",
   },
   {
-    key: "pain_point",
+    key: "main_problem",
     label: "Main Problem You Solve",
-    placeholder: "e.g. Leads go cold because follow-up is inconsistent",
-    helper: "What is the main pain your prospect has?",
+    placeholder: "e.g. missed follow-ups and cold leads",
+    helper: "Used for {{main_problem}}.",
   },
   {
-    key: "cta",
+    key: "call_to_action",
     label: "Call To Action",
     placeholder: "e.g. Open to a quick 15-minute call this week?",
-    helper: "What do you want them to do next?",
+    helper: "Used for {{call_to_action}}.",
   },
   {
     key: "industry",
     label: "Industry (Optional)",
     placeholder: "e.g. Real estate",
-    helper: "Only fill this if you want the messaging to feel more specific.",
+    helper: "Optional industry context.",
   },
 ];
 
