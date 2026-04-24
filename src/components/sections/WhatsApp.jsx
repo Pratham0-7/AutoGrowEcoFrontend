@@ -76,7 +76,30 @@ const getLeadPhone = (lead) =>
 const isInterestedLead = (lead) =>
   String(lead?.response_status || "").toLowerCase().trim() === "yes";
 
+const STATUS_COLORS = {
+  pending:   { bg: "#2A1F05", border: "#92400E44", text: "#F59E0B" },
+  sent:      { bg: "#0D3D20", border: "#22C55E44", text: "#22C55E" },
+  delivered: { bg: "#0A1E40", border: "#3B82F644", text: "#60A5FA" },
+  read:      { bg: "#0A2419", border: "#25D36644", text: "#25D366" },
+  failed:    { bg: "#2D0A0A", border: "#DC262644", text: "#EF4444" },
+};
+
+const MetaStatusBadge = ({ status }) => {
+  const c = STATUS_COLORS[status] || STATUS_COLORS.pending;
+  const icons = { pending: "⏳", sent: "✓", delivered: "✓✓", read: "✓✓", failed: "✗" };
+  return (
+    <span style={{
+      fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6,
+      background: c.bg, border: `1px solid ${c.border}`, color: c.text,
+    }}>
+      {icons[status] || "?"} {status}
+    </span>
+  );
+};
+
 const WhatsApp = ({ leads = [], companyId }) => {
+  const userId = localStorage.getItem("user_id") || "";
+
   const [tab, setTab] = useState("send");
   const [configOpen, setConfigOpen] = useState(false);
 
@@ -101,6 +124,23 @@ const WhatsApp = ({ leads = [], companyId }) => {
   const [msgTotal, setMsgTotal] = useState(0);
   const [msgPage, setMsgPage] = useState(1);
   const [loadingHistory, setLoadingHistory] = useState(false);
+
+  // ── Meta Cloud state ────────────────────────────────────────────────────────
+  const [metaConfigOpen, setMetaConfigOpen] = useState(false);
+  const [metaConfig, setMetaConfig] = useState({ meta_phone_number_id: "", meta_access_token: "" });
+  const [metaConfigStatus, setMetaConfigStatus] = useState(null);
+  const [metaTemplates, setMetaTemplates] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [templateVars, setTemplateVars] = useState({});
+  const [metaLeadSearch, setMetaLeadSearch] = useState("");
+  const [metaSelectedLeadId, setMetaSelectedLeadId] = useState("");
+  const [metaManualPhone, setMetaManualPhone] = useState("");
+  const [metaManualName, setMetaManualName] = useState("");
+  const [metaSendStatus, setMetaSendStatus] = useState(null);
+  const [metaMessages, setMetaMessages] = useState([]);
+  const [metaMsgTotal, setMetaMsgTotal] = useState(0);
+  const [metaMsgPage, setMetaMsgPage] = useState(1);
+  const [loadingMetaHistory, setLoadingMetaHistory] = useState(false);
 
   const interestedLeads = useMemo(
     () => leads.filter((lead) => isInterestedLead(lead)),
@@ -162,6 +202,72 @@ const WhatsApp = ({ leads = [], companyId }) => {
     setLoadingHistory(false);
   }, [companyId, msgPage]);
 
+  // ── Meta Cloud derived values ───────────────────────────────────────────────
+  const metaSelectedLead = useMemo(
+    () => leads.find((l) => l._id === metaSelectedLeadId),
+    [leads, metaSelectedLeadId]
+  );
+
+  const metaSearchableLeads = useMemo(() => {
+    const q = metaLeadSearch.toLowerCase().trim();
+    const sorted = [...leads].sort((a, b) => {
+      const aYes = isInterestedLead(a) ? 1 : 0;
+      const bYes = isInterestedLead(b) ? 1 : 0;
+      if (aYes !== bYes) return bYes - aYes;
+      return (a.name || "").localeCompare(b.name || "");
+    });
+    if (!q) return sorted;
+    return sorted.filter((l) => {
+      const name = String(l?.name || "").toLowerCase();
+      const email = String(l?.email || "").toLowerCase();
+      const phone = getLeadPhone(l).toLowerCase();
+      return name.includes(q) || email.includes(q) || phone.includes(q);
+    });
+  }, [metaLeadSearch, leads]);
+
+  const bodyPreview = useMemo(() => {
+    if (!selectedTemplate?.body) return "";
+    let body = selectedTemplate.body;
+    Object.entries(templateVars).forEach(([k, v]) => {
+      body = body.replace(new RegExp(`\\{\\{${k}\\}\\}`, "g"), v || `{{${k}}}`);
+    });
+    return body;
+  }, [selectedTemplate, templateVars]);
+
+  // ── Meta Cloud fetch functions ──────────────────────────────────────────────
+  const fetchMetaConfig = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/whatsapp/meta/config/${companyId}`);
+      if (res.ok) {
+        const d = await res.json();
+        setMetaConfig({ meta_phone_number_id: d.meta_phone_number_id || "", meta_access_token: d.meta_access_token || "" });
+      }
+    } catch {}
+  }, [companyId]);
+
+  const fetchMetaTemplates = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/whatsapp/meta/templates`);
+      if (res.ok) {
+        const d = await res.json();
+        setMetaTemplates(d.templates || []);
+      }
+    } catch {}
+  }, []);
+
+  const fetchMetaMessages = useCallback(async () => {
+    setLoadingMetaHistory(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/whatsapp/meta/messages/${companyId}?page=${metaMsgPage}&per_page=20`);
+      if (res.ok) {
+        const d = await res.json();
+        setMetaMessages(d.messages);
+        setMetaMsgTotal(d.total);
+      }
+    } catch {}
+    setLoadingMetaHistory(false);
+  }, [companyId, metaMsgPage]);
+
   useEffect(() => {
     fetchConfig();
     fetch(`${API_BASE_URL}/whatsapp/messages/${companyId}?page=1&per_page=1`)
@@ -173,6 +279,14 @@ const WhatsApp = ({ leads = [], companyId }) => {
   useEffect(() => {
     if (tab === "history") fetchHistory();
   }, [tab, msgPage, fetchHistory]);
+
+  useEffect(() => {
+    if (tab === "meta") {
+      fetchMetaConfig();
+      fetchMetaTemplates();
+      fetchMetaMessages();
+    }
+  }, [tab, metaMsgPage, fetchMetaConfig, fetchMetaTemplates, fetchMetaMessages]);
 
   const saveConfig = async () => {
     setConfigStatus({ type: "loading", msg: "Saving..." });
@@ -287,6 +401,87 @@ const WhatsApp = ({ leads = [], companyId }) => {
     }
   };
 
+  // ── Meta Cloud handlers ─────────────────────────────────────────────────────
+  const saveMetaConfig = async () => {
+    setMetaConfigStatus({ type: "loading", msg: "Saving..." });
+    try {
+      const res = await fetch(`${API_BASE_URL}/whatsapp/meta/config/${companyId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(metaConfig),
+      });
+      const d = await res.json();
+      if (res.ok) {
+        setMetaConfigStatus({ type: "success", msg: "Meta config saved!" });
+      } else {
+        setMetaConfigStatus({ type: "error", msg: d.error || "Save failed" });
+      }
+    } catch {
+      setMetaConfigStatus({ type: "error", msg: "Save failed" });
+    }
+  };
+
+  const handleMetaLeadPick = (lead) => {
+    setMetaSelectedLeadId(lead._id);
+    setMetaManualPhone(getLeadPhone(lead));
+    setMetaManualName(lead.name || "");
+    setMetaLeadSearch(`${lead.name || "Unknown"} · ${lead.email || getLeadPhone(lead)}`);
+  };
+
+  const clearMetaLeadSelection = () => {
+    setMetaSelectedLeadId("");
+    setMetaManualPhone("");
+    setMetaManualName("");
+    setMetaLeadSearch("");
+  };
+
+  const handleMetaSend = async () => {
+    const phone = metaSelectedLead ? getLeadPhone(metaSelectedLead) : metaManualPhone;
+    const name = metaSelectedLead?.name || metaManualName;
+
+    if (!phone) {
+      setMetaSendStatus({ type: "error", msg: "Select a lead or enter a phone number." });
+      return;
+    }
+    if (!selectedTemplate) {
+      setMetaSendStatus({ type: "error", msg: "Select a template." });
+      return;
+    }
+
+    setMetaSendStatus({ type: "loading", msg: "Sending via Meta Cloud API..." });
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/whatsapp/meta/send_template`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_id: companyId,
+          lead_id: metaSelectedLead?._id || "",
+          user_id: userId,
+          phone,
+          lead_name: name,
+          template_name: selectedTemplate.name,
+          language_code: selectedTemplate.language,
+          variables_used: templateVars,
+          body_preview: bodyPreview,
+        }),
+      });
+
+      const d = await res.json();
+
+      if (res.ok) {
+        setMetaSendStatus({ type: "success", msg: `Sent! Meta ID: ${d.meta_message_id || "—"}` });
+        setTemplateVars({});
+        fetchMetaMessages();
+      } else {
+        const errMsg = d?.provider_response?.error?.message || d?.error || "Send failed";
+        setMetaSendStatus({ type: "error", msg: errMsg });
+      }
+    } catch {
+      setMetaSendStatus({ type: "error", msg: "Send failed" });
+    }
+  };
+
   const inputStyle = {
     width: "100%",
     borderRadius: 10,
@@ -383,7 +578,8 @@ const WhatsApp = ({ leads = [], companyId }) => {
         <div style={{ display: "flex", borderBottom: "1px solid #1E3D47" }}>
           {[
             { key: "send", label: "Send" },
-            { key: "history", label: "Message History" },
+            { key: "meta", label: "Meta Cloud" },
+            { key: "history", label: "History" },
           ].map(({ key, label }) => (
             <button
               key={key}
@@ -687,6 +883,228 @@ const WhatsApp = ({ leads = [], companyId }) => {
                 )}
               </>
             )}
+          </div>
+        )}
+
+        {tab === "meta" && (
+          <div style={{ padding: 22, display: "flex", flexDirection: "column", gap: 20 }}>
+
+            {/* Meta Cloud Config */}
+            <div>
+              <button
+                onClick={() => setMetaConfigOpen((p) => !p)}
+                style={{ background: "transparent", border: "1px solid #1E3D47", color: "#6B8E95", borderRadius: 8, padding: "6px 14px", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+              >
+                {metaConfigOpen ? "Hide" : "Configure"} Meta Cloud Credentials
+              </button>
+
+              {metaConfigOpen && (
+                <div style={{ marginTop: 14, background: "#0F2229", border: "1px solid #1E3D47", borderRadius: 12, padding: 18, display: "flex", flexDirection: "column", gap: 12 }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1.3, margin: 0 }}>Meta Cloud API — per company credentials</p>
+                  <div>
+                    <Label>Phone Number ID</Label>
+                    <input type="text" value={metaConfig.meta_phone_number_id} onChange={(e) => setMetaConfig((p) => ({ ...p, meta_phone_number_id: e.target.value }))} placeholder="From Meta App Dashboard" className="crm-input" style={inputStyle} />
+                  </div>
+                  <div>
+                    <Label>Access Token</Label>
+                    <input type="password" value={metaConfig.meta_access_token} onChange={(e) => setMetaConfig((p) => ({ ...p, meta_access_token: e.target.value }))} placeholder="Bearer token" className="crm-input" style={inputStyle} />
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <button onClick={saveMetaConfig} style={{ background: WA_DARK, color: "white", border: "none", borderRadius: 8, padding: "8px 18px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                      Save
+                    </button>
+                    {metaConfigStatus && <StatusBanner status={metaConfigStatus} />}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div style={{ height: 1, background: "#1E3D47" }} />
+
+            {/* Send Template */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <p style={{ fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1.3, margin: 0 }}>
+                Send Approved Template
+              </p>
+
+              {/* Lead picker */}
+              <div>
+                <Label>Search Lead</Label>
+                <input type="text" value={metaLeadSearch} onChange={(e) => setMetaLeadSearch(e.target.value)} placeholder="Search by name, email, or phone" className="crm-input" style={inputStyle} />
+              </div>
+
+              <div style={{ maxHeight: 180, overflowY: "auto", border: "1px solid #1E3D47", borderRadius: 10, background: "#0F2229" }}>
+                {metaSearchableLeads.length === 0 ? (
+                  <div style={{ padding: 12, fontSize: 12, color: "#6B8E95" }}>No leads found.</div>
+                ) : (
+                  metaSearchableLeads.map((lead) => (
+                    <button key={lead._id} type="button" onClick={() => handleMetaLeadPick(lead)}
+                      style={{ width: "100%", textAlign: "left", background: metaSelectedLeadId === lead._id ? "#142830" : "transparent", border: "none", color: "#FFFFFF", padding: "9px 12px", cursor: "pointer", borderBottom: "1px solid #1E3D47", fontFamily: "inherit" }}
+                    >
+                      <div style={{ fontSize: 12, fontWeight: 600 }}>
+                        {lead.name || "Unknown"}
+                        {isInterestedLead(lead) && <span style={{ marginLeft: 8, color: "#22C55E", fontSize: 11 }}>Interested</span>}
+                        {!getLeadPhone(lead) && <span style={{ marginLeft: 8, color: "#F59E0B", fontSize: 11 }}>No phone</span>}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#6B8E95" }}>{lead.email || "No email"}{getLeadPhone(lead) ? ` · ${getLeadPhone(lead)}` : ""}</div>
+                    </button>
+                  ))
+                )}
+              </div>
+
+              {metaSelectedLeadId && (
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <button type="button" onClick={clearMetaLeadSelection}
+                    style={{ background: "transparent", border: "1px solid #1E3D47", color: "#6B8E95", borderRadius: 8, padding: "6px 12px", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
+
+              {!metaSelectedLeadId && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div>
+                    <Label>Name</Label>
+                    <input type="text" value={metaManualName} onChange={(e) => setMetaManualName(e.target.value)} placeholder="Lead name" className="crm-input" style={inputStyle} />
+                  </div>
+                  <div>
+                    <Label>Phone</Label>
+                    <input type="text" value={metaManualPhone} onChange={(e) => setMetaManualPhone(e.target.value)} placeholder="91XXXXXXXXXX" className="crm-input" style={inputStyle} />
+                  </div>
+                </div>
+              )}
+
+              {/* Template picker */}
+              <div>
+                <Label>Template</Label>
+                <select
+                  value={selectedTemplate?.name || ""}
+                  onChange={(e) => {
+                    const t = metaTemplates.find((x) => x.name === e.target.value) || null;
+                    setSelectedTemplate(t);
+                    setTemplateVars({});
+                  }}
+                  className="crm-input"
+                  style={{ ...inputStyle, cursor: "pointer" }}
+                >
+                  <option value="">— Select template —</option>
+                  {metaTemplates.map((t) => (
+                    <option key={t.name} value={t.name}>{t.display_name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Variable fields */}
+              {selectedTemplate?.variables?.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1, margin: 0 }}>Template Variables</p>
+                  {selectedTemplate.variables.map((v) => (
+                    <div key={v.index}>
+                      <Label>{`{{${v.index}}} — ${v.label}`}</Label>
+                      <input
+                        type="text"
+                        value={templateVars[v.index] || ""}
+                        onChange={(e) => setTemplateVars((p) => ({ ...p, [v.index]: e.target.value }))}
+                        placeholder={v.label}
+                        className="crm-input"
+                        style={inputStyle}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Preview */}
+              {selectedTemplate && (
+                <div>
+                  <Label>Message Preview</Label>
+                  <div style={{ background: "#0A2419", border: "1px solid #0F3D2A", borderRadius: 10, padding: "12px 14px", fontSize: 12, color: "#E2F5E8", lineHeight: 1.6, whiteSpace: "pre-wrap", minHeight: 48 }}>
+                    {bodyPreview || <span style={{ color: "#6B8E95" }}>Fill variables above to see preview…</span>}
+                  </div>
+                  <p style={{ fontSize: 10, color: "#6B8E95", margin: "5px 0 0" }}>
+                    Template: <strong style={{ color: "#9FE6F2" }}>{selectedTemplate.name}</strong> · Lang: {selectedTemplate.language}
+                  </p>
+                </div>
+              )}
+
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <button
+                  onClick={handleMetaSend}
+                  style={{ background: WA_GREEN, color: "white", border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 7 }}
+                >
+                  <WaLogo size={14} color="white" /> Send via Meta Cloud
+                </button>
+                <StatusBanner status={metaSendStatus} />
+              </div>
+            </div>
+
+            <div style={{ height: 1, background: "#1E3D47" }} />
+
+            {/* Audit Log */}
+            <div>
+              <p style={{ fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1.3, margin: "0 0 12px" }}>
+                Sent Messages — Meta Cloud Audit Log
+              </p>
+
+              {loadingMetaHistory ? (
+                <p style={{ color: "#6B8E95", fontSize: 12, margin: 0 }}>Loading…</p>
+              ) : metaMessages.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "32px 20px" }}>
+                  <WaLogo size={36} color="#1E3D47" />
+                  <p style={{ color: "#6B8E95", fontSize: 12, marginTop: 12 }}>No Meta Cloud messages sent yet.</p>
+                </div>
+              ) : (
+                <>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 80px 110px", gap: 8, padding: "5px 10px", fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
+                    <span>Lead / Preview</span>
+                    <span>Template · Phone</span>
+                    <span>Status</span>
+                    <span>Sent At</span>
+                  </div>
+
+                  {metaMessages.map((msg) => (
+                    <div key={msg.id} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 80px 110px", gap: 8, padding: "10px 10px", background: "#0F2229", borderRadius: 10, marginBottom: 4, alignItems: "start" }}>
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ fontSize: 12, fontWeight: 600, color: "#FFFFFF", margin: "0 0 3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {msg.lead_name || "Unknown"}
+                        </p>
+                        <p style={{ fontSize: 11, color: "#9FE6F2", margin: "0 0 3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {msg.body_preview || "—"}
+                        </p>
+                        {msg.meta_message_id && (
+                          <p style={{ fontSize: 10, color: "#3E6570", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            ID: {msg.meta_message_id}
+                          </p>
+                        )}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ fontSize: 11, fontWeight: 600, color: "#E2F5E8", margin: "0 0 3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {msg.template_name}
+                        </p>
+                        <p style={{ fontSize: 11, color: "#6B8E95", margin: 0 }}>{msg.to_phone}</p>
+                      </div>
+                      <MetaStatusBadge status={msg.status} />
+                      <span style={{ fontSize: 10, color: "#6B8E95" }}>
+                        {msg.created_at ? new Date(msg.created_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : "—"}
+                      </span>
+                    </div>
+                  ))}
+
+                  {metaMsgTotal > 20 && (
+                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 10, marginTop: 14 }}>
+                      <button onClick={() => setMetaMsgPage((p) => Math.max(1, p - 1))} disabled={metaMsgPage === 1} className="crm-btn-sm crm-btn-ghost">
+                        <Icon d={ICONS.chevronLeft} size={12} /> Prev
+                      </button>
+                      <span style={{ color: "#6B8E95", fontSize: 12 }}>Page {metaMsgPage} of {Math.ceil(metaMsgTotal / 20)}</span>
+                      <button onClick={() => setMetaMsgPage((p) => p + 1)} disabled={metaMsgPage * 20 >= metaMsgTotal} className="crm-btn-sm crm-btn-ghost">
+                        Next <Icon d={ICONS.chevronRight} size={12} />
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         )}
       </div>
