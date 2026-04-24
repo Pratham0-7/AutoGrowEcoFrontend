@@ -97,6 +97,101 @@ const MetaStatusBadge = ({ status }) => {
   );
 };
 
+const CONV_STATUS_STYLES = {
+  unread:   { color: "#25D366", label: "Unread" },
+  replied:  { color: "#60A5FA", label: "Replied" },
+  no_reply: { color: "#6B8E95", label: "No Reply" },
+};
+
+const fmtTime = (iso) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const now = new Date();
+  const diffMs = now - d;
+  const diffDays = Math.floor(diffMs / 86400000);
+  if (diffDays === 0) return d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+  if (diffDays < 7)   return d.toLocaleDateString("en-IN", { weekday: "short" });
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+};
+
+const ConvItem = ({ conv, selected, onClick }) => {
+  const s = CONV_STATUS_STYLES[conv.status] || CONV_STATUS_STYLES.no_reply;
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        padding: "10px 12px",
+        cursor: "pointer",
+        background: selected ? "#0A2419" : "transparent",
+        borderBottom: "1px solid #1E3D4730",
+        borderLeft: `3px solid ${selected ? WA_GREEN : "transparent"}`,
+      }}
+    >
+      <div style={{ display: "flex", gap: 8 }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
+          background: "#0A2419", border: "1px solid #25D36644",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 12, fontWeight: 700, color: WA_GREEN,
+        }}>
+          {(conv.lead_name || "?")[0].toUpperCase()}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: "#E2F5E8", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 130 }}>
+              {conv.lead_name || conv.contact_phone}
+            </p>
+            <span style={{ fontSize: 10, color: "#6B8E95", flexShrink: 0 }}>{fmtTime(conv.last_at)}</span>
+          </div>
+          <p style={{ fontSize: 11, color: "#6B8E95", margin: "0 0 5px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {conv.last_direction === "outbound" ? "You: " : ""}{conv.last_body || "…"}
+          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: s.color, flexShrink: 0 }} />
+            <span style={{ fontSize: 10, color: s.color }}>{s.label}</span>
+            {conv.assigned_to && (
+              <span style={{ fontSize: 10, color: "#4A7080", marginLeft: "auto", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 70 }}>
+                {conv.assigned_to}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MessageBubble = ({ msg }) => {
+  const isOut = msg.direction === "outbound";
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: isOut ? "flex-end" : "flex-start", marginBottom: 2 }}>
+      <div style={{
+        maxWidth: "72%",
+        background: isOut ? "#0D3D20" : "#1A3040",
+        border: `1px solid ${isOut ? "#22C55E33" : "#1E3D47"}`,
+        borderRadius: isOut ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
+        padding: "8px 12px",
+      }}>
+        {isOut && msg.template_name && (
+          <p style={{ fontSize: 9, fontWeight: 700, color: WA_GREEN, margin: "0 0 4px", textTransform: "uppercase", letterSpacing: 0.8 }}>
+            {msg.template_name}
+          </p>
+        )}
+        <p style={{ fontSize: 12, color: isOut ? "#E2F5E8" : "#CBD5E1", margin: 0, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+          {msg.body_preview || (isOut ? "[template]" : "[message]")}
+        </p>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3, flexDirection: isOut ? "row-reverse" : "row" }}>
+        <span style={{ fontSize: 10, color: "#4A7080" }}>{fmtTime(msg.created_at)}</span>
+        {isOut && <MetaStatusBadge status={msg.status} />}
+        {!isOut && msg.from_name && (
+          <span style={{ fontSize: 10, color: "#4A7080" }}>{msg.from_name}</span>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const WhatsApp = ({ leads = [], companyId }) => {
   const userId = localStorage.getItem("user_id") || "";
 
@@ -141,6 +236,14 @@ const WhatsApp = ({ leads = [], companyId }) => {
   const [metaMsgTotal, setMetaMsgTotal] = useState(0);
   const [metaMsgPage, setMetaMsgPage] = useState(1);
   const [loadingMetaHistory, setLoadingMetaHistory] = useState(false);
+
+  // ── Inbox state ─────────────────────────────────────────────────────────────
+  const [inboxConvs, setInboxConvs] = useState([]);
+  const [inboxSearch, setInboxSearch] = useState("");
+  const [selectedConv, setSelectedConv] = useState(null);
+  const [threadMessages, setThreadMessages] = useState([]);
+  const [loadingConvs, setLoadingConvs] = useState(false);
+  const [loadingThread, setLoadingThread] = useState(false);
 
   const interestedLeads = useMemo(
     () => leads.filter((lead) => isInterestedLead(lead)),
@@ -234,6 +337,21 @@ const WhatsApp = ({ leads = [], companyId }) => {
     return body;
   }, [selectedTemplate, templateVars]);
 
+  // ── Inbox derived values ────────────────────────────────────────────────────
+  const filteredConvs = useMemo(() => {
+    const q = inboxSearch.toLowerCase().trim();
+    if (!q) return inboxConvs;
+    return inboxConvs.filter((c) =>
+      (c.lead_name || "").toLowerCase().includes(q) ||
+      (c.contact_phone || "").includes(q)
+    );
+  }, [inboxConvs, inboxSearch]);
+
+  const activeConv = useMemo(
+    () => inboxConvs.find((c) => c.contact_phone === selectedConv) || null,
+    [inboxConvs, selectedConv]
+  );
+
   // ── Meta Cloud fetch functions ──────────────────────────────────────────────
   const fetchMetaConfig = useCallback(async () => {
     try {
@@ -254,6 +372,31 @@ const WhatsApp = ({ leads = [], companyId }) => {
       }
     } catch {}
   }, []);
+
+  const fetchConversations = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoadingConvs(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/whatsapp/meta/conversations/${companyId}`);
+      if (res.ok) {
+        const d = await res.json();
+        setInboxConvs(d.conversations || []);
+      }
+    } catch {}
+    if (!silent) setLoadingConvs(false);
+  }, [companyId]);
+
+  const fetchThread = useCallback(async (phone, { silent = false } = {}) => {
+    if (!phone) return;
+    if (!silent) setLoadingThread(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/whatsapp/meta/thread/${companyId}/${encodeURIComponent(phone)}`);
+      if (res.ok) {
+        const d = await res.json();
+        setThreadMessages(d.messages || []);
+      }
+    } catch {}
+    if (!silent) setLoadingThread(false);
+  }, [companyId]);
 
   const fetchMetaMessages = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setLoadingMetaHistory(true);
@@ -288,6 +431,20 @@ const WhatsApp = ({ leads = [], companyId }) => {
     const id = setInterval(() => fetchMetaMessages({ silent: true }), 15000);
     return () => clearInterval(id);
   }, [tab, metaMsgPage, fetchMetaConfig, fetchMetaTemplates, fetchMetaMessages]);
+
+  useEffect(() => {
+    if (tab !== "inbox") return;
+    fetchConversations();
+    const id = setInterval(() => fetchConversations({ silent: true }), 15000);
+    return () => clearInterval(id);
+  }, [tab, fetchConversations]);
+
+  useEffect(() => {
+    if (!selectedConv || tab !== "inbox") return;
+    fetchThread(selectedConv);
+    const id = setInterval(() => fetchThread(selectedConv, { silent: true }), 10000);
+    return () => clearInterval(id);
+  }, [selectedConv, tab, fetchThread]);
 
   const saveConfig = async () => {
     setConfigStatus({ type: "loading", msg: "Saving..." });
@@ -578,8 +735,9 @@ const WhatsApp = ({ leads = [], companyId }) => {
 
         <div style={{ display: "flex", borderBottom: "1px solid #1E3D47" }}>
           {[
-            { key: "send", label: "Send" },
-            { key: "meta", label: "Meta Cloud" },
+            { key: "inbox",   label: "Inbox" },
+            { key: "send",    label: "Send" },
+            { key: "meta",    label: "Meta Cloud" },
             { key: "history", label: "History" },
           ].map(({ key, label }) => (
             <button
@@ -602,6 +760,97 @@ const WhatsApp = ({ leads = [], companyId }) => {
             </button>
           ))}
         </div>
+
+        {tab === "inbox" && (
+          <div style={{ display: "flex", height: 560, overflow: "hidden" }}>
+            {/* ── Left: conversation list ──────────────────────────────────── */}
+            <div style={{ width: 264, borderRight: "1px solid #1E3D47", display: "flex", flexDirection: "column", flexShrink: 0 }}>
+              <div style={{ padding: "10px 12px", borderBottom: "1px solid #1E3D47" }}>
+                <input
+                  type="text"
+                  value={inboxSearch}
+                  onChange={(e) => setInboxSearch(e.target.value)}
+                  placeholder="Search conversations…"
+                  className="crm-input"
+                  style={{ width: "100%", background: "#0F2229", border: "1px solid #1E3D47", borderRadius: 8, padding: "7px 10px", fontSize: 11, color: "#E2F5E8", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }}
+                />
+              </div>
+              <div style={{ flex: 1, overflowY: "auto" }}>
+                {loadingConvs && filteredConvs.length === 0 ? (
+                  <p style={{ color: "#6B8E95", fontSize: 12, textAlign: "center", padding: 24 }}>Loading…</p>
+                ) : filteredConvs.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: 32 }}>
+                    <WaLogo size={32} color="#1E3D47" />
+                    <p style={{ color: "#6B8E95", fontSize: 11, marginTop: 10 }}>No conversations yet</p>
+                  </div>
+                ) : filteredConvs.map((conv) => (
+                  <ConvItem
+                    key={conv.contact_phone}
+                    conv={conv}
+                    selected={selectedConv === conv.contact_phone}
+                    onClick={() => setSelectedConv(conv.contact_phone)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* ── Right: thread ────────────────────────────────────────────── */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+              {!selectedConv ? (
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
+                  <WaLogo size={40} color="#1E3D47" />
+                  <p style={{ color: "#6B8E95", fontSize: 12, margin: 0 }}>Select a conversation to view the thread</p>
+                </div>
+              ) : (
+                <>
+                  {/* Thread header */}
+                  <div style={{ padding: "11px 16px", borderBottom: "1px solid #1E3D47", display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#0A2419", border: "1px solid #25D36644", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: WA_GREEN, flexShrink: 0 }}>
+                      {(activeConv?.lead_name || selectedConv)[0].toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: "#E2F5E8", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {activeConv?.lead_name || selectedConv}
+                      </p>
+                      <p style={{ fontSize: 11, color: "#6B8E95", margin: 0 }}>{selectedConv}</p>
+                    </div>
+                    {activeConv && (() => {
+                      const s = CONV_STATUS_STYLES[activeConv.status] || CONV_STATUS_STYLES.no_reply;
+                      return (
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: s.color + "22", color: s.color, border: `1px solid ${s.color}44`, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                          {s.label}
+                        </span>
+                      );
+                    })()}
+                    {activeConv?.assigned_to && (
+                      <span style={{ fontSize: 10, color: "#4A7080", marginLeft: 4 }}>👤 {activeConv.assigned_to}</span>
+                    )}
+                  </div>
+
+                  {/* Messages */}
+                  <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+                    {loadingThread && threadMessages.length === 0 ? (
+                      <p style={{ color: "#6B8E95", fontSize: 12, textAlign: "center", marginTop: 40 }}>Loading…</p>
+                    ) : threadMessages.length === 0 ? (
+                      <p style={{ color: "#6B8E95", fontSize: 12, textAlign: "center", marginTop: 40 }}>No messages in thread</p>
+                    ) : threadMessages.map((msg) => (
+                      <MessageBubble key={msg.id} msg={msg} />
+                    ))}
+                  </div>
+
+                  {/* Thread footer */}
+                  <div style={{ padding: "10px 16px", borderTop: "1px solid #1E3D47", flexShrink: 0 }}>
+                    <p style={{ fontSize: 10, color: "#4A7080", margin: 0, textAlign: "center" }}>
+                      {activeConv?.inbound_count > 0
+                        ? "Reply via the Send tab using a template"
+                        : "Send a template to start the conversation"}
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {tab === "send" && (
           <div style={{ padding: 22, display: "flex", flexDirection: "column", gap: 22 }}>
