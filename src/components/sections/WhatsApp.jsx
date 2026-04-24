@@ -281,11 +281,12 @@ const WhatsApp = ({ leads = [], companyId }) => {
   }, [tab, msgPage, fetchHistory]);
 
   useEffect(() => {
-    if (tab === "meta") {
-      fetchMetaConfig();
-      fetchMetaTemplates();
-      fetchMetaMessages();
-    }
+    if (tab !== "meta") return;
+    fetchMetaConfig();
+    fetchMetaTemplates();
+    fetchMetaMessages();
+    const id = setInterval(fetchMetaMessages, 15000);
+    return () => clearInterval(id);
   }, [tab, metaMsgPage, fetchMetaConfig, fetchMetaTemplates, fetchMetaMessages]);
 
   const saveConfig = async () => {
