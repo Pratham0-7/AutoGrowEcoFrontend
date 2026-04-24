@@ -98,7 +98,7 @@ const MetaStatusBadge = ({ status }) => {
 };
 
 const CONV_STATUS_STYLES = {
-  unread:   { color: "#25D366", label: "Unread" },
+  unread:   { color: "#25D366", label: "Needs Reply" },
   replied:  { color: "#60A5FA", label: "Replied" },
   no_reply: { color: "#6B8E95", label: "No Reply" },
 };
