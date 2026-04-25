@@ -178,14 +178,28 @@ const ConvItem = ({ conv, selected, onClick }) => {
   );
 };
 
-const MessageBubble = ({ msg }) => {
-  const isOut = msg.direction === "outbound";
+const MessageBubble = ({ msg, convPhone }) => {
+  // Resolve direction with a frontend-side fallback:
+  // If the server already set direction, use it. If it's missing, infer from
+  // from_phone: inbound messages come FROM the lead's phone (== convPhone).
+  let direction = msg.direction;
+  if (direction !== "outbound" && direction !== "inbound") {
+    direction = (msg.from_phone && convPhone && msg.from_phone === convPhone)
+      ? "inbound"
+      : "outbound";
+  }
+  const isOut = direction === "outbound";
+
+  // Body text — inbound messages carry body_preview from the webhook.
+  // Fall back to type-appropriate placeholder if empty.
+  const bodyText = msg.body_preview || (isOut ? "[template]" : "[message]");
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: isOut ? "flex-end" : "flex-start", marginBottom: 2 }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: isOut ? "flex-end" : "flex-start", marginBottom: 4 }}>
       <div style={{
-        maxWidth: "72%",
+        maxWidth: "74%",
         background: isOut ? "#0D3D20" : "#1A3040",
-        border: `1px solid ${isOut ? "#22C55E33" : "#1E3D47"}`,
+        border: `1px solid ${isOut ? "#22C55E33" : "#1E3D4799"}`,
         borderRadius: isOut ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
         padding: "8px 12px",
       }}>
@@ -195,14 +209,14 @@ const MessageBubble = ({ msg }) => {
           </p>
         )}
         <p style={{ fontSize: 12, color: isOut ? "#E2F5E8" : "#CBD5E1", margin: 0, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-          {msg.body_preview || (isOut ? "[template]" : "[message]")}
+          {bodyText}
         </p>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3, flexDirection: isOut ? "row-reverse" : "row" }}>
         <span style={{ fontSize: 10, color: "#4A7080" }}>{fmtTime(msg.created_at)}</span>
         {isOut && <MetaStatusBadge status={msg.status} />}
-        {!isOut && msg.from_name && (
-          <span style={{ fontSize: 10, color: "#4A7080" }}>{msg.from_name}</span>
+        {!isOut && (msg.from_name || msg.lead_name) && (
+          <span style={{ fontSize: 10, color: "#4A7080" }}>{msg.from_name || msg.lead_name}</span>
         )}
       </div>
     </div>
@@ -962,7 +976,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
                     ) : threadMessages.length === 0 ? (
                       <p style={{ color: "#6B8E95", fontSize: 12, textAlign: "center", marginTop: 40 }}>No messages yet</p>
                     ) : threadMessages.map((msg) => (
-                      <MessageBubble key={msg.id} msg={msg} />
+                      <MessageBubble key={msg.id} msg={msg} convPhone={selectedConv} />
                     ))}
                   </div>
 
