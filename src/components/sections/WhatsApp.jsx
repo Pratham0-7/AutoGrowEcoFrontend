@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Icon from "../shared/Icon";
 import { ICONS } from "../shared/icons";
 
@@ -93,6 +93,22 @@ const MetaStatusBadge = ({ status }) => {
       background: c.bg, border: `1px solid ${c.border}`, color: c.text,
     }}>
       {icons[status] || "?"} {status}
+    </span>
+  );
+};
+
+const TPLSTATUS = {
+  approved: { color: "#22C55E", bg: "#0D3D20", border: "#22C55E44", label: "Approved", icon: "✓" },
+  pending:  { color: "#F59E0B", bg: "#2A1F05", border: "#92400E44", label: "Pending approval", icon: "⏳" },
+  rejected: { color: "#EF4444", bg: "#2D0A0A", border: "#DC262644", label: "Rejected", icon: "✗" },
+  disabled: { color: "#6B8E95", bg: "#1A2A2A", border: "#1E3D47",   label: "Disabled", icon: "—" },
+};
+
+const TemplateStatusBadge = ({ status }) => {
+  const c = TPLSTATUS[status] || TPLSTATUS.disabled;
+  return (
+    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: c.bg, border: `1px solid ${c.border}`, color: c.color }}>
+      {c.icon} {c.label}
     </span>
   );
 };
@@ -193,11 +209,20 @@ const MessageBubble = ({ msg }) => {
   );
 };
 
+const autoFillVarsFromLead = (template, lead) => {
+  const vars = {};
+  (template?.variables || []).forEach((v) => {
+    if (v.auto_fill === "lead_name" && lead?.name) vars[v.index] = lead.name;
+  });
+  return vars;
+};
+
 const WhatsApp = ({ leads = [], companyId }) => {
   const userId = localStorage.getItem("user_id") || "";
 
-  const [tab, setTab] = useState("send");
+  const [tab, setTab] = useState("inbox");
   const [configOpen, setConfigOpen] = useState(false);
+  const threadRef = useRef(null);
 
   const [waConfig, setWaConfig] = useState({
     wa_number: "",
@@ -343,6 +368,15 @@ const WhatsApp = ({ leads = [], companyId }) => {
     return body;
   }, [selectedTemplate, templateVars]);
 
+  const inboxBodyPreview = useMemo(() => {
+    if (!inboxReplyTemplate?.body) return "";
+    let body = inboxReplyTemplate.body;
+    Object.entries(inboxReplyVars).forEach(([k, v]) => {
+      body = body.replace(new RegExp(`\\{\\{${k}\\}\\}`, "g"), v || `{{${k}}}`);
+    });
+    return body;
+  }, [inboxReplyTemplate, inboxReplyVars]);
+
   // ── Inbox derived values ────────────────────────────────────────────────────
   const filteredConvs = useMemo(() => {
     const q = inboxSearch.toLowerCase().trim();
@@ -419,11 +453,13 @@ const WhatsApp = ({ leads = [], companyId }) => {
 
   useEffect(() => {
     fetchConfig();
+    fetchMetaConfig();
+    fetchMetaTemplates();
     fetch(`${API_BASE_URL}/whatsapp/messages/${companyId}?page=1&per_page=1`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => d && setMsgTotal(d.total))
       .catch(() => {});
-  }, [companyId, fetchConfig]);
+  }, [companyId, fetchConfig, fetchMetaConfig, fetchMetaTemplates]);
 
   useEffect(() => {
     if (tab === "history") fetchHistory();
@@ -431,23 +467,19 @@ const WhatsApp = ({ leads = [], companyId }) => {
 
   useEffect(() => {
     if (tab !== "meta") return;
-    fetchMetaConfig();
-    fetchMetaTemplates();
     fetchMetaMessages();
     const id = setInterval(() => fetchMetaMessages({ silent: true }), 15000);
     return () => clearInterval(id);
-  }, [tab, metaMsgPage, fetchMetaConfig, fetchMetaTemplates, fetchMetaMessages]);
+  }, [tab, metaMsgPage, fetchMetaMessages]);
 
   useEffect(() => {
-    if (tab !== "inbox") return;
     fetchConversations();
-    fetchMetaTemplates();
     const id = setInterval(() => fetchConversations({ silent: true }), 15000);
     return () => clearInterval(id);
-  }, [tab, fetchConversations, fetchMetaTemplates]);
+  }, [fetchConversations]);
 
   useEffect(() => {
-    if (!selectedConv || tab !== "inbox") return;
+    if (!selectedConv) return;
     fetchThread(selectedConv);
     setInboxReplyText("");
     setInboxReplyStatus(null);
@@ -455,7 +487,12 @@ const WhatsApp = ({ leads = [], companyId }) => {
     setInboxReplyVars({});
     const id = setInterval(() => fetchThread(selectedConv, { silent: true }), 10000);
     return () => clearInterval(id);
-  }, [selectedConv, tab, fetchThread]);
+  }, [selectedConv, fetchThread]);
+
+  useEffect(() => {
+    if (!threadRef.current) return;
+    threadRef.current.scrollTop = threadRef.current.scrollHeight;
+  }, [threadMessages]);
 
   const handleSendText = async () => {
     if (!inboxReplyText.trim() || !selectedConv || !activeConv || inboxReplySending) return;
@@ -491,13 +528,13 @@ const WhatsApp = ({ leads = [], companyId }) => {
 
   const handleSendTemplateFromInbox = async () => {
     if (!inboxReplyTemplate || !selectedConv || !activeConv || inboxReplySending) return;
+    if (inboxReplyTemplate.status !== "approved") {
+      setInboxReplyStatus({ ok: false, msg: `Template is ${inboxReplyTemplate.status || "not approved"} — cannot send until Meta approves it.` });
+      return;
+    }
     setInboxReplySending(true);
     setInboxReplyStatus(null);
     try {
-      let preview = inboxReplyTemplate.body || "";
-      Object.entries(inboxReplyVars).forEach(([k, v]) => {
-        preview = preview.replace(new RegExp(`\\{\\{${k}\\}\\}`, "g"), v);
-      });
       const res = await fetch(`${API_BASE_URL}/whatsapp/meta/send_template`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -506,9 +543,9 @@ const WhatsApp = ({ leads = [], companyId }) => {
           lead_id:        activeConv.lead_id,
           phone:          selectedConv,
           template_name:  inboxReplyTemplate.name,
-          language_code:  inboxReplyTemplate.language || "en",
+          language_code:  inboxReplyTemplate.language_code || inboxReplyTemplate.language || "en",
           variables_used: inboxReplyVars,
-          body_preview:   preview,
+          body_preview:   inboxBodyPreview,
           user_id:        userId,
           lead_name:      activeConv.lead_name,
         }),
@@ -667,6 +704,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
     setMetaManualPhone(getLeadPhone(lead));
     setMetaManualName(lead.name || "");
     setMetaLeadSearch(`${lead.name || "Unknown"} · ${lead.email || getLeadPhone(lead)}`);
+    if (selectedTemplate) setTemplateVars(autoFillVarsFromLead(selectedTemplate, lead));
   };
 
   const clearMetaLeadSelection = () => {
@@ -686,6 +724,10 @@ const WhatsApp = ({ leads = [], companyId }) => {
     }
     if (!selectedTemplate) {
       setMetaSendStatus({ type: "error", msg: "Select a template." });
+      return;
+    }
+    if (selectedTemplate.status !== "approved") {
+      setMetaSendStatus({ type: "error", msg: `Template is ${selectedTemplate.status || "not approved"} — cannot send until Meta approves it.` });
       return;
     }
 
@@ -732,7 +774,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16, paddingBottom: 80 }}>
       <div style={{ background: "#142830", border: "1px solid #1E3D47", borderRadius: 16, overflow: "hidden" }}>
         <div style={{ padding: "14px 20px", borderBottom: "1px solid #1E3D47", display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ background: WA_BG, border: `1px solid ${WA_BORDER}`, borderRadius: 10, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -741,111 +783,114 @@ const WhatsApp = ({ leads = [], companyId }) => {
           <div>
             <h2 style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF", margin: 0 }}>WhatsApp</h2>
             <p style={{ fontSize: 11, color: "#6B8E95", margin: 0 }}>
-              WhatsApp Cloud API · {leadsWithPhone.length} leads with phone
+              WhatsApp Cloud API · Shared team inbox
             </p>
           </div>
-          <button
-            onClick={() => setConfigOpen((p) => !p)}
-            style={{
-              marginLeft: "auto",
-              background: "transparent",
-              border: "1px solid #1E3D47",
-              color: "#6B8E95",
-              borderRadius: 8,
-              padding: "5px 14px",
-              fontSize: 11,
-              fontWeight: 600,
-              cursor: "pointer",
-              fontFamily: "inherit",
-            }}
-          >
-            Settings
-          </button>
-        </div>
-
-        {configOpen && (
-          <div style={{ padding: 20, borderBottom: "1px solid #1E3D47", background: "#0F2229", display: "flex", flexDirection: "column", gap: 14 }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1.3, margin: 0 }}>
-              WhatsApp Settings
-            </p>
-
-            <div>
-              <Label>Integrated Number (From)</Label>
-              <input
-                type="text"
-                value={waConfig.wa_number}
-                onChange={(e) => setWaConfig((p) => ({ ...p, wa_number: e.target.value }))}
-                placeholder="91XXXXXXXXXX"
-                className="crm-input"
-                style={inputStyle}
-              />
-            </div>
-
-            <div>
-              <Label>Template Name</Label>
-              <input
-                type="text"
-                value={waConfig.wa_template_name}
-                onChange={(e) => setWaConfig((p) => ({ ...p, wa_template_name: e.target.value }))}
-                placeholder="e.g. age_outreach_v1"
-                className="crm-input"
-                style={inputStyle}
-              />
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <button
-                onClick={saveConfig}
-                style={{
-                  background: WA_DARK,
-                  color: "white",
-                  border: "none",
-                  borderRadius: 8,
-                  padding: "8px 18px",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                }}
-              >
-                Save Settings
-              </button>
-
-              {configStatus && <StatusBanner status={configStatus} />}
-            </div>
-          </div>
-        )}
-
-        <div style={{ display: "flex", borderBottom: "1px solid #1E3D47" }}>
-          {[
-            { key: "inbox",   label: "Inbox" },
-            { key: "send",    label: "Send" },
-            { key: "meta",    label: "Meta Cloud" },
-            { key: "history", label: "History" },
-          ].map(({ key, label }) => (
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
             <button
-              key={key}
-              onClick={() => setTab(key)}
+              onClick={() => setConfigOpen((p) => !p)}
               style={{
-                flex: 1,
-                padding: "11px",
-                fontSize: 12,
-                fontWeight: tab === key ? 700 : 500,
-                color: tab === key ? WA_GREEN : "#6B8E95",
-                background: "transparent",
-                border: "none",
-                borderBottom: tab === key ? `2px solid ${WA_GREEN}` : "2px solid transparent",
+                background: configOpen ? "#0F2229" : "transparent",
+                border: "1px solid #1E3D47",
+                color: configOpen ? WA_GREEN : "#6B8E95",
+                borderRadius: 8,
+                padding: "5px 14px",
+                fontSize: 11,
+                fontWeight: 600,
                 cursor: "pointer",
                 fontFamily: "inherit",
               }}
             >
-              {label}
+              ⚙ Settings
             </button>
-          ))}
+          </div>
         </div>
 
+        {configOpen && (
+          <div style={{ padding: 20, borderBottom: "1px solid #1E3D47", background: "#0F2229", display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* ── Twilio / legacy WA config ── */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <p style={{ fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1.3, margin: 0 }}>
+                Legacy WhatsApp (Twilio)
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <Label>Integrated Number (From)</Label>
+                  <input type="text" value={waConfig.wa_number}
+                    onChange={(e) => setWaConfig((p) => ({ ...p, wa_number: e.target.value }))}
+                    placeholder="91XXXXXXXXXX" className="crm-input" style={inputStyle} />
+                </div>
+                <div>
+                  <Label>Template Name</Label>
+                  <input type="text" value={waConfig.wa_template_name}
+                    onChange={(e) => setWaConfig((p) => ({ ...p, wa_template_name: e.target.value }))}
+                    placeholder="e.g. age_outreach_v1" className="crm-input" style={inputStyle} />
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <button onClick={saveConfig} style={{ background: WA_DARK, color: "white", border: "none", borderRadius: 8, padding: "7px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                  Save
+                </button>
+                {configStatus && <StatusBanner status={configStatus} />}
+              </div>
+            </div>
+
+            <div style={{ height: 1, background: "#1E3D47" }} />
+
+            {/* ── Meta Cloud API config ── */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <p style={{ fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1.3, margin: 0 }}>
+                Meta Cloud API Credentials
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <Label>Phone Number ID</Label>
+                  <input type="text" value={metaConfig.meta_phone_number_id}
+                    onChange={(e) => setMetaConfig((p) => ({ ...p, meta_phone_number_id: e.target.value }))}
+                    placeholder="From Meta App Dashboard" className="crm-input" style={inputStyle} />
+                </div>
+                <div>
+                  <Label>Access Token</Label>
+                  <input type="password" value={metaConfig.meta_access_token}
+                    onChange={(e) => setMetaConfig((p) => ({ ...p, meta_access_token: e.target.value }))}
+                    placeholder="Bearer token" className="crm-input" style={inputStyle} />
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <button onClick={saveMetaConfig} style={{ background: WA_DARK, color: "white", border: "none", borderRadius: 8, padding: "7px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                  Save
+                </button>
+                {metaConfigStatus && <StatusBanner status={metaConfigStatus} />}
+              </div>
+            </div>
+
+            <div style={{ height: 1, background: "#1E3D47" }} />
+
+            {/* ── Admin-only advanced views ── */}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <p style={{ fontSize: 10, fontWeight: 700, color: "#3E6570", textTransform: "uppercase", letterSpacing: 1.3, margin: "0 8px 0 0", alignSelf: "center" }}>Admin</p>
+              {[
+                { key: "meta", label: "Meta Cloud Audit" },
+                { key: "send", label: "Legacy Send" },
+                { key: "history", label: "Send History" },
+              ].map(({ key, label }) => (
+                <button key={key} onClick={() => { setConfigOpen(false); setTab(key); }}
+                  style={{ background: "transparent", border: "1px solid #1E3D47", color: "#4A7080", borderRadius: 7, padding: "4px 12px", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>
+                  {label}
+                </button>
+              ))}
+              {tab !== "inbox" && (
+                <button onClick={() => setTab("inbox")}
+                  style={{ background: "#0A2419", border: `1px solid ${WA_GREEN}55`, color: WA_GREEN, borderRadius: 7, padding: "4px 12px", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>
+                  ← Back to Inbox
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {tab === "inbox" && (
-          <div style={{ display: "flex", height: 560, overflow: "hidden" }}>
+          <div style={{ display: "flex", height: 580, overflow: "hidden" }}>
             {/* ── Left: conversation list ──────────────────────────────────── */}
             <div style={{ width: 264, borderRight: "1px solid #1E3D47", display: "flex", flexDirection: "column", flexShrink: 0 }}>
               <div style={{ padding: "10px 12px", borderBottom: "1px solid #1E3D47" }}>
@@ -911,18 +956,18 @@ const WhatsApp = ({ leads = [], companyId }) => {
                   </div>
 
                   {/* Messages */}
-                  <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div ref={threadRef} style={{ flex: 1, overflowY: "auto", padding: "14px 16px 8px", display: "flex", flexDirection: "column", gap: 6 }}>
                     {loadingThread && threadMessages.length === 0 ? (
                       <p style={{ color: "#6B8E95", fontSize: 12, textAlign: "center", marginTop: 40 }}>Loading…</p>
                     ) : threadMessages.length === 0 ? (
-                      <p style={{ color: "#6B8E95", fontSize: 12, textAlign: "center", marginTop: 40 }}>No messages in thread</p>
+                      <p style={{ color: "#6B8E95", fontSize: 12, textAlign: "center", marginTop: 40 }}>No messages yet</p>
                     ) : threadMessages.map((msg) => (
                       <MessageBubble key={msg.id} msg={msg} />
                     ))}
                   </div>
 
                   {/* Thread footer — 24h window */}
-                  <div style={{ padding: "12px 16px", borderTop: "1px solid #1E3D47", flexShrink: 0 }}>
+                  <div style={{ padding: "10px 14px 14px", borderTop: "1px solid #1E3D47", flexShrink: 0 }}>
                     {activeConv?.window_open ? (
                       <>
                         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
@@ -958,31 +1003,45 @@ const WhatsApp = ({ leads = [], companyId }) => {
                           <span style={{ fontSize: 10, fontWeight: 700, color: "#F59E0B" }}>Template required</span>
                           <span style={{ fontSize: 10, color: "#4A7080" }}>· 24h window closed</span>
                         </div>
-                        <div style={{ display: "flex", gap: 8, marginBottom: inboxReplyTemplate?.variables?.length ? 8 : 0 }}>
+                        <div style={{ display: "flex", gap: 8, marginBottom: 6 }}>
                           <select
                             value={inboxReplyTemplate?.name || ""}
                             onChange={(e) => {
                               const t = metaTemplates.find((x) => x.name === e.target.value) || null;
                               setInboxReplyTemplate(t);
-                              setInboxReplyVars({});
+                              const lead = activeConv?.lead_name ? { name: activeConv.lead_name } : null;
+                              setInboxReplyVars(t ? autoFillVarsFromLead(t, lead) : {});
                             }}
                             style={{ flex: 1, background: "#0F2229", border: "1px solid #1E3D47", borderRadius: 8, padding: "7px 10px", fontSize: 11, color: "#E2F5E8", fontFamily: "inherit" }}
                           >
                             <option value="">Select template…</option>
-                            {metaTemplates.map((t) => (
-                              <option key={t.name} value={t.name}>{t.display_name || t.name}</option>
-                            ))}
+                            {metaTemplates.map((t) => {
+                              const sc = TPLSTATUS[t.status] || TPLSTATUS.disabled;
+                              return (
+                                <option key={t.name} value={t.name} disabled={t.status !== "approved"}>
+                                  {sc.icon} {t.display_name || t.name}{t.status !== "approved" ? ` [${sc.label}]` : ""}
+                                </option>
+                              );
+                            })}
                           </select>
                           <button
                             onClick={handleSendTemplateFromInbox}
-                            disabled={inboxReplySending || !inboxReplyTemplate}
-                            style={{ background: "#0D3D20", color: WA_GREEN, border: `1px solid ${WA_GREEN}55`, borderRadius: 8, padding: "7px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", opacity: inboxReplySending || !inboxReplyTemplate ? 0.5 : 1 }}
+                            disabled={inboxReplySending || !inboxReplyTemplate || inboxReplyTemplate.status !== "approved"}
+                            style={{ background: "#0D3D20", color: WA_GREEN, border: `1px solid ${WA_GREEN}55`, borderRadius: 8, padding: "7px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", opacity: inboxReplySending || !inboxReplyTemplate || inboxReplyTemplate.status !== "approved" ? 0.5 : 1 }}
                           >
                             {inboxReplySending ? "…" : "Send"}
                           </button>
                         </div>
+                        {inboxReplyTemplate && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                            <TemplateStatusBadge status={inboxReplyTemplate.status} />
+                            {inboxReplyTemplate.use_case && (
+                              <span style={{ fontSize: 10, color: "#4A7080" }}>{inboxReplyTemplate.use_case}</span>
+                            )}
+                          </div>
+                        )}
                         {inboxReplyTemplate?.variables?.length > 0 && (
-                          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 6 }}>
                             {inboxReplyTemplate.variables.map((v) => (
                               <input
                                 key={v.index}
@@ -992,6 +1051,11 @@ const WhatsApp = ({ leads = [], companyId }) => {
                                 style={{ background: "#0F2229", border: "1px solid #1E3D47", borderRadius: 7, padding: "6px 10px", fontSize: 11, color: "#E2F5E8", outline: "none", fontFamily: "inherit" }}
                               />
                             ))}
+                          </div>
+                        )}
+                        {inboxReplyTemplate && inboxBodyPreview && (
+                          <div style={{ background: "#0A2419", border: "1px solid #0F3D2A", borderRadius: 8, padding: "8px 10px", fontSize: 11, color: "#E2F5E8", lineHeight: 1.5, whiteSpace: "pre-wrap", marginBottom: 4 }}>
+                            {inboxBodyPreview}
                           </div>
                         )}
                       </>
@@ -1010,6 +1074,12 @@ const WhatsApp = ({ leads = [], companyId }) => {
 
         {tab === "send" && (
           <div style={{ padding: 22, display: "flex", flexDirection: "column", gap: 22 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <button onClick={() => setTab("inbox")} style={{ background: "transparent", border: "1px solid #1E3D47", color: "#6B8E95", borderRadius: 7, padding: "4px 12px", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>
+                ← Inbox
+              </button>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#4A7080", textTransform: "uppercase", letterSpacing: 1 }}>Legacy Send (Admin)</span>
+            </div>
             {!isConfigured && (
               <div style={{ background: "#2A1A05", border: "1px solid #92400E44", borderRadius: 10, padding: "12px 16px", display: "flex", alignItems: "flex-start", gap: 10 }}>
                 <span style={{ fontSize: 14, marginTop: 1 }}>⚠️</span>
@@ -1228,7 +1298,13 @@ const WhatsApp = ({ leads = [], companyId }) => {
         )}
 
         {tab === "history" && (
-          <div style={{ padding: 22 }}>
+          <div style={{ padding: 22, display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <button onClick={() => setTab("inbox")} style={{ background: "transparent", border: "1px solid #1E3D47", color: "#6B8E95", borderRadius: 7, padding: "4px 12px", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>
+                ← Inbox
+              </button>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#4A7080", textTransform: "uppercase", letterSpacing: 1 }}>Send History (Admin)</span>
+            </div>
             {loadingHistory ? (
               <p style={{ color: "#6B8E95", fontSize: 12, margin: 0 }}>Loading...</p>
             ) : messages.length === 0 ? (
@@ -1295,13 +1371,21 @@ const WhatsApp = ({ leads = [], companyId }) => {
         {tab === "meta" && (
           <div style={{ padding: 22, display: "flex", flexDirection: "column", gap: 20 }}>
 
-            {/* Meta Cloud Config */}
+            {/* back link */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <button onClick={() => setTab("inbox")} style={{ background: "transparent", border: "1px solid #1E3D47", color: "#6B8E95", borderRadius: 7, padding: "4px 12px", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>
+                ← Inbox
+              </button>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#4A7080", textTransform: "uppercase", letterSpacing: 1 }}>Meta Cloud Audit (Admin)</span>
+            </div>
+
+            {/* Meta Cloud Config - collapsed by default here since it's also in Settings */}
             <div>
               <button
                 onClick={() => setMetaConfigOpen((p) => !p)}
                 style={{ background: "transparent", border: "1px solid #1E3D47", color: "#6B8E95", borderRadius: 8, padding: "6px 14px", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
               >
-                {metaConfigOpen ? "Hide" : "Configure"} Meta Cloud Credentials
+                {metaConfigOpen ? "Hide" : "Edit"} Meta Credentials
               </button>
 
               {metaConfigOpen && (
@@ -1389,16 +1473,30 @@ const WhatsApp = ({ leads = [], companyId }) => {
                   onChange={(e) => {
                     const t = metaTemplates.find((x) => x.name === e.target.value) || null;
                     setSelectedTemplate(t);
-                    setTemplateVars({});
+                    const lead = metaSelectedLead || (metaManualName ? { name: metaManualName } : null);
+                    setTemplateVars(t ? autoFillVarsFromLead(t, lead) : {});
                   }}
                   className="crm-input"
                   style={{ ...inputStyle, cursor: "pointer" }}
                 >
                   <option value="">— Select template —</option>
-                  {metaTemplates.map((t) => (
-                    <option key={t.name} value={t.name}>{t.display_name}</option>
-                  ))}
+                  {metaTemplates.map((t) => {
+                    const sc = TPLSTATUS[t.status] || TPLSTATUS.disabled;
+                    return (
+                      <option key={t.name} value={t.name} disabled={t.status !== "approved"}>
+                        {sc.icon} {t.display_name}{t.status !== "approved" ? ` [${sc.label}]` : ""}
+                      </option>
+                    );
+                  })}
                 </select>
+                {selectedTemplate && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
+                    <TemplateStatusBadge status={selectedTemplate.status} />
+                    {selectedTemplate.use_case && (
+                      <span style={{ fontSize: 10, color: "#4A7080" }}>{selectedTemplate.use_case}</span>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Variable fields */}
