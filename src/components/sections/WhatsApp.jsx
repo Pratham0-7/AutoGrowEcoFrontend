@@ -109,9 +109,10 @@ const fmtTime = (iso) => {
   const now = new Date();
   const diffMs = now - d;
   const diffDays = Math.floor(diffMs / 86400000);
-  if (diffDays === 0) return d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
-  if (diffDays < 7)   return d.toLocaleDateString("en-IN", { weekday: "short" });
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+  const IST = { timeZone: "Asia/Kolkata" };
+  if (diffDays === 0) return d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", ...IST });
+  if (diffDays < 7)   return d.toLocaleDateString("en-IN", { weekday: "short", ...IST });
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", ...IST });
 };
 
 const ConvItem = ({ conv, selected, onClick }) => {
@@ -244,6 +245,11 @@ const WhatsApp = ({ leads = [], companyId }) => {
   const [threadMessages, setThreadMessages] = useState([]);
   const [loadingConvs, setLoadingConvs] = useState(false);
   const [loadingThread, setLoadingThread] = useState(false);
+  const [inboxReplyText, setInboxReplyText] = useState("");
+  const [inboxReplySending, setInboxReplySending] = useState(false);
+  const [inboxReplyStatus, setInboxReplyStatus] = useState(null);
+  const [inboxReplyTemplate, setInboxReplyTemplate] = useState(null);
+  const [inboxReplyVars, setInboxReplyVars] = useState({});
 
   const interestedLeads = useMemo(
     () => leads.filter((lead) => isInterestedLead(lead)),
@@ -435,16 +441,93 @@ const WhatsApp = ({ leads = [], companyId }) => {
   useEffect(() => {
     if (tab !== "inbox") return;
     fetchConversations();
+    fetchMetaTemplates();
     const id = setInterval(() => fetchConversations({ silent: true }), 15000);
     return () => clearInterval(id);
-  }, [tab, fetchConversations]);
+  }, [tab, fetchConversations, fetchMetaTemplates]);
 
   useEffect(() => {
     if (!selectedConv || tab !== "inbox") return;
     fetchThread(selectedConv);
+    setInboxReplyText("");
+    setInboxReplyStatus(null);
+    setInboxReplyTemplate(null);
+    setInboxReplyVars({});
     const id = setInterval(() => fetchThread(selectedConv, { silent: true }), 10000);
     return () => clearInterval(id);
   }, [selectedConv, tab, fetchThread]);
+
+  const handleSendText = async () => {
+    if (!inboxReplyText.trim() || !selectedConv || !activeConv || inboxReplySending) return;
+    setInboxReplySending(true);
+    setInboxReplyStatus(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/whatsapp/meta/send_text`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_id: companyId,
+          lead_id:    activeConv.lead_id,
+          phone:      selectedConv,
+          message:    inboxReplyText.trim(),
+          user_id:    userId,
+          lead_name:  activeConv.lead_name,
+        }),
+      });
+      const d = await res.json();
+      if (res.ok) {
+        setInboxReplyText("");
+        setInboxReplyStatus({ ok: true, msg: "Sent!" });
+        fetchThread(selectedConv, { silent: true });
+        fetchConversations({ silent: true });
+      } else {
+        setInboxReplyStatus({ ok: false, msg: d.error || "Send failed" });
+      }
+    } catch {
+      setInboxReplyStatus({ ok: false, msg: "Network error" });
+    }
+    setInboxReplySending(false);
+  };
+
+  const handleSendTemplateFromInbox = async () => {
+    if (!inboxReplyTemplate || !selectedConv || !activeConv || inboxReplySending) return;
+    setInboxReplySending(true);
+    setInboxReplyStatus(null);
+    try {
+      let preview = inboxReplyTemplate.body || "";
+      Object.entries(inboxReplyVars).forEach(([k, v]) => {
+        preview = preview.replace(new RegExp(`\\{\\{${k}\\}\\}`, "g"), v);
+      });
+      const res = await fetch(`${API_BASE_URL}/whatsapp/meta/send_template`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_id:     companyId,
+          lead_id:        activeConv.lead_id,
+          phone:          selectedConv,
+          template_name:  inboxReplyTemplate.name,
+          language_code:  inboxReplyTemplate.language || "en",
+          variables_used: inboxReplyVars,
+          body_preview:   preview,
+          user_id:        userId,
+          lead_name:      activeConv.lead_name,
+        }),
+      });
+      const d = await res.json();
+      if (res.ok) {
+        setInboxReplyStatus({ ok: true, msg: "Template sent!" });
+        setInboxReplyTemplate(null);
+        setInboxReplyVars({});
+        fetchThread(selectedConv, { silent: true });
+        fetchConversations({ silent: true });
+      } else {
+        setInboxReplyStatus({ ok: false, msg: d.error || "Send failed" });
+      }
+    } catch {
+      setInboxReplyStatus({ ok: false, msg: "Network error" });
+    }
+    setInboxReplySending(false);
+  };
 
   const saveConfig = async () => {
     setConfigStatus({ type: "loading", msg: "Saving..." });
@@ -658,7 +741,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
           <div>
             <h2 style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF", margin: 0 }}>WhatsApp</h2>
             <p style={{ fontSize: 11, color: "#6B8E95", margin: 0 }}>
-              MSG91-powered · {leadsWithPhone.length} leads with phone
+              WhatsApp Cloud API · {leadsWithPhone.length} leads with phone
             </p>
           </div>
           <button
@@ -838,13 +921,86 @@ const WhatsApp = ({ leads = [], companyId }) => {
                     ))}
                   </div>
 
-                  {/* Thread footer */}
-                  <div style={{ padding: "10px 16px", borderTop: "1px solid #1E3D47", flexShrink: 0 }}>
-                    <p style={{ fontSize: 10, color: "#4A7080", margin: 0, textAlign: "center" }}>
-                      {activeConv?.inbound_count > 0
-                        ? "Reply via the Send tab using a template"
-                        : "Send a template to start the conversation"}
-                    </p>
+                  {/* Thread footer — 24h window */}
+                  <div style={{ padding: "12px 16px", borderTop: "1px solid #1E3D47", flexShrink: 0 }}>
+                    {activeConv?.window_open ? (
+                      <>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                          <span style={{ width: 7, height: 7, borderRadius: "50%", background: WA_GREEN, flexShrink: 0 }} />
+                          <span style={{ fontSize: 10, fontWeight: 700, color: WA_GREEN }}>24h window open</span>
+                          {activeConv.window_until && (
+                            <span style={{ fontSize: 10, color: "#4A7080" }}>
+                              · closes {new Date(activeConv.window_until).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" })}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <input
+                            value={inboxReplyText}
+                            onChange={(e) => setInboxReplyText(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendText(); } }}
+                            placeholder="Type a message…"
+                            style={{ flex: 1, background: "#0F2229", border: "1px solid #1E3D47", borderRadius: 8, padding: "8px 12px", fontSize: 12, color: "#E2F5E8", outline: "none", fontFamily: "inherit" }}
+                          />
+                          <button
+                            onClick={handleSendText}
+                            disabled={inboxReplySending || !inboxReplyText.trim()}
+                            style={{ background: WA_GREEN, color: "#060E09", border: "none", borderRadius: 8, padding: "8px 18px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", opacity: inboxReplySending || !inboxReplyText.trim() ? 0.5 : 1 }}
+                          >
+                            {inboxReplySending ? "…" : "Send"}
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#F59E0B", flexShrink: 0 }} />
+                          <span style={{ fontSize: 10, fontWeight: 700, color: "#F59E0B" }}>Template required</span>
+                          <span style={{ fontSize: 10, color: "#4A7080" }}>· 24h window closed</span>
+                        </div>
+                        <div style={{ display: "flex", gap: 8, marginBottom: inboxReplyTemplate?.variables?.length ? 8 : 0 }}>
+                          <select
+                            value={inboxReplyTemplate?.name || ""}
+                            onChange={(e) => {
+                              const t = metaTemplates.find((x) => x.name === e.target.value) || null;
+                              setInboxReplyTemplate(t);
+                              setInboxReplyVars({});
+                            }}
+                            style={{ flex: 1, background: "#0F2229", border: "1px solid #1E3D47", borderRadius: 8, padding: "7px 10px", fontSize: 11, color: "#E2F5E8", fontFamily: "inherit" }}
+                          >
+                            <option value="">Select template…</option>
+                            {metaTemplates.map((t) => (
+                              <option key={t.name} value={t.name}>{t.display_name || t.name}</option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={handleSendTemplateFromInbox}
+                            disabled={inboxReplySending || !inboxReplyTemplate}
+                            style={{ background: "#0D3D20", color: WA_GREEN, border: `1px solid ${WA_GREEN}55`, borderRadius: 8, padding: "7px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", opacity: inboxReplySending || !inboxReplyTemplate ? 0.5 : 1 }}
+                          >
+                            {inboxReplySending ? "…" : "Send"}
+                          </button>
+                        </div>
+                        {inboxReplyTemplate?.variables?.length > 0 && (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                            {inboxReplyTemplate.variables.map((v) => (
+                              <input
+                                key={v.index}
+                                value={inboxReplyVars[v.index] || ""}
+                                onChange={(e) => setInboxReplyVars((p) => ({ ...p, [v.index]: e.target.value }))}
+                                placeholder={v.label || `Variable {{${v.index}}}`}
+                                style={{ background: "#0F2229", border: "1px solid #1E3D47", borderRadius: 7, padding: "6px 10px", fontSize: 11, color: "#E2F5E8", outline: "none", fontFamily: "inherit" }}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                    {inboxReplyStatus && (
+                      <p style={{ fontSize: 11, color: inboxReplyStatus.ok ? WA_GREEN : "#EF4444", margin: "6px 0 0" }}>
+                        {inboxReplyStatus.msg}
+                      </p>
+                    )}
                   </div>
                 </>
               )}
@@ -1336,7 +1492,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
                       </div>
                       <MetaStatusBadge status={msg.status} />
                       <span style={{ fontSize: 10, color: "#6B8E95" }}>
-                        {msg.created_at ? new Date(msg.created_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : "—"}
+                        {msg.created_at ? new Date(msg.created_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Kolkata" }) : "—"}
                       </span>
                     </div>
                   ))}
