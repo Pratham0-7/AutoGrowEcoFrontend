@@ -115,7 +115,7 @@ const TermsAndConditions = () => {
           <ul className="list-disc space-y-2 pl-5">
             <li>Provide accurate, current, and complete information during registration and keep it up to date.</li>
             <li>Maintain the confidentiality of your login credentials and API keys configured in the platform (WhatsApp tokens, MSG91 keys, SMTP passwords).</li>
-            <li>Promptly notify us at <a href="mailto:legal@ageautomation.in" className="font-medium underline" style={{ color: TEAL }}>legal@ageautomation.in</a> if you suspect unauthorised access.</li>
+            <li>Promptly notify us at <a href="mailto:prathambuilds123@gmail.com" className="font-medium underline" style={{ color: TEAL }}>prathambuilds123@gmail.com</a> if you suspect unauthorised access.</li>
             <li>Accept responsibility for all activities that occur under your account.</li>
           </ul>
           <p>AGE reserves the right to refuse registration or cancel accounts at its discretion, including where we suspect fraudulent activity or policy violations.</p>
@@ -156,7 +156,7 @@ const TermsAndConditions = () => {
 
           <p><strong className="text-[#1A2E35]">Refund policy.</strong> All subscription fees are non-refundable except as required by law. We do not issue refunds or credits for: (a) partial subscription periods, (b) unused features, (c) periods during which the Service was available but not used, or (d) cancellations during the minimum commitment period. If a sustained technical issue caused by AGE prevents your use of the Service, contact us and we will assess the situation in good faith and may issue a service credit at our discretion.</p>
 
-          <p><strong className="text-[#1A2E35]">Cancellation.</strong> You may submit a cancellation request at any time through your account settings or by emailing <a href="mailto:legal@ageautomation.in" className="font-medium underline" style={{ color: TEAL }}>legal@ageautomation.in</a>. If you cancel <em>during</em> your minimum commitment period, your access continues until the end of the minimum period and you remain liable for the remaining monthly fees of that period. If you cancel <em>after</em> your minimum commitment period, cancellation takes effect at the end of your current monthly billing cycle and you retain access until that date. No prorated refunds are issued in either case.</p>
+          <p><strong className="text-[#1A2E35]">Cancellation.</strong> You may submit a cancellation request at any time through your account settings or by emailing <a href="mailto:prathambuilds123@gmail.com" className="font-medium underline" style={{ color: TEAL }}>prathambuilds123@gmail.com</a>. If you cancel <em>during</em> your minimum commitment period, your access continues until the end of the minimum period and you remain liable for the remaining monthly fees of that period. If you cancel <em>after</em> your minimum commitment period, cancellation takes effect at the end of your current monthly billing cycle and you retain access until that date. No prorated refunds are issued in either case.</p>
 
           <p><strong className="text-[#1A2E35]">Third-party costs.</strong> Message delivery costs (MSG91 SMS credits, Meta WhatsApp conversation charges, SMTP costs) are not included in AGE's subscription fee and are billed separately by the respective provider under your own account with them.</p>
         </Section>
@@ -265,7 +265,7 @@ const TermsAndConditions = () => {
 
         <Section title="15. Governing Law & Dispute Resolution">
           <p>These Terms are governed by and construed in accordance with the laws of India, without regard to conflict of law principles.</p>
-          <p><strong className="text-[#1A2E35]">Informal resolution first.</strong> Before commencing formal proceedings, you agree to contact us at <a href="mailto:legal@ageautomation.in" className="font-medium underline" style={{ color: TEAL }}>legal@ageautomation.in</a> and give us 30 days to resolve the dispute informally.</p>
+          <p><strong className="text-[#1A2E35]">Informal resolution first.</strong> Before commencing formal proceedings, you agree to contact us at <a href="mailto:prathambuilds123@gmail.com" className="font-medium underline" style={{ color: TEAL }}>prathambuilds123@gmail.com</a> and give us 30 days to resolve the dispute informally.</p>
           <p><strong className="text-[#1A2E35]">Jurisdiction.</strong> If the dispute cannot be resolved informally, both parties submit to the exclusive jurisdiction of the courts at <strong className="text-[#1A2E35]">Bhopal, Madhya Pradesh, India</strong>.</p>
           <p><strong className="text-[#1A2E35]">Consumer rights.</strong> Nothing in these Terms limits any rights you may have under the Consumer Protection Act, 2019 or other mandatory consumer protection laws.</p>
         </Section>
@@ -291,7 +291,7 @@ const TermsAndConditions = () => {
             style={{ borderColor: `${TEAL}30`, background: `${TEAL}08` }}
           >
             <p className="font-bold" style={{ color: DARK }}>Automated Growth Ecosystem</p>
-            <p className="mt-1 text-[#3D5560]">Email: <a href="mailto:legal@ageautomation.in" className="font-medium underline" style={{ color: TEAL }}>legal@ageautomation.in</a></p>
+            <p className="mt-1 text-[#3D5560]">Email: <a href="mailto:prathambuilds123@gmail.com" className="font-medium underline" style={{ color: TEAL }}>prathambuilds123@gmail.com</a></p>
             <p className="text-[#3D5560]">Website: <span style={{ color: TEAL }}>ageautomation.in</span></p>
             <p className="text-[#3D5560]">Jurisdiction: Bhopal, Madhya Pradesh, India</p>
           </div>
