@@ -8,6 +8,7 @@ import BookDemo from "./components/BookDemo";
 import ScheduleDemo from "./components/ScheduleDemo";
 import AdminDashboard from "./components/AdminDashboard";
 import PricingPage from "./components/PricingPage";
+import PrivacyPolicy from "./components/PrivacyPolicy";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -136,6 +137,7 @@ const App = () => {
       />
 
       <Route path="/pricing" element={<PricingPage />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/schedule" element={<ScheduleDemo />} />
       <Route path="/book-demo" element={<ProtectedBookDemo />} />
       <Route path="/onboarding" element={<ProtectedOnboarding />} />

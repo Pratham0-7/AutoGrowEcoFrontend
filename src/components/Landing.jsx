@@ -52,6 +52,12 @@ const Footer = () => {
             >
               Book a Demo
             </button>
+            <button
+              onClick={() => navigate("/privacy")}
+              className="transition hover:text-white"
+            >
+              Privacy Policy
+            </button>
           </div>
 
         </div>
