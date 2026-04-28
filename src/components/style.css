@@ -45,7 +45,25 @@
   top: 0;
   height: 100vh;
   flex-shrink: 0;
+  transition: width 0.2s ease;
 }
+
+.sidebar-collapse-btn {
+  display: flex;
+  background: transparent;
+  border: 1px solid #1E3D47;
+  border-radius: 7px;
+  width: 26px;
+  height: 26px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #6B8E95;
+  flex-shrink: 0;
+  padding: 0;
+  margin-left: auto;
+}
+.sidebar-collapse-btn:hover { color: #fff; border-color: #1A8A9E; }
 
 .sidebar-overlay {
   display: none;
@@ -107,6 +125,7 @@
   .sidebar-overlay.open { display: block; }
   .hamburger-btn { display: flex; }
   .sidebar-close-btn { display: flex !important; }
+  .sidebar-collapse-btn { display: none !important; }
   .header-live-badge { display: none !important; }
   .header-subtitle { display: none !important; }
   .overview-grid-2 { grid-template-columns: 1fr !important; }

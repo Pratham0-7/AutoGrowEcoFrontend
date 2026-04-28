@@ -39,6 +39,7 @@ const NAV_ITEMS = [
   { key: "sequences", label: "Sequences", icon: ICONS.zap },
   { key: "whatsapp", label: "WhatsApp", icon: ICONS.whatsapp },
   { key: "import", label: "Import", icon: ICONS.upload },
+  { key: "ai", label: "AI Assistant", icon: ICONS.ai },
 ];
 
 const SECTION_SUBTITLE = (total, indCount, filtered, convRate) => ({
@@ -71,6 +72,7 @@ const Dashboard = () => {
   const [messageTemplate, setMessageTemplate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const isReady = isLoaded && isSignedIn && !!company_id && !!user_id;
   const {
@@ -98,6 +100,15 @@ const Dashboard = () => {
     setActiveSection(section);
     setCurrentPage(1);
     setSidebarOpen(false);
+  };
+
+  const handleNavClick = (key) => {
+    if (key === "ai") {
+      setIsAIAssistOpen(true);
+      setSidebarOpen(false);
+      return;
+    }
+    navigate(key);
   };
 
   if (!isLoaded)
@@ -141,6 +152,7 @@ const Dashboard = () => {
       <aside
         className={`sidebar${sidebarOpen ? " open" : ""}`}
         style={{
+          width: sidebarCollapsed ? 64 : 220,
           background: THEME.panelAlt,
           borderRight: `1px solid ${THEME.border}`,
           display: "flex",
@@ -150,11 +162,11 @@ const Dashboard = () => {
       >
         <div
           style={{
-            padding: "18px 16px",
+            padding: "18px 12px",
             borderBottom: `1px solid ${THEME.border}`,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 10, width: "100%" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div
               style={{
                 background: THEME.teal,
@@ -173,35 +185,34 @@ const Dashboard = () => {
             >
               AGE
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p
-                style={{
-                  fontSize: 9,
-                  color: THEME.muted,
-                  fontWeight: 700,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                  margin: 0,
-                }}
-              >
-                CRM
-              </p>
-              <p
-                style={{
-                  fontSize: 13,
-                  color: THEME.text,
-                  fontWeight: 700,
-                  margin: 0,
-                  lineHeight: 1.2,
-                  maxWidth: 140,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {company_name || "Workspace"}
-              </p>
-            </div>
+            {!sidebarCollapsed && (
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p
+                  style={{
+                    fontSize: 9,
+                    color: THEME.muted,
+                    fontWeight: 700,
+                    letterSpacing: 1.5,
+                    textTransform: "uppercase",
+                    margin: 0,
+                  }}
+                >
+                  CRM
+                </p>
+                <p
+                  style={{
+                    fontSize: 13,
+                    color: THEME.text,
+                    fontWeight: 700,
+                    margin: 0,
+                    lineHeight: 1.2,
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {company_name || "Workspace"}
+                </p>
+              </div>
+            )}
             <button
               className="sidebar-close-btn"
               onClick={() => setSidebarOpen(false)}
@@ -213,6 +224,7 @@ const Dashboard = () => {
                 padding: 4,
                 flexShrink: 0,
                 lineHeight: 0,
+                display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
@@ -222,35 +234,51 @@ const Dashboard = () => {
                 <line x1="6" y1="6" x2="18" y2="18"/>
               </svg>
             </button>
+            <button
+              className="sidebar-collapse-btn"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                {sidebarCollapsed
+                  ? <polyline points="9 18 15 12 9 6" />
+                  : <polyline points="15 18 9 12 15 6" />
+                }
+              </svg>
+            </button>
           </div>
         </div>
 
-        <nav style={{ flex: 1, padding: "14px 10px", overflowY: "auto" }}>
-          <p
-            style={{
-              fontSize: 9,
-              fontWeight: 700,
-              color: THEME.muted,
-              textTransform: "uppercase",
-              letterSpacing: 2,
-              padding: "0 12px",
-              margin: "0 0 8px",
-            }}
-          >
-            MAIN MENU
-          </p>
+        <nav style={{ flex: 1, padding: "14px 8px", overflowY: "auto" }}>
+          {!sidebarCollapsed && (
+            <p
+              style={{
+                fontSize: 9,
+                fontWeight: 700,
+                color: THEME.muted,
+                textTransform: "uppercase",
+                letterSpacing: 2,
+                padding: "0 12px",
+                margin: "0 0 8px",
+              }}
+            >
+              MAIN MENU
+            </p>
+          )}
 
           {NAV_ITEMS.map(({ key, label, icon }) => {
             const active = activeSection === key;
             return (
               <div
                 key={key}
-                onClick={() => navigate(key)}
+                onClick={() => handleNavClick(key)}
+                title={sidebarCollapsed ? label : undefined}
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 10,
-                  padding: "10px 12px",
+                  gap: sidebarCollapsed ? 0 : 10,
+                  padding: sidebarCollapsed ? "10px 0" : "10px 12px",
+                  justifyContent: sidebarCollapsed ? "center" : "flex-start",
                   borderRadius: 10,
                   cursor: "pointer",
                   color: active ? THEME.text : THEME.muted,
@@ -261,9 +289,9 @@ const Dashboard = () => {
                 }}
               >
                 <Icon d={icon} size={15} />
-                <span>{label}</span>
+                {!sidebarCollapsed && <span>{label}</span>}
 
-                {key === "contacts" && totalLeads > 0 && (
+                {!sidebarCollapsed && key === "contacts" && totalLeads > 0 && (
                   <span
                     style={{
                       marginLeft: "auto",
@@ -279,7 +307,7 @@ const Dashboard = () => {
                   </span>
                 )}
 
-                {key === "individual" && individualLeads.length > 0 && (
+                {!sidebarCollapsed && key === "individual" && individualLeads.length > 0 && (
                   <span
                     style={{
                       marginLeft: "auto",
@@ -295,7 +323,7 @@ const Dashboard = () => {
                   </span>
                 )}
 
-                {key === "pipeline" && interestedLeads.length > 0 && (
+                {!sidebarCollapsed && key === "pipeline" && interestedLeads.length > 0 && (
                   <span
                     style={{
                       marginLeft: "auto",
@@ -313,77 +341,47 @@ const Dashboard = () => {
               </div>
             );
           })}
-
-          <div
-            style={{
-              height: 1,
-              background: THEME.border,
-              margin: "16px 0 14px",
-            }}
-          />
-          <p
-            style={{
-              fontSize: 9,
-              fontWeight: 700,
-              color: THEME.muted,
-              textTransform: "uppercase",
-              letterSpacing: 2,
-              padding: "0 12px",
-              margin: "0 0 8px",
-            }}
-          >
-            AI
-          </p>
-
-          <div
-            onClick={() => setIsAIAssistOpen(true)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: "10px 12px",
-              borderRadius: 10,
-              cursor: "pointer",
-              color: THEME.muted,
-            }}
-          >
-            <Icon d={ICONS.ai} size={15} />
-            <span>AI Assistant</span>
-          </div>
         </nav>
 
         <div
           style={{
-            padding: "12px 16px",
+            padding: "12px",
             borderTop: `1px solid ${THEME.border}`,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: sidebarCollapsed ? 0 : 10,
+            justifyContent: sidebarCollapsed ? "center" : "flex-start",
+          }}>
             <UserButton />
-            <div style={{ minWidth: 0 }}>
-              <p
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: THEME.text,
-                  margin: 0,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {name}
-              </p>
-              <p
-                style={{
-                  fontSize: 10,
-                  color: THEME.muted,
-                  margin: 0,
-                }}
-              >
-                Workspace Admin
-              </p>
-            </div>
+            {!sidebarCollapsed && (
+              <div style={{ minWidth: 0 }}>
+                <p
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: THEME.text,
+                    margin: 0,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {name}
+                </p>
+                <p
+                  style={{
+                    fontSize: 10,
+                    color: THEME.muted,
+                    margin: 0,
+                  }}
+                >
+                  Workspace Admin
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </aside>
@@ -549,7 +547,6 @@ const Dashboard = () => {
           {activeSection === "whatsapp" && (
             <WhatsApp leads={leads} companyId={company_id} />
           )}
-
           {activeSection === "import" && (
             <Import companyId={company_id} userId={user_id} fetchLeads={fetchLeads} />
           )}
@@ -566,32 +563,6 @@ const Dashboard = () => {
           messageTemplate={messageTemplate}
         />
       )}
-
-      <button
-        onClick={() => setIsAIAssistOpen(true)}
-        style={{
-          position: "fixed",
-          bottom: 24,
-          right: 24,
-          zIndex: 40,
-          width: 52,
-          height: 52,
-          borderRadius: "50%",
-          background: THEME.coral,
-          border: "none",
-          color: "white",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          boxShadow: "0 8px 24px rgba(232,86,58,.28)",
-          transition: "transform .15s",
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.08)")}
-        onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-      >
-        {/* <Icon d={ICONS.ai} size={20} /> */}
-      </button>
 
       <AIMessageBox isOpen={isAIAssistOpen} onClose={() => setIsAIAssistOpen(false)} />
     </div>
