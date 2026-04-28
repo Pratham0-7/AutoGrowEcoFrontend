@@ -402,6 +402,11 @@ const WhatsApp = ({ leads = [], companyId }) => {
     );
   }, [inboxConvs, inboxSearch]);
 
+  const newContactPhone = useMemo(() => {
+    const s = inboxSearch.trim().replace(/[\s\-]/g, "");
+    return /^\+?\d{7,}$/.test(s) ? inboxSearch.trim() : null;
+  }, [inboxSearch]);
+
   const activeConv = useMemo(
     () => inboxConvs.find((c) => c.contact_phone === selectedConv) || null,
     [inboxConvs, selectedConv]
@@ -510,7 +515,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
   }, [threadMessages]);
 
   const handleSendText = async () => {
-    if (!inboxReplyText.trim() || !selectedConv || !activeConv || inboxReplySending) return;
+    if (!inboxReplyText.trim() || !selectedConv || inboxReplySending) return;
     setInboxReplySending(true);
     setInboxReplyStatus(null);
     try {
@@ -519,11 +524,11 @@ const WhatsApp = ({ leads = [], companyId }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           company_id: companyId,
-          lead_id:    activeConv.lead_id,
+          lead_id:    activeConv?.lead_id || "",
           phone:      selectedConv,
           message:    inboxReplyText.trim(),
           user_id:    userId,
-          lead_name:  activeConv.lead_name,
+          lead_name:  activeConv?.lead_name || selectedConv,
         }),
       });
       const d = await res.json();
@@ -542,7 +547,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
   };
 
   const handleSendTemplateFromInbox = async () => {
-    if (!inboxReplyTemplate || !selectedConv || !activeConv || inboxReplySending) return;
+    if (!inboxReplyTemplate || !selectedConv || inboxReplySending) return;
     if (inboxReplyTemplate.status !== "approved") {
       setInboxReplyStatus({ ok: false, msg: `Template is ${inboxReplyTemplate.status || "not approved"} — cannot send until Meta approves it.` });
       return;
@@ -555,14 +560,14 @@ const WhatsApp = ({ leads = [], companyId }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           company_id:     companyId,
-          lead_id:        activeConv.lead_id,
+          lead_id:        activeConv?.lead_id || "",
           phone:          selectedConv,
           template_name:  inboxReplyTemplate.name,
           language_code:  inboxReplyTemplate.language_code || inboxReplyTemplate.language || "en",
           variables_used: inboxReplyVars,
           body_preview:   inboxBodyPreview,
           user_id:        userId,
-          lead_name:      activeConv.lead_name,
+          lead_name:      activeConv?.lead_name || selectedConv,
         }),
       });
       const d = await res.json();
@@ -921,7 +926,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
               <div style={{ flex: 1, overflowY: "auto" }}>
                 {loadingConvs && filteredConvs.length === 0 ? (
                   <p style={{ color: "#6B8E95", fontSize: 12, textAlign: "center", padding: 24 }}>Loading…</p>
-                ) : filteredConvs.length === 0 ? (
+                ) : filteredConvs.length === 0 && !newContactPhone ? (
                   <div style={{ textAlign: "center", padding: 32 }}>
                     <WaLogo size={32} color="#1E3D47" />
                     <p style={{ color: "#6B8E95", fontSize: 11, marginTop: 10 }}>No conversations yet</p>
@@ -934,6 +939,34 @@ const WhatsApp = ({ leads = [], companyId }) => {
                     onClick={() => { setSelectedConv(conv.contact_phone); setShowThread(true); }}
                   />
                 ))}
+                {newContactPhone && (
+                  <div
+                    onClick={() => { setSelectedConv(newContactPhone); setShowThread(true); }}
+                    style={{
+                      padding: "10px 12px",
+                      cursor: "pointer",
+                      background: selectedConv === newContactPhone ? "#0A2419" : "transparent",
+                      borderBottom: "1px solid #1E3D4730",
+                      borderLeft: `3px solid ${selectedConv === newContactPhone ? WA_GREEN : WA_GREEN + "55"}`,
+                    }}
+                  >
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <div style={{
+                        width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
+                        background: "#0A2419", border: `1px solid ${WA_GREEN}55`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={WA_GREEN} strokeWidth="2.5" strokeLinecap="round">
+                          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 11, fontWeight: 700, color: WA_GREEN, margin: "0 0 2px" }}>New conversation</p>
+                        <p style={{ fontSize: 12, color: "#E2F5E8", margin: 0, fontWeight: 600 }}>{newContactPhone}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
