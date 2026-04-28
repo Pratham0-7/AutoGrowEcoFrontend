@@ -293,7 +293,6 @@ const TermsAndConditions = () => {
             <p className="font-bold" style={{ color: DARK }}>Automated Growth Ecosystem</p>
             <p className="mt-1 text-[#3D5560]">Email: <a href="mailto:prathambuilds123@gmail.com" className="font-medium underline" style={{ color: TEAL }}>prathambuilds123@gmail.com</a></p>
             <p className="text-[#3D5560]">Website: <span style={{ color: TEAL }}>ageautomation.in</span></p>
-            <p className="text-[#3D5560]">Jurisdiction: Bhopal, Madhya Pradesh, India</p>
           </div>
         </Section>
 
