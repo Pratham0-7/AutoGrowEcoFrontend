@@ -590,7 +590,7 @@ const Dashboard = () => {
         onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.08)")}
         onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
       >
-        <Icon d={ICONS.ai} size={20} />
+        {/* <Icon d={ICONS.ai} size={20} /> */}
       </button>
 
       <AIMessageBox isOpen={isAIAssistOpen} onClose={() => setIsAIAssistOpen(false)} />
