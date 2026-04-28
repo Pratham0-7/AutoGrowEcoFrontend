@@ -199,8 +199,7 @@ const PrivacyPolicy = () => {
           >
             <p className="font-bold" style={{ color: DARK }}>Grievance Officer</p>
             <p className="mt-1 text-[#3D5560]">Name: Pratham Pandey (Founder)</p>
-            <p className="text-[#3D5560]">Email: <a href="mailto:grievance@ageautomation.in" className="font-medium underline" style={{ color: TEAL }}>grievance@ageautomation.in</a></p>
-            <p className="text-[#3D5560]">Address: [Insert business address]</p>
+            <p className="text-[#3D5560]">Email: <a href="mailto:grievance@ageautomation.in" className="font-medium underline" style={{ color: TEAL }}>prathambuilds123@gmail.com</a></p>
           </div>
           <p>We will acknowledge complaints within 7 days and aim to resolve them within 30 days. If you are not satisfied with our response, you may approach the Data Protection Board of India.</p>
         </Section>
@@ -258,8 +257,8 @@ const PrivacyPolicy = () => {
             style={{ borderColor: `${TEAL}30`, background: `${TEAL}08` }}
           >
             <p className="font-bold" style={{ color: DARK }}>Automated Growth Ecosystem</p>
-            <p className="mt-1 text-[#3D5560]">General privacy: <a href="mailto:privacy@ageautomation.in" className="font-medium underline" style={{ color: TEAL }}>privacy@ageautomation.in</a></p>
-            <p className="text-[#3D5560]">Grievance Officer: <a href="mailto:grievance@ageautomation.in" className="font-medium underline" style={{ color: TEAL }}>grievance@ageautomation.in</a></p>
+            <p className="mt-1 text-[#3D5560]">General privacy: <a href="mailto:privacy@ageautomation.in" className="font-medium underline" style={{ color: TEAL }}>prathambuilds123@gmail.com</a></p>
+            <p className="text-[#3D5560]">Grievance Officer: <a href="mailto:grievance@ageautomation.in" className="font-medium underline" style={{ color: TEAL }}>prathambuilds123@gmail.com</a></p>
             <p className="text-[#3D5560]">Website: ageautomation.in</p>
           </div>
           <p>This Privacy Policy is governed by the laws of India. Any disputes are subject to the exclusive jurisdiction of the courts at Bhopal, Madhya Pradesh.</p>
