@@ -93,7 +93,7 @@ const Dashboard = () => {
 
   const startFollowup = (leadId) =>
     handleStartFollowup(leadId, emailSubject, messageTemplate, () =>
-      setSelectedLead(null)
+      setSelectedLead(null),
     );
 
   const navigate = (section) => {
@@ -132,7 +132,7 @@ const Dashboard = () => {
     totalLeads,
     individualLeads.length,
     leads.length,
-    convRate
+    convRate,
   );
 
   return (
@@ -189,18 +189,6 @@ const Dashboard = () => {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p
                   style={{
-                    fontSize: 9,
-                    color: THEME.muted,
-                    fontWeight: 700,
-                    letterSpacing: 1.5,
-                    textTransform: "uppercase",
-                    margin: 0,
-                  }}
-                >
-                  CRM
-                </p>
-                <p
-                  style={{
                     fontSize: 13,
                     color: THEME.text,
                     fontWeight: 700,
@@ -229,9 +217,17 @@ const Dashboard = () => {
                 justifyContent: "center",
               }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
             <button
@@ -239,11 +235,21 @@ const Dashboard = () => {
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                {sidebarCollapsed
-                  ? <polyline points="9 18 15 12 9 6" />
-                  : <polyline points="15 18 9 12 15 6" />
-                }
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                {sidebarCollapsed ? (
+                  <polyline points="9 18 15 12 9 6" />
+                ) : (
+                  <polyline points="15 18 9 12 15 6" />
+                )}
               </svg>
             </button>
           </div>
@@ -295,7 +301,9 @@ const Dashboard = () => {
                   <span
                     style={{
                       marginLeft: "auto",
-                      background: active ? "rgba(255,255,255,.16)" : THEME.tealSoft,
+                      background: active
+                        ? "rgba(255,255,255,.16)"
+                        : THEME.tealSoft,
                       color: active ? "#fff" : "#9FE6F2",
                       borderRadius: 100,
                       padding: "2px 8px",
@@ -307,37 +315,41 @@ const Dashboard = () => {
                   </span>
                 )}
 
-                {!sidebarCollapsed && key === "individual" && individualLeads.length > 0 && (
-                  <span
-                    style={{
-                      marginLeft: "auto",
-                      background: "rgba(245,158,11,.14)",
-                      color: "#F5B74F",
-                      borderRadius: 100,
-                      padding: "2px 8px",
-                      fontSize: 10,
-                      fontWeight: 700,
-                    }}
-                  >
-                    {individualLeads.length}
-                  </span>
-                )}
+                {!sidebarCollapsed &&
+                  key === "individual" &&
+                  individualLeads.length > 0 && (
+                    <span
+                      style={{
+                        marginLeft: "auto",
+                        background: "rgba(245,158,11,.14)",
+                        color: "#F5B74F",
+                        borderRadius: 100,
+                        padding: "2px 8px",
+                        fontSize: 10,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {individualLeads.length}
+                    </span>
+                  )}
 
-                {!sidebarCollapsed && key === "pipeline" && interestedLeads.length > 0 && (
-                  <span
-                    style={{
-                      marginLeft: "auto",
-                      background: "rgba(34,197,94,.14)",
-                      color: "#7DE3A0",
-                      borderRadius: 100,
-                      padding: "2px 8px",
-                      fontSize: 10,
-                      fontWeight: 700,
-                    }}
-                  >
-                    {interestedLeads.length}
-                  </span>
-                )}
+                {!sidebarCollapsed &&
+                  key === "pipeline" &&
+                  interestedLeads.length > 0 && (
+                    <span
+                      style={{
+                        marginLeft: "auto",
+                        background: "rgba(34,197,94,.14)",
+                        color: "#7DE3A0",
+                        borderRadius: 100,
+                        padding: "2px 8px",
+                        fontSize: 10,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {interestedLeads.length}
+                    </span>
+                  )}
               </div>
             );
           })}
@@ -349,12 +361,14 @@ const Dashboard = () => {
             borderTop: `1px solid ${THEME.border}`,
           }}
         >
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: sidebarCollapsed ? 0 : 10,
-            justifyContent: sidebarCollapsed ? "center" : "flex-start",
-          }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: sidebarCollapsed ? 0 : 10,
+              justifyContent: sidebarCollapsed ? "center" : "flex-start",
+            }}
+          >
             <UserButton />
             {!sidebarCollapsed && (
               <div style={{ minWidth: 0 }}>
@@ -415,7 +429,9 @@ const Dashboard = () => {
               className="hamburger-btn"
               onClick={() => setSidebarOpen(true)}
             >
-              <span /><span /><span />
+              <span />
+              <span />
+              <span />
             </button>
             <div>
               <h1
@@ -492,7 +508,10 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <main className="dashboard-main-content" style={{ padding: 24, flex: 1 }}>
+        <main
+          className="dashboard-main-content"
+          style={{ padding: 24, flex: 1 }}
+        >
           {activeSection === "overview" && (
             <Overview
               leads={leads}
@@ -542,13 +561,21 @@ const Dashboard = () => {
             />
           )}
           {activeSection === "sequences" && (
-            <Sequences leads={leads} companyId={company_id} fetchLeads={fetchLeads} />
+            <Sequences
+              leads={leads}
+              companyId={company_id}
+              fetchLeads={fetchLeads}
+            />
           )}
           {activeSection === "whatsapp" && (
             <WhatsApp leads={leads} companyId={company_id} />
           )}
           {activeSection === "import" && (
-            <Import companyId={company_id} userId={user_id} fetchLeads={fetchLeads} />
+            <Import
+              companyId={company_id}
+              userId={user_id}
+              fetchLeads={fetchLeads}
+            />
           )}
         </main>
       </div>
@@ -564,7 +591,10 @@ const Dashboard = () => {
         />
       )}
 
-      <AIMessageBox isOpen={isAIAssistOpen} onClose={() => setIsAIAssistOpen(false)} />
+      <AIMessageBox
+        isOpen={isAIAssistOpen}
+        onClose={() => setIsAIAssistOpen(false)}
+      />
     </div>
   );
 };

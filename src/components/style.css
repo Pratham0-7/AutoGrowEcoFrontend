@@ -106,8 +106,60 @@
   gap: 14px;
 }
 
+/* ── WhatsApp responsive ─────────────────────────────── */
+.wa-inbox { display: flex; height: 580px; overflow: hidden; }
+
+.wa-conv-list {
+  width: 264px;
+  border-right: 1px solid #1E3D47;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.wa-thread { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+.wa-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+.wa-form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.wa-history-header { display: grid; grid-template-columns: 1fr 130px 70px 70px; gap: 10px; }
+.wa-history-row    { display: grid; grid-template-columns: 1fr 130px 70px 70px; gap: 10px; }
+
+.wa-meta-header { display: grid; grid-template-columns: 1fr 1fr 80px 110px; gap: 8px; }
+.wa-meta-row    { display: grid; grid-template-columns: 1fr 1fr 80px 110px; gap: 8px; }
+
+.wa-back-btn {
+  display: none;
+  background: transparent;
+  border: 1px solid #1E3D47;
+  color: #6B8E95;
+  border-radius: 7px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+}
+.wa-back-btn:hover { color: #fff; border-color: #1A8A9E; }
+
 /* ── Mobile responsive ──────────────────────────── */
 @media (max-width: 768px) {
+  /* WhatsApp */
+  .wa-inbox { height: 75vh; flex-direction: column; }
+  .wa-conv-list { width: 100%; border-right: none; border-bottom: 1px solid #1E3D47; }
+  .wa-inbox.wa-showing-thread .wa-conv-list { display: none; }
+  .wa-inbox:not(.wa-showing-thread) .wa-thread { display: none; }
+  .wa-stats-grid { grid-template-columns: 1fr; }
+  .wa-form-grid-2 { grid-template-columns: 1fr; }
+  .wa-history-header { display: none; }
+  .wa-history-row { grid-template-columns: 1fr; gap: 4px; }
+  .wa-meta-header { display: none; }
+  .wa-meta-row { grid-template-columns: 1fr 1fr; }
+  .wa-back-btn { display: flex; }
   .sidebar {
     position: fixed;
     top: 0;

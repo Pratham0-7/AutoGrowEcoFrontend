@@ -236,6 +236,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
 
   const [tab, setTab] = useState("inbox");
   const [configOpen, setConfigOpen] = useState(false);
+  const [showThread, setShowThread] = useState(false);
   const threadRef = useRef(null);
 
   const [waConfig, setWaConfig] = useState({
@@ -827,7 +828,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
               <p style={{ fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1.3, margin: 0 }}>
                 Legacy WhatsApp (Twilio)
               </p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div className="wa-form-grid-2">
                 <div>
                   <Label>Integrated Number (From)</Label>
                   <input type="text" value={waConfig.wa_number}
@@ -856,7 +857,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
               <p style={{ fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1.3, margin: 0 }}>
                 Meta Cloud API Credentials
               </p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div className="wa-form-grid-2">
                 <div>
                   <Label>Phone Number ID</Label>
                   <input type="text" value={metaConfig.meta_phone_number_id}
@@ -904,9 +905,9 @@ const WhatsApp = ({ leads = [], companyId }) => {
         )}
 
         {tab === "inbox" && (
-          <div style={{ display: "flex", height: 580, overflow: "hidden" }}>
+          <div className={`wa-inbox${showThread ? " wa-showing-thread" : ""}`}>
             {/* ── Left: conversation list ──────────────────────────────────── */}
-            <div style={{ width: 264, borderRight: "1px solid #1E3D47", display: "flex", flexDirection: "column", flexShrink: 0 }}>
+            <div className="wa-conv-list">
               <div style={{ padding: "10px 12px", borderBottom: "1px solid #1E3D47" }}>
                 <input
                   type="text"
@@ -930,14 +931,14 @@ const WhatsApp = ({ leads = [], companyId }) => {
                     key={conv.contact_phone}
                     conv={conv}
                     selected={selectedConv === conv.contact_phone}
-                    onClick={() => setSelectedConv(conv.contact_phone)}
+                    onClick={() => { setSelectedConv(conv.contact_phone); setShowThread(true); }}
                   />
                 ))}
               </div>
             </div>
 
             {/* ── Right: thread ────────────────────────────────────────────── */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+            <div className="wa-thread">
               {!selectedConv ? (
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
                   <WaLogo size={40} color="#1E3D47" />
@@ -947,6 +948,12 @@ const WhatsApp = ({ leads = [], companyId }) => {
                 <>
                   {/* Thread header */}
                   <div style={{ padding: "11px 16px", borderBottom: "1px solid #1E3D47", display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                    <button
+                      className="wa-back-btn"
+                      onClick={() => { setSelectedConv(null); setShowThread(false); }}
+                    >
+                      ← Back
+                    </button>
                     <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#0A2419", border: "1px solid #25D36644", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: WA_GREEN, flexShrink: 0 }}>
                       {(activeConv?.lead_name || selectedConv)[0].toUpperCase()}
                     </div>
@@ -1196,7 +1203,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
                 </div>
               )}
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div className="wa-form-grid-2">
                 <div>
                   <Label>Contact Name</Label>
                   <input
@@ -1328,7 +1335,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
               </div>
             ) : (
               <>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 130px 70px 70px", gap: 10, padding: "6px 12px", fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
+                <div className="wa-history-header" style={{ padding: "6px 12px", fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
                   <span>Lead / Message</span>
                   <span>Phone</span>
                   <span>Type</span>
@@ -1338,7 +1345,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
                 {messages.map((msg) => (
                   <div
                     key={msg.id}
-                    style={{ display: "grid", gridTemplateColumns: "1fr 130px 70px 70px", gap: 10, padding: "10px 12px", background: "#0F2229", borderRadius: 10, marginBottom: 4, alignItems: "center" }}
+                    className="wa-history-row" style={{ padding: "10px 12px", background: "#0F2229", borderRadius: 10, marginBottom: 4, alignItems: "center" }}
                   >
                     <div style={{ minWidth: 0 }}>
                       <p style={{ fontSize: 12, fontWeight: 600, color: "#FFFFFF", margin: "0 0 3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -1467,7 +1474,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
               )}
 
               {!metaSelectedLeadId && (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="wa-form-grid-2">
                   <div>
                     <Label>Name</Label>
                     <input type="text" value={metaManualName} onChange={(e) => setMetaManualName(e.target.value)} placeholder="Lead name" className="crm-input" style={inputStyle} />
@@ -1574,7 +1581,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
                 </div>
               ) : (
                 <>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 80px 110px", gap: 8, padding: "5px 10px", fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
+                  <div className="wa-meta-header" style={{ padding: "5px 10px", fontSize: 10, fontWeight: 700, color: "#6B8E95", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
                     <span>Lead / Preview</span>
                     <span>Template · Phone</span>
                     <span>Status</span>
@@ -1582,7 +1589,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
                   </div>
 
                   {metaMessages.map((msg) => (
-                    <div key={msg.id} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 80px 110px", gap: 8, padding: "10px 10px", background: "#0F2229", borderRadius: 10, marginBottom: 4, alignItems: "start" }}>
+                    <div key={msg.id} className="wa-meta-row" style={{ padding: "10px 10px", background: "#0F2229", borderRadius: 10, marginBottom: 4, alignItems: "start" }}>
                       <div style={{ minWidth: 0 }}>
                         <p style={{ fontSize: 12, fontWeight: 600, color: "#FFFFFF", margin: "0 0 3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {msg.lead_name || "Unknown"}
@@ -1627,7 +1634,7 @@ const WhatsApp = ({ leads = [], companyId }) => {
         )}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+      <div className="wa-stats-grid">
         {[
           { label: "Interested Leads", value: interestedLeads.length, color: "#22C55E" },
           { label: "With Phone Number", value: leadsWithPhone.length, color: WA_GREEN },
