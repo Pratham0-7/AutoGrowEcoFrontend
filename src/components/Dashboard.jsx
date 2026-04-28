@@ -567,7 +567,7 @@ const Dashboard = () => {
         />
       )}
 
-      {/* <button
+      <button
         onClick={() => setIsAIAssistOpen(true)}
         style={{
           position: "fixed",
@@ -593,7 +593,7 @@ const Dashboard = () => {
         <Icon d={ICONS.ai} size={20} />
       </button>
 
-      <AIMessageBox isOpen={isAIAssistOpen} onClose={() => setIsAIAssistOpen(false)} /> */}
+      <AIMessageBox isOpen={isAIAssistOpen} onClose={() => setIsAIAssistOpen(false)} />
     </div>
   );
 };
