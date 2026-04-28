@@ -84,7 +84,7 @@ const TermsAndConditions = () => {
         >
           <p className="font-semibold" style={{ color: TEAL }}>Key points (not a substitute for the full Terms)</p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-[#3D5560]">
-            <li>AGE is a CRM and multi-channel outreach tool. It automates follow-ups — it does not guarantee conversions, revenue, or business outcomes.</li>
+            <li>AGE is a CRM and multi-channel outreach tool. It automates follow-ups it does not guarantee conversions, revenue, or business outcomes.</li>
             <li>You are responsible for the legality of your contacts, your message content, and compliance with DLT, TRAI, WhatsApp, and CAN-SPAM rules.</li>
             <li>Subscriptions are billed monthly in USD with a minimum commitment of 3 months (Solo, Team) or 6 months (Agency).</li>
             <li>Refunds are not provided for partial periods, unused features, or cancellations during the minimum commitment.</li>
@@ -95,7 +95,7 @@ const TermsAndConditions = () => {
         </div>
 
         <Section title="1. Acceptance of Terms">
-          <p>By accessing or using the Service in any way — including browsing the website, creating an account, uploading data, sending messages, or using any feature — you agree to these Terms in full. If you do not agree, you must not use the Service.</p>
+          <p>By accessing or using the Service in any way, including browsing the website, creating an account, uploading data, sending messages, or using any feature you agree to these Terms in full. If you do not agree, you must not use the Service.</p>
           <p>These Terms supersede all prior agreements between you and AGE relating to the Service and, together with the Privacy Policy and any applicable Order Form, constitute the entire agreement between the parties.</p>
         </Section>
 
@@ -192,7 +192,7 @@ const TermsAndConditions = () => {
         <Section title="8. Outreach Channel Compliance">
           <p>AGE provides infrastructure to send messages across SMS, email, and WhatsApp. You are solely responsible for ensuring your outreach complies with all applicable laws and platform policies. Specific requirements include:</p>
 
-          <p><strong className="text-[#1A2E35]">SMS (India — TRAI / DLT).</strong> You must be registered as a Principal Entity on the DLT platform, have approved message headers and templates, and comply with TRAI's Telecom Commercial Communications Customer Preference Regulations. Sending to contacts on the National Do Not Call (NDNC) registry without their prior written consent is prohibited. AGE sends SMS using your DLT credentials — AGE is not your DLT registrant.</p>
+          <p><strong className="text-[#1A2E35]">SMS (India — TRAI / DLT).</strong> You must be registered as a Principal Entity on the DLT platform, have approved message headers and templates, and comply with TRAI's Telecom Commercial Communications Customer Preference Regulations. Sending to contacts on the National Do Not Call (NDNC) registry without their prior written consent is prohibited. AGE sends SMS using your DLT credentials. AGE is not your DLT registrant.</p>
 
           <p><strong className="text-[#1A2E35]">WhatsApp (Meta Cloud API).</strong> You must operate and maintain your own WhatsApp Business Account (WABA) in good standing. All templates must be submitted to and approved by Meta before use. You must obtain valid opt-in from recipients in accordance with Meta's WhatsApp Business Policy. AGE is not responsible for Meta's decisions on template approval, account suspension, messaging rate limits, or quality rating.</p>
 
@@ -202,7 +202,7 @@ const TermsAndConditions = () => {
         </Section>
 
         <Section title="9. Intellectual Property">
-          <p><strong className="text-[#1A2E35]">AGE's IP.</strong> All rights, title, and interest in the Service — including the software, platform design, algorithms, AI models, documentation, trademarks, and brand — belong exclusively to AGE. These Terms do not grant you any ownership right in the Service.</p>
+          <p><strong className="text-[#1A2E35]">AGE's IP.</strong> All rights, title, and interest in the Service including the software, platform design, algorithms, AI models, documentation, trademarks, and brand belong exclusively to AGE. These Terms do not grant you any ownership right in the Service.</p>
           <p><strong className="text-[#1A2E35]">Feedback.</strong> If you provide us with suggestions, ideas, or feedback about the Service ("Feedback"), you grant AGE a perpetual, irrevocable, royalty-free licence to use and incorporate that Feedback into the Service without any obligation to you.</p>
           <p><strong className="text-[#1A2E35]">Restrictions.</strong> You may not copy, modify, create derivative works of, or distribute the Service or any part of it without our prior written consent.</p>
         </Section>
@@ -228,7 +228,7 @@ const TermsAndConditions = () => {
         </Section>
 
         <Section title="12. Limitation of Liability">
-          <p>To the maximum extent permitted by applicable law, AGE's total aggregate liability to you for any claims arising out of or relating to these Terms or the Service — whether in contract, tort (including negligence), statute, or otherwise — shall not exceed the <strong className="text-[#1A2E35]">total fees paid by you to AGE in the three (3) months immediately preceding the event giving rise to the claim</strong>.</p>
+          <p>To the maximum extent permitted by applicable law, AGE's total aggregate liability to you for any claims arising out of or relating to these Terms or the Service, whether in contract, tort (including negligence), statute, or otherwise shall not exceed the <strong className="text-[#1A2E35]">total fees paid by you to AGE in the three (3) months immediately preceding the event giving rise to the claim</strong>.</p>
           <p>In no event shall AGE be liable for any:</p>
           <ul className="list-disc space-y-2 pl-5">
             <li>Indirect, incidental, special, consequential, or punitive damages.</li>
