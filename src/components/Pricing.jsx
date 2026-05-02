@@ -107,6 +107,7 @@ const accentMap = {
 
 const PlanCard = ({ plan, delay }) => {
   const [ref, inView] = useInView();
+  const navigate = useNavigate();
   const a = accentMap[plan.accent];
 
   return (
@@ -168,9 +169,9 @@ const PlanCard = ({ plan, delay }) => {
       {/* CTA */}
       <button
         onClick={() => navigate("/schedule")}
-        className={`mt-8 w-full rounded-xl px-5 py-3 text-sm font-semibold text-white transition-all duration-200 shadow-lg ${
+        className={`mt-8 w-full rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 shadow-lg ${
           plan.popular
-            ? `${a.cta}`
+            ? `text-white ${a.cta}`
             : `border ${a.ctaOutline} bg-transparent`
         }`}
       >
