@@ -87,8 +87,8 @@ const Landing = () => {
       <Navbar />
       <main>
         <Hero />
-        <Problem />
         <WhyAGE />
+        <Problem />
         <WhyItWorks/>
         <Solution />
         <Results />

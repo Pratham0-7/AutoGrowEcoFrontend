@@ -21,7 +21,7 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
   const totalLeads = leads.length;
 
   const sentLeads = leads.filter(
-    (l) => l.send_status && l.send_status !== "not sent"
+    (l) => l.send_status && l.send_status !== "not sent",
   ).length;
 
   const yesLeads = leads.filter((l) => l.response_status === "yes").length;
@@ -30,7 +30,7 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
     (l) =>
       !l.response_status ||
       l.response_status === "pending" ||
-      l.response_status === "no reply"
+      l.response_status === "no reply",
   ).length;
 
   const convRate = totalLeads ? Math.round((yesLeads / totalLeads) * 100) : 0;
@@ -42,7 +42,7 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
         l.send_status &&
         l.send_status !== "not sent" &&
         l.response_status !== "yes" &&
-        l.response_status !== "no"
+        l.response_status !== "no",
     ),
     interested: leads.filter((l) => l.response_status === "yes"),
     declined: leads.filter((l) => l.response_status === "no"),
@@ -77,12 +77,12 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
     .filter(
       (l) =>
         l.last_followup_sent_at ||
-        (l.send_status && l.send_status !== "not sent")
+        (l.send_status && l.send_status !== "not sent"),
     )
     .sort(
       (a, b) =>
         new Date(b.last_followup_sent_at || 0) -
-        new Date(a.last_followup_sent_at || 0)
+        new Date(a.last_followup_sent_at || 0),
     )
     .slice(0, 8);
 
