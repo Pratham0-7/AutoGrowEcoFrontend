@@ -9,7 +9,7 @@ const useInView = (threshold = 0.15) => {
       ([entry]) => {
         if (entry.isIntersecting) setInView(true);
       },
-      { threshold },
+      { threshold }
     );
 
     if (ref.current) observer.observe(ref.current);
@@ -29,49 +29,49 @@ const oldWay = [
 const ageWay = [
   "Automatically follows up until they reply or say no.",
   "Simple, focused on one thing: consistent outreach.",
-  "Runs on a schedule. Never misses a touch, ever.",
+  "Runs on a schedule. Never misses a touch.",
   "Clear Yes / No / Pending on every lead at a glance.",
 ];
 
 const proofStats = [
   {
     value: "80%",
-    label: "of successful sales take 5+ follow-up calls",
-    source: "HubSpot, citing Invesp",
+    label: "of successful sales take 5+ follow-ups",
+    source: "HubSpot / Invesp",
     url: "https://blog.hubspot.com/sales/sales-statistics",
   },
   {
     value: "44%",
-    label: "of salespeople give up after one follow-up",
-    source: "HubSpot, citing Invesp",
+    label: "give up after just one follow-up",
+    source: "HubSpot / Invesp",
     url: "https://blog.hubspot.com/sales/sales-statistics",
   },
   {
     value: "42 hrs",
-    label: "average response time among companies that responded",
+    label: "average response time among responders",
     source: "Harvard Business Review",
     url: "https://hbr.org/2011/03/the-short-life-of-online-sales-leads",
   },
 ];
 
-const lossExample = [
-  { label: "Monthly leads", value: 300, display: "300", width: "100%" },
-  { label: "Warm leads", value: 60, display: "60", width: "55%" },
-  { label: "Lost from weak follow-up", value: 30, display: "30", width: "32%" },
+const lossFlow = [
+  { label: "Monthly leads", value: "300", width: "100%" },
+  { label: "Warm leads", value: "60", width: "52%" },
+  { label: "Lost from weak follow-up", value: "30", width: "28%" },
 ];
 
 const WhyAGE = () => {
   const [headerRef, headerInView] = useInView(0.2);
   const [proofRef, proofInView] = useInView(0.1);
-  const [cardRef, cardInView] = useInView(0.1);
+  const [comparisonRef, comparisonInView] = useInView(0.1);
   const [featRef, featInView] = useInView(0.1);
 
   return (
-    <section className="relative bg-[#FFFBF5] py-24 sm:py-32">
+    <section className="relative bg-[#FFFBF5] py-20 sm:py-28">
       <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent" />
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+        {/* Main heading */}
         <div
           ref={headerRef}
           style={{
@@ -79,7 +79,7 @@ const WhyAGE = () => {
             transform: headerInView ? "translateY(0)" : "translateY(24px)",
             transition: "opacity 0.7s ease, transform 0.7s ease",
           }}
-          className="mx-auto max-w-2xl text-center"
+          className="mx-auto max-w-3xl text-center"
         >
           <div className="inline-flex items-center gap-2 rounded-full border border-[#0F5E6E]/20 bg-[#0F5E6E]/5 px-4 py-1.5 text-sm font-medium text-[#0F5E6E]">
             <svg
@@ -98,161 +98,177 @@ const WhyAGE = () => {
             Why AGE
           </div>
 
-          {/* Lead loss proof section */}
-
-          <h2 className="mt-16 text-4xl font-bold tracking-tight text-[#1A2E35] sm:text-5xl">
+          <h2 className="mt-5 text-4xl font-bold tracking-tight text-[#1A2E35] sm:text-5xl">
             AGE isn't a CRM.{" "}
             <span className="text-[#0F5E6E]">It's a closer.</span>
           </h2>
 
           <p className="mt-4 text-lg text-[#6B7280]">
-            Traditional CRMs help you organize leads. AGE helps you convert
-            them.
+            Traditional CRMs help you organize leads. AGE helps you convert them.
           </p>
+        </div>
 
-          <div
-            ref={proofRef}
-            style={{
-              opacity: proofInView ? 1 : 0,
-              transform: proofInView ? "translateY(0)" : "translateY(28px)",
-              transition: "opacity 0.7s ease 0.1s, transform 0.7s ease 0.1s",
-            }}
-            className="mt-10 overflow-hidden rounded-3xl border border-[#0F5E6E]/15 bg-white shadow-sm"
-          >
-            <div className="grid lg:grid-cols-[1.05fr_0.95fr]">
-              {/* Left: narrative and stats */}
-              <div className="p-6 text-left sm:p-8">
-                <div className="inline-flex rounded-full bg-[#E8563A]/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-[#E8563A]">
-                  The hidden leak
-                </div>
+        {/* THE HIDDEN LEAK heading */}
+        <div className="mt-16 text-center sm:mt-20">
+          <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#0F5E6E]">
+            The Hidden Leak
+          </p>
+          <h3 className="mt-3 text-2xl font-bold tracking-tight text-[#1A2E35] sm:text-3xl">
+            Most businesses are not only losing leads.
+            <span className="text-[#0F5E6E]"> They are losing revenue already in the pipeline.</span>
+          </h3>
+        </div>
 
-                <h3 className="mt-4 text-2xl font-bold tracking-tight text-[#1A2E35] sm:text-3xl">
-                  Leads do not go cold all at once.
-                  <span className="text-[#0F5E6E]"> They get forgotten.</span>
-                </h3>
-
-                <p className="mt-4 text-base leading-relaxed text-[#3D5560]">
-                  Most businesses already paid to generate the lead through ads,
-                  referrals, walk-ins, calls, Instagram, or website forms. When
-                  follow-ups are delayed, inconsistent, or skipped, that paid
-                  interest quietly turns into lost revenue.
-                </p>
-
-                <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                  {proofStats.map((stat) => (
-                    <a
-                      key={stat.label}
-                      href={stat.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded-2xl border border-slate-200 bg-[#FFFBF5] p-4 transition hover:-translate-y-0.5 hover:border-[#0F5E6E]/30 hover:shadow-sm"
-                    >
-                      <p className="text-3xl font-black tracking-tight text-[#0F5E6E]">
-                        {stat.value}
-                      </p>
-                      <p className="mt-2 text-xs font-semibold leading-relaxed text-[#1A2E35]">
-                        {stat.label}
-                      </p>
-                      <p className="mt-2 text-[10px] font-medium uppercase tracking-wider text-[#6B7280]">
-                        Source: {stat.source}
-                      </p>
-                    </a>
-                  ))}
-                </div>
+        {/* Hidden leak visual card */}
+        <div
+          ref={proofRef}
+          style={{
+            opacity: proofInView ? 1 : 0,
+            transform: proofInView ? "translateY(0)" : "translateY(28px)",
+            transition: "opacity 0.7s ease 0.1s, transform 0.7s ease 0.1s",
+          }}
+          className="mt-8 overflow-hidden rounded-3xl border border-[#0F5E6E]/15 bg-white shadow-sm"
+        >
+          <div className="grid lg:grid-cols-[1.1fr_0.9fr]">
+            {/* Left side */}
+            <div className="p-6 sm:p-8 lg:p-10">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="rounded-full bg-[#E8563A]/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-[#E8563A]">
+                  Lead follow-up proof
+                </span>
+                <span className="rounded-full bg-[#0F5E6E]/8 px-3 py-1 text-xs font-semibold text-[#0F5E6E]">
+                  Source-backed
+                </span>
               </div>
 
-              {/* Right: graph */}
-              <div className="border-t border-slate-200 bg-[#0D1F24] p-6 text-left sm:p-8 lg:border-l lg:border-t-0">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-[#E8563A]">
-                      Revenue leak example
+              <p className="mt-5 max-w-2xl text-base leading-7 text-[#3D5560] sm:text-lg">
+                Leads rarely disappear in one moment. They go cold when the
+                follow-up does not happen enough, fast enough, or consistently enough.
+              </p>
+
+              <div className="mt-8 grid gap-4 sm:grid-cols-3">
+                {proofStats.map((stat) => (
+                  <a
+                    key={stat.label}
+                    href={stat.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-2xl border border-slate-200 bg-[#FFFBF5] p-5 transition hover:-translate-y-0.5 hover:border-[#0F5E6E]/30 hover:shadow-sm"
+                  >
+                    <p className="text-4xl font-black tracking-tight text-[#0F5E6E]">
+                      {stat.value}
                     </p>
-                    <h4 className="mt-2 text-2xl font-bold text-white">
-                      ₹7.5L/month can disappear from weak follow-up
-                    </h4>
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-right">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-white/50">
-                      Example
+                    <p className="mt-3 text-sm font-semibold leading-6 text-[#1A2E35]">
+                      {stat.label}
                     </p>
-                    <p className="text-sm font-bold text-white">₹25k/deal</p>
-                  </div>
-                </div>
-
-                <div className="mt-7 space-y-5">
-                  {lossExample.map((item) => (
-                    <div key={item.label}>
-                      <div className="mb-2 flex items-center justify-between gap-4">
-                        <p className="text-sm font-medium text-white/75">
-                          {item.label}
-                        </p>
-                        <p className="text-sm font-bold text-white">
-                          {item.display}
-                        </p>
-                      </div>
-
-                      <div className="h-3 overflow-hidden rounded-full bg-white/10">
-                        <div
-                          className="h-full rounded-full bg-[#E8563A]"
-                          style={{ width: item.width }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-7 rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <div className="flex items-center justify-between gap-4">
-                    <p className="text-sm font-medium text-white/70">
-                      30 lost warm leads × ₹25,000
+                    <p className="mt-4 text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">
+                      {stat.source}
                     </p>
-                    <p className="text-xl font-black text-white">₹7,50,000</p>
-                  </div>
-
-                  <div className="mt-3 h-px bg-white/10" />
-
-                  <div className="mt-3 flex items-center justify-between gap-4">
-                    <p className="text-sm font-medium text-white/70">
-                      Possible yearly leak
-                    </p>
-                    <p className="text-xl font-black text-[#E8563A]">
-                      ₹90,00,000
-                    </p>
-                  </div>
-                </div>
-
-                <p className="mt-4 text-xs leading-relaxed text-white/45">
-                  This is an illustrative model, not an industry-wide guarantee:
-                  300 leads, 20% warm, 50% of warm leads lost due to weak
-                  follow-up, ₹25,000 average deal value.
-                </p>
+                  </a>
+                ))}
               </div>
             </div>
 
-            <div className="border-t border-slate-200 bg-[#FFFBF5] px-6 py-4 text-center sm:px-8">
-              <p className="text-sm font-semibold text-[#1A2E35]">
-                The problem is not always lack of leads. It is losing the leads
-                you already paid for.
+            {/* Right side */}
+            <div className="bg-[#0D1F24] p-6 sm:p-8 lg:p-10">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-[#E8563A]">
+                    Visual example
+                  </p>
+                  <h4 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">
+                    ₹7.5L/month
+                  </h4>
+                  <p className="mt-2 text-base font-semibold text-white/75">
+                    can be lost from weak follow-up
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/45">
+                    Example
+                  </p>
+                  <p className="mt-1 text-sm font-black text-white">₹25k/deal</p>
+                </div>
+              </div>
+
+              <div className="mt-8 space-y-5">
+                {lossFlow.map((item) => (
+                  <div key={item.label}>
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-sm font-medium text-white/75">
+                        {item.label}
+                      </span>
+                      <span className="text-sm font-bold text-white">
+                        {item.value}
+                      </span>
+                    </div>
+                    <div className="h-3 overflow-hidden rounded-full bg-white/10">
+                      <div
+                        className="h-full rounded-full bg-[#E8563A]"
+                        style={{ width: item.width }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-5">
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-sm font-medium text-white/70">
+                    30 lost warm leads × ₹25,000
+                  </p>
+                  <p className="text-2xl font-black text-white">₹7,50,000</p>
+                </div>
+
+                <div className="my-4 h-px bg-white/10" />
+
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-sm font-medium text-white/70">
+                    Possible yearly leak
+                  </p>
+                  <p className="text-2xl font-black text-[#E8563A]">₹90,00,000</p>
+                </div>
+              </div>
+
+              <p className="mt-5 text-xs leading-6 text-white/45">
+                Illustrative model only: 300 leads, 20% warm leads, 50% of warm
+                leads lost due to weak follow-up, ₹25,000 average deal value.
               </p>
             </div>
           </div>
+
+          <div className="border-t border-slate-200 bg-[#FFFBF5] px-6 py-5 text-center">
+            <p className="text-sm font-bold text-[#1A2E35] sm:text-base">
+              The problem is not always lack of leads. It is losing the leads you already paid for.
+            </p>
+          </div>
+        </div>
+
+        {/* THE COMPARISON heading */}
+        <div className="mt-16 text-center sm:mt-20">
+          <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#0F5E6E]">
+            The Comparison
+          </p>
+          <h3 className="mt-3 text-2xl font-bold tracking-tight text-[#1A2E35] sm:text-3xl">
+            Traditional CRM shows you leads.
+            <span className="text-[#0F5E6E]"> AGE follows up with them.</span>
+          </h3>
         </div>
 
         {/* Comparison card */}
         <div
-          ref={cardRef}
+          ref={comparisonRef}
           style={{
-            opacity: cardInView ? 1 : 0,
-            transform: cardInView ? "translateY(0)" : "translateY(32px)",
+            opacity: comparisonInView ? 1 : 0,
+            transform: comparisonInView ? "translateY(0)" : "translateY(32px)",
             transition: "opacity 0.7s ease 0.15s, transform 0.7s ease 0.15s",
           }}
-          className="mt-16 overflow-hidden rounded-3xl border border-slate-200 shadow-sm"
+          className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
         >
           <div className="grid sm:grid-cols-2">
             {/* Old way */}
-            <div className="border-b border-slate-200 bg-slate-50 p-8 sm:border-b-0 sm:border-r">
+            <div className="border-b border-slate-200 bg-slate-50 p-6 sm:border-b-0 sm:border-r sm:p-8">
               <div className="mb-6 flex items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-200">
                   <svg
@@ -301,7 +317,7 @@ const WhyAGE = () => {
             </div>
 
             {/* AGE way */}
-            <div className="bg-white p-8">
+            <div className="bg-white p-6 sm:p-8">
               <div className="mb-6 flex items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0F5E6E]/10">
                   <svg
@@ -350,8 +366,7 @@ const WhyAGE = () => {
             </div>
           </div>
 
-          {/* Bottom bar */}
-          <div className="border-t border-slate-200 bg-[#0F5E6E] px-8 py-4 text-center">
+          <div className="border-t border-slate-200 bg-[#0F5E6E] px-6 py-4 text-center">
             <p className="text-sm font-medium text-white">
               AGE replaces the follow-up part of your CRM and actually does it.
             </p>
