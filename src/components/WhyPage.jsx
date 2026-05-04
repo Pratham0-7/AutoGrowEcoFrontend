@@ -151,11 +151,11 @@ const WhyAGE = () => {
 
         {/* The Hidden Leak */}
         <div className="mt-16 text-center sm:mt-20">
-          <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#0F5E6E]">
+          <div className="inline-flex rounded-full bg-[#E8563A]/10 px-4 py-1.5 text-sm font-bold uppercase tracking-[0.18em] text-[#E8563A]">
             The Hidden Leak
-          </p>
+          </div>
 
-          <h3 className="mx-auto mt-3 max-w-3xl text-2xl font-bold tracking-tight text-[#1A2E35] sm:text-3xl">
+          <h3 className="mx-auto mt-4 max-w-3xl text-2xl font-bold tracking-tight text-[#1A2E35] sm:text-3xl">
             See how much revenue weak follow-up could be leaking from your
             pipeline.
           </h3>
@@ -170,215 +170,217 @@ const WhyAGE = () => {
           }}
           className="mt-8 overflow-hidden rounded-3xl border border-[#0F5E6E]/15 bg-white shadow-sm"
         >
-          <div className="grid lg:grid-cols-[0.95fr_1.05fr]">
-            {/* Left: source-backed proof */}
-            <div className="p-6 sm:p-8 lg:p-10">
+          {/* Top white proof section */}
+          <div className="p-6 sm:p-8 lg:p-10">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="rounded-full bg-[#E8563A]/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-[#E8563A]">
+                Why follow-up matters
+              </span>
+
+              <span className="rounded-full bg-[#0F5E6E]/10 px-3 py-1 text-xs font-semibold text-[#0F5E6E]">
+                Source-backed
+              </span>
+            </div>
+
+            <h4 className="mt-5 max-w-3xl text-3xl font-bold tracking-tight text-[#1A2E35] sm:text-4xl">
+              Leads rarely disappear in one moment.
+              <span className="text-[#0F5E6E]"> They fade when nobody follows up.</span>
+            </h4>
+
+            <p className="mt-4 max-w-3xl text-base leading-8 text-[#3D5560] sm:text-lg">
+              Most businesses already paid to generate the lead. The leak
+              happens when that interest is not followed up with fast enough,
+              long enough, or consistently enough.
+            </p>
+
+            {/* Stacked stat cards */}
+            <div className="mt-8 space-y-4">
+              {proofStats.map((stat) => (
+                <a
+                  key={stat.label}
+                  href={stat.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block rounded-2xl border border-slate-200 bg-[#FFFBF5] p-5 transition hover:-translate-y-0.5 hover:border-[#0F5E6E]/30 hover:shadow-sm"
+                >
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="sm:min-w-[140px]">
+                      <p className="text-4xl font-black tracking-tight text-[#0F5E6E]">
+                        {stat.value}
+                      </p>
+                    </div>
+
+                    <div className="flex-1">
+                      <p className="text-base font-semibold leading-7 text-[#1A2E35]">
+                        {stat.label}
+                      </p>
+
+                      <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
+                        {stat.source}
+                      </p>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom dark calculator section */}
+          <div className="border-t border-white/5 bg-[#0D1F24] p-6 sm:p-8 lg:p-10">
+            <div className="flex flex-col gap-4">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="rounded-full bg-[#E8563A]/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-[#E8563A]">
-                  Why follow-up matters
+                  Interactive calculator
                 </span>
 
-                <span className="rounded-full bg-[#0F5E6E]/10 px-3 py-1 text-xs font-semibold text-[#0F5E6E]">
-                  Source-backed
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-white/75">
+                  Live estimate
                 </span>
               </div>
 
-              <h4 className="mt-5 text-2xl font-bold tracking-tight text-[#1A2E35] sm:text-3xl">
-                Leads rarely disappear in one moment.
-                <span className="text-[#0F5E6E]"> They fade when nobody follows up.</span>
-              </h4>
+              <div>
+                <h4 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
+                  Estimate your follow-up leak
+                </h4>
 
-              <p className="mt-4 text-base leading-7 text-[#3D5560]">
-                Most businesses already paid to generate the lead. The leak
-                happens when that interest is not followed up with fast enough,
-                long enough, or consistently enough.
-              </p>
-
-              <div className="mt-8 grid gap-4 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-                {proofStats.map((stat) => (
-                  <a
-                    key={stat.label}
-                    href={stat.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-2xl border border-slate-200 bg-[#FFFBF5] p-5 transition hover:-translate-y-0.5 hover:border-[#0F5E6E]/30 hover:shadow-sm"
-                  >
-                    <p className="text-4xl font-black tracking-tight text-[#0F5E6E]">
-                      {stat.value}
-                    </p>
-
-                    <p className="mt-3 text-sm font-semibold leading-6 text-[#1A2E35]">
-                      {stat.label}
-                    </p>
-
-                    <p className="mt-4 text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">
-                      {stat.source}
-                    </p>
-                  </a>
-                ))}
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-white/60 sm:text-base">
+                  Change the numbers to estimate how much revenue weak
+                  follow-up could be costing.
+                </p>
               </div>
             </div>
 
-            {/* Right: interactive calculator */}
-            <div className="bg-[#0D1F24] p-6 sm:p-8 lg:p-10">
-              <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-[#E8563A]">
-                    Interactive calculator
-                  </p>
+            {/* Inputs */}
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              <label className="block">
+                <span className="text-xs font-bold uppercase tracking-wider text-white/50">
+                  Monthly leads
+                </span>
 
-                  <h4 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">
-                    Estimate your follow-up leak
-                  </h4>
+                <input
+                  type="number"
+                  min="0"
+                  value={monthlyLeads}
+                  onChange={(e) => setMonthlyLeads(e.target.value)}
+                  onBlur={() => setMonthlyLeads(clampNumber(monthlyLeads))}
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-white/30 focus:border-[#E8563A]"
+                />
+              </label>
 
-                  <p className="mt-2 max-w-xl text-sm leading-6 text-white/60">
-                    Change the numbers to estimate how much revenue weak
-                    follow-up could be costing.
-                  </p>
-                </div>
+              <label className="block">
+                <span className="text-xs font-bold uppercase tracking-wider text-white/50">
+                  Average deal value
+                </span>
 
-                <div className="w-fit rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/45">
-                    Result
-                  </p>
-                  <p className="mt-1 text-sm font-black text-white">
-                    Live estimate
-                  </p>
-                </div>
-              </div>
+                <input
+                  type="number"
+                  min="0"
+                  value={dealValue}
+                  onChange={(e) => setDealValue(e.target.value)}
+                  onBlur={() => setDealValue(clampNumber(dealValue))}
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-white/30 focus:border-[#E8563A]"
+                />
+              </label>
 
-              {/* Inputs */}
-              <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                <label className="block">
+              <label className="block">
+                <div className="flex items-center justify-between gap-4">
                   <span className="text-xs font-bold uppercase tracking-wider text-white/50">
-                    Monthly leads
+                    Warm lead estimate
                   </span>
 
-                  <input
-                    type="number"
-                    min="0"
-                    value={monthlyLeads}
-                    onChange={(e) => setMonthlyLeads(e.target.value)}
-                    onBlur={() => setMonthlyLeads(clampNumber(monthlyLeads))}
-                    className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-white/30 focus:border-[#E8563A]"
-                  />
-                </label>
+                  <span className="text-xs font-bold text-white">
+                    {warmLeadPercent}%
+                  </span>
+                </div>
 
-                <label className="block">
+                <input
+                  type="range"
+                  min="1"
+                  max="100"
+                  value={warmLeadPercent}
+                  onChange={(e) => setWarmLeadPercent(Number(e.target.value))}
+                  className="mt-3 w-full accent-[#E8563A]"
+                />
+              </label>
+
+              <label className="block">
+                <div className="flex items-center justify-between gap-4">
                   <span className="text-xs font-bold uppercase tracking-wider text-white/50">
-                    Average deal value
+                    Weak follow-up loss
                   </span>
 
-                  <input
-                    type="number"
-                    min="0"
-                    value={dealValue}
-                    onChange={(e) => setDealValue(e.target.value)}
-                    onBlur={() => setDealValue(clampNumber(dealValue))}
-                    className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-white/30 focus:border-[#E8563A]"
-                  />
-                </label>
-
-                <label className="block">
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-xs font-bold uppercase tracking-wider text-white/50">
-                      Warm lead estimate
-                    </span>
-
-                    <span className="text-xs font-bold text-white">
-                      {warmLeadPercent}%
-                    </span>
-                  </div>
-
-                  <input
-                    type="range"
-                    min="1"
-                    max="100"
-                    value={warmLeadPercent}
-                    onChange={(e) => setWarmLeadPercent(Number(e.target.value))}
-                    className="mt-3 w-full accent-[#E8563A]"
-                  />
-                </label>
-
-                <label className="block">
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-xs font-bold uppercase tracking-wider text-white/50">
-                      Weak follow-up loss
-                    </span>
-
-                    <span className="text-xs font-bold text-white">
-                      {weakFollowupLossPercent}%
-                    </span>
-                  </div>
-
-                  <input
-                    type="range"
-                    min="1"
-                    max="100"
-                    value={weakFollowupLossPercent}
-                    onChange={(e) =>
-                      setWeakFollowupLossPercent(Number(e.target.value))
-                    }
-                    className="mt-3 w-full accent-[#E8563A]"
-                  />
-                </label>
-              </div>
-
-              {/* Visual bars */}
-              <div className="mt-8 space-y-5">
-                {calculatorBars.map((item) => (
-                  <div key={item.label}>
-                    <div className="mb-2 flex items-center justify-between gap-4">
-                      <span className="text-sm font-medium text-white/75">
-                        {item.label}
-                      </span>
-
-                      <span className="text-sm font-bold text-white">
-                        {item.value}
-                      </span>
-                    </div>
-
-                    <div className="h-3 overflow-hidden rounded-full bg-white/10">
-                      <div
-                        className="h-full rounded-full bg-[#E8563A] transition-all duration-500"
-                        style={{ width: item.width }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Result card */}
-              <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-5">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-sm font-medium text-white/70">
-                    Estimated monthly revenue leak
-                  </p>
-
-                  <p className="text-2xl font-black text-white">
-                    {formatINR(monthlyLeak)}
-                  </p>
+                  <span className="text-xs font-bold text-white">
+                    {weakFollowupLossPercent}%
+                  </span>
                 </div>
 
-                <div className="my-4 h-px bg-white/10" />
-
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-sm font-medium text-white/70">
-                    Estimated yearly revenue leak
-                  </p>
-
-                  <p className="text-2xl font-black text-[#E8563A]">
-                    {formatINR(yearlyLeak)}
-                  </p>
-                </div>
-              </div>
-
-              <p className="mt-5 text-xs leading-6 text-white/45">
-                This is an estimate, not a guarantee. It uses your monthly
-                leads, estimated warm lead percentage, estimated weak follow-up
-                loss, and average deal value.
-              </p>
+                <input
+                  type="range"
+                  min="1"
+                  max="100"
+                  value={weakFollowupLossPercent}
+                  onChange={(e) =>
+                    setWeakFollowupLossPercent(Number(e.target.value))
+                  }
+                  className="mt-3 w-full accent-[#E8563A]"
+                />
+              </label>
             </div>
+
+            {/* Visual bars */}
+            <div className="mt-8 space-y-5">
+              {calculatorBars.map((item) => (
+                <div key={item.label}>
+                  <div className="mb-2 flex items-center justify-between gap-4">
+                    <span className="text-sm font-medium text-white/75">
+                      {item.label}
+                    </span>
+
+                    <span className="text-sm font-bold text-white">
+                      {item.value}
+                    </span>
+                  </div>
+
+                  <div className="h-3 overflow-hidden rounded-full bg-white/10">
+                    <div
+                      className="h-full rounded-full bg-[#E8563A] transition-all duration-500"
+                      style={{ width: item.width }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Result card */}
+            <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm font-medium text-white/70">
+                  Estimated monthly revenue leak
+                </p>
+
+                <p className="text-2xl font-black text-white">
+                  {formatINR(monthlyLeak)}
+                </p>
+              </div>
+
+              <div className="my-4 h-px bg-white/10" />
+
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm font-medium text-white/70">
+                  Estimated yearly revenue leak
+                </p>
+
+                <p className="text-2xl font-black text-[#E8563A]">
+                  {formatINR(yearlyLeak)}
+                </p>
+              </div>
+            </div>
+
+            <p className="mt-5 max-w-3xl text-xs leading-6 text-white/45">
+              This is an estimate, not a guarantee. It uses your monthly leads,
+              estimated warm lead percentage, estimated weak follow-up loss, and
+              average deal value.
+            </p>
           </div>
 
           <div className="border-t border-slate-200 bg-[#FFFBF5] px-6 py-5 text-center">
@@ -391,11 +393,11 @@ const WhyAGE = () => {
 
         {/* The Comparison */}
         <div className="mt-16 text-center sm:mt-20">
-          <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#0F5E6E]">
+          <div className="inline-flex rounded-full bg-[#0F5E6E]/10 px-4 py-1.5 text-sm font-bold uppercase tracking-[0.18em] text-[#0F5E6E]">
             The Comparison
-          </p>
+          </div>
 
-          <h3 className="mx-auto mt-3 max-w-3xl text-2xl font-bold tracking-tight text-[#1A2E35] sm:text-3xl">
+          <h3 className="mx-auto mt-4 max-w-3xl text-2xl font-bold tracking-tight text-[#1A2E35] sm:text-3xl">
             Traditional CRM shows you leads.
             <span className="text-[#0F5E6E]"> AGE follows up with them.</span>
           </h3>
