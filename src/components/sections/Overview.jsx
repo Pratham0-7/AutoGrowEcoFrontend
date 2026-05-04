@@ -19,14 +19,20 @@ const THEME = {
 
 const Overview = ({ leads, onSelectLead, onNavigate }) => {
   const totalLeads = leads.length;
-  const sentLeads = leads.filter((l) => l.send_status && l.send_status !== "not sent").length;
+
+  const sentLeads = leads.filter(
+    (l) => l.send_status && l.send_status !== "not sent"
+  ).length;
+
   const yesLeads = leads.filter((l) => l.response_status === "yes").length;
+
   const pendingLeads = leads.filter(
     (l) =>
       !l.response_status ||
       l.response_status === "pending" ||
       l.response_status === "no reply"
   ).length;
+
   const convRate = totalLeads ? Math.round((yesLeads / totalLeads) * 100) : 0;
 
   const pipeline = {
@@ -42,9 +48,42 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
     declined: leads.filter((l) => l.response_status === "no"),
   };
 
+  const pipelineChart = [
+    {
+      label: "New",
+      value: pipeline.new.length,
+      color: THEME.muted,
+    },
+    {
+      label: "In Progress",
+      value: pipeline.contacted.length,
+      color: "#58D2E6",
+    },
+    {
+      label: "Won",
+      value: pipeline.interested.length,
+      color: THEME.green,
+    },
+    {
+      label: "Lost",
+      value: pipeline.declined.length,
+      color: THEME.coral,
+    },
+  ];
+
+  const chartMax = Math.max(...pipelineChart.map((item) => item.value), 1);
+
   const recentActivity = [...leads]
-    .filter((l) => l.last_followup_sent_at || (l.send_status && l.send_status !== "not sent"))
-    .sort((a, b) => new Date(b.last_followup_sent_at || 0) - new Date(a.last_followup_sent_at || 0))
+    .filter(
+      (l) =>
+        l.last_followup_sent_at ||
+        (l.send_status && l.send_status !== "not sent")
+    )
+    .sort(
+      (a, b) =>
+        new Date(b.last_followup_sent_at || 0) -
+        new Date(a.last_followup_sent_at || 0)
+    )
     .slice(0, 8);
 
   return (
@@ -63,6 +102,7 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
           icon={ICONS.users}
           sub={`${pipeline.new.length} not yet contacted`}
         />
+
         <StatCard
           label="Contacted"
           value={sentLeads}
@@ -72,6 +112,7 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
           trend={`${Math.round((sentLeads / (totalLeads || 1)) * 100)}% reach rate`}
           trendUp={sentLeads > 0}
         />
+
         <StatCard
           label="Interested"
           value={yesLeads}
@@ -81,6 +122,7 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
           trend={`${convRate}% conversion`}
           trendUp={convRate > 0}
         />
+
         <StatCard
           label="Pending"
           value={pendingLeads}
@@ -88,6 +130,7 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
           icon={ICONS.clock}
           sub="Need follow-up"
         />
+
         <StatCard
           label="Declined"
           value={pipeline.declined.length}
@@ -98,12 +141,14 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
       </div>
 
       <div className="overview-grid-2" style={{ gap: 14 }}>
+        {/* Conversion Funnel */}
         <div
           style={{
             background: THEME.panel,
             border: `1px solid ${THEME.border}`,
             borderRadius: 16,
             padding: 20,
+            minHeight: 420,
           }}
         >
           <div
@@ -124,11 +169,19 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
             >
               Conversion Funnel
             </h3>
-            <span style={{ fontSize: 11, color: THEME.muted }}>{convRate}% overall</span>
+
+            <span style={{ fontSize: 11, color: THEME.muted }}>
+              {convRate}% overall
+            </span>
           </div>
 
           {[
-            { label: "Total Leads", value: totalLeads, color: THEME.teal, pct: 100 },
+            {
+              label: "Total Leads",
+              value: totalLeads,
+              color: THEME.teal,
+              pct: 100,
+            },
             {
               label: "Contacted",
               value: sentLeads,
@@ -143,22 +196,43 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
             },
           ].map(({ label, value, color, pct }) => (
             <div key={label} style={{ marginBottom: 14 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-                <span style={{ fontSize: 11, color: THEME.muted }}>{label}</span>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: 5,
+                }}
+              >
+                <span style={{ fontSize: 11, color: THEME.muted }}>
+                  {label}
+                </span>
+
                 <span style={{ fontSize: 11, fontWeight: 700, color }}>
                   {value}{" "}
-                  <span style={{ color: THEME.muted, fontWeight: 400 }}>({pct}%)</span>
+                  <span style={{ color: THEME.muted, fontWeight: 400 }}>
+                    ({pct}%)
+                  </span>
                 </span>
               </div>
+
               <div
                 style={{
                   background: THEME.panelAlt,
                   borderRadius: 4,
                   height: 6,
                   border: `1px solid ${THEME.border}`,
+                  overflow: "hidden",
                 }}
               >
-                <div className="funnel-bar" style={{ background: color, width: `${pct}%` }} />
+                <div
+                  style={{
+                    background: color,
+                    width: `${pct}%`,
+                    height: "100%",
+                    borderRadius: 4,
+                    transition: "width 0.35s ease",
+                  }}
+                />
               </div>
             </div>
           ))}
@@ -173,20 +247,166 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
               flexWrap: "wrap",
             }}
           >
-            {[
-              { label: "New", val: pipeline.new.length, color: THEME.muted },
-              { label: "In Progress", val: pipeline.contacted.length, color: "#58D2E6" },
-              { label: "Won", val: pipeline.interested.length, color: THEME.green },
-              { label: "Lost", val: pipeline.declined.length, color: THEME.coral },
-            ].map(({ label, val, color }) => (
-              <div key={label} style={{ textAlign: "center", flex: 1 }}>
-                <p style={{ fontSize: 18, fontWeight: 800, color, margin: 0 }}>{val}</p>
-                <p style={{ fontSize: 10, color: THEME.muted, margin: 0 }}>{label}</p>
+            {pipelineChart.map(({ label, value, color }) => (
+              <div
+                key={label}
+                style={{
+                  textAlign: "center",
+                  flex: 1,
+                  minWidth: 70,
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: 18,
+                    fontWeight: 800,
+                    color,
+                    margin: 0,
+                  }}
+                >
+                  {value}
+                </p>
+
+                <p
+                  style={{
+                    fontSize: 10,
+                    color: THEME.muted,
+                    margin: 0,
+                  }}
+                >
+                  {label}
+                </p>
               </div>
             ))}
           </div>
+
+          {/* Dynamic graph */}
+          <div
+            style={{
+              marginTop: 22,
+              paddingTop: 18,
+              borderTop: `1px solid ${THEME.border}`,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 14,
+                gap: 12,
+              }}
+            >
+              <div>
+                <p
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: THEME.text,
+                    margin: 0,
+                  }}
+                >
+                  Pipeline Breakdown
+                </p>
+
+                <p
+                  style={{
+                    fontSize: 10,
+                    color: THEME.muted,
+                    margin: "3px 0 0",
+                  }}
+                >
+                  Live distribution of lead status
+                </p>
+              </div>
+
+              <span
+                style={{
+                  fontSize: 10,
+                  color: THEME.muted,
+                  border: `1px solid ${THEME.border}`,
+                  background: THEME.panelAlt,
+                  padding: "4px 8px",
+                  borderRadius: 999,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Updates live
+              </span>
+            </div>
+
+            <div
+              style={{
+                height: 180,
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: 14,
+                alignItems: "end",
+                padding: "14px 12px 8px",
+                background: THEME.panelAlt,
+                border: `1px solid ${THEME.border}`,
+                borderRadius: 14,
+              }}
+            >
+              {pipelineChart.map(({ label, value, color }) => {
+                const height =
+                  value === 0 ? 4 : Math.max((value / chartMax) * 100, 8);
+
+                return (
+                  <div
+                    key={label}
+                    style={{
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "flex-end",
+                      alignItems: "center",
+                      gap: 8,
+                      minWidth: 0,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 800,
+                        color,
+                      }}
+                    >
+                      {value}
+                    </span>
+
+                    <div
+                      title={`${label}: ${value}`}
+                      style={{
+                        width: "100%",
+                        maxWidth: 44,
+                        height: `${height}%`,
+                        minHeight: 6,
+                        background: color,
+                        borderRadius: "10px 10px 4px 4px",
+                        boxShadow: `0 0 18px ${color}35`,
+                        transition: "height 0.35s ease",
+                      }}
+                    />
+
+                    <span
+                      style={{
+                        fontSize: 9,
+                        color: THEME.muted,
+                        textAlign: "center",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
+        {/* Recent Activity */}
         <div
           style={{
             background: THEME.panel,
@@ -213,6 +433,7 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
             >
               Recent Activity
             </h3>
+
             <button
               onClick={() => onNavigate("contacts")}
               style={{
@@ -279,6 +500,7 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
                   >
                     {getInitial(l.name)}
                   </div>
+
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p
                       style={{
@@ -293,10 +515,18 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
                     >
                       {l.name}
                     </p>
-                    <p style={{ fontSize: 10, color: THEME.muted, margin: 0 }}>
+
+                    <p
+                      style={{
+                        fontSize: 10,
+                        color: THEME.muted,
+                        margin: 0,
+                      }}
+                    >
                       {l.followup_count || 0} follow-ups sent
                     </p>
                   </div>
+
                   <div
                     style={{
                       display: "flex",
@@ -307,6 +537,7 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
                     }}
                   >
                     <ReplyBadge status={l.response_status} />
+
                     {formatRelative(l.last_followup_sent_at) && (
                       <span style={{ fontSize: 9, color: THEME.muted }}>
                         {formatRelative(l.last_followup_sent_at)}
@@ -320,6 +551,7 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
         </div>
       </div>
 
+      {/* Quick actions */}
       <div
         style={{
           display: "grid",
@@ -387,11 +619,22 @@ const Overview = ({ leads, onSelectLead, onNavigate }) => {
             >
               <Icon d={icon} size={16} />
             </div>
+
             <div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: THEME.text, margin: 0 }}>
+              <p
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: THEME.text,
+                  margin: 0,
+                }}
+              >
                 {label}
               </p>
-              <p style={{ fontSize: 11, color: THEME.muted, margin: 0 }}>{sub}</p>
+
+              <p style={{ fontSize: 11, color: THEME.muted, margin: 0 }}>
+                {sub}
+              </p>
             </div>
           </div>
         ))}
