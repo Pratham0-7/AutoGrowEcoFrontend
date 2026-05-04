@@ -109,7 +109,7 @@ const WhyAGE = () => {
 
   return (
     <section className="relative bg-[#FFFBF5] py-20 sm:py-28">
-      <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent" />
+      <div className="absolute left-0 right-0 top-0 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent" />
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         {/* Main heading */}
@@ -149,7 +149,7 @@ const WhyAGE = () => {
           </p>
         </div>
 
-        {/* The Hidden Leak */}
+        {/* The Hidden Leak heading */}
         <div className="mt-16 text-center sm:mt-20">
           <div className="inline-flex rounded-full bg-[#E8563A]/10 px-4 py-1.5 text-sm font-bold uppercase tracking-[0.18em] text-[#E8563A]">
             The Hidden Leak
@@ -161,6 +161,7 @@ const WhyAGE = () => {
           </h3>
         </div>
 
+        {/* The Hidden Leak card */}
         <div
           ref={proofRef}
           style={{
@@ -168,9 +169,9 @@ const WhyAGE = () => {
             transform: proofInView ? "translateY(0)" : "translateY(28px)",
             transition: "opacity 0.7s ease 0.1s, transform 0.7s ease 0.1s",
           }}
-          className="mt-8 overflow-hidden rounded-3xl border border-[#0F5E6E]/15 bg-white shadow-sm"
+          className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
         >
-          {/* Top white proof section */}
+          {/* Proof section */}
           <div className="p-6 sm:p-8 lg:p-10">
             <div className="flex flex-wrap items-center gap-3">
               <span className="rounded-full bg-[#E8563A]/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-[#E8563A]">
@@ -182,18 +183,19 @@ const WhyAGE = () => {
               </span>
             </div>
 
-            <h4 className="mt-5 max-w-3xl text-3xl font-bold tracking-tight text-[#1A2E35] sm:text-4xl">
-              Leads rarely disappear in one moment.
-              <span className="text-[#0F5E6E]"> They fade when nobody follows up.</span>
+            <h4 className="mt-5 max-w-4xl text-3xl font-bold tracking-tight text-[#1A2E35] sm:text-4xl">
+              Leads rarely disappear in one moment.{" "}
+              <span className="text-[#0F5E6E]">
+                They fade when nobody follows up.
+              </span>
             </h4>
 
-            <p className="mt-4 max-w-3xl text-base leading-8 text-[#3D5560] sm:text-lg">
+            <p className="mt-4 max-w-4xl text-base leading-8 text-[#3D5560] sm:text-lg">
               Most businesses already paid to generate the lead. The leak
               happens when that interest is not followed up with fast enough,
               long enough, or consistently enough.
             </p>
 
-            {/* Stacked stat cards */}
             <div className="mt-8 space-y-4">
               {proofStats.map((stat) => (
                 <a
@@ -203,19 +205,17 @@ const WhyAGE = () => {
                   rel="noreferrer"
                   className="block rounded-2xl border border-slate-200 bg-[#FFFBF5] p-5 transition hover:-translate-y-0.5 hover:border-[#0F5E6E]/30 hover:shadow-sm"
                 >
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="sm:min-w-[140px]">
-                      <p className="text-4xl font-black tracking-tight text-[#0F5E6E]">
-                        {stat.value}
-                      </p>
-                    </div>
+                  <div className="grid gap-4 sm:grid-cols-[140px_1fr] sm:items-center">
+                    <p className="text-4xl font-black tracking-tight text-[#0F5E6E]">
+                      {stat.value}
+                    </p>
 
-                    <div className="flex-1">
+                    <div>
                       <p className="text-base font-semibold leading-7 text-[#1A2E35]">
                         {stat.label}
                       </p>
 
-                      <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
+                      <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
                         {stat.source}
                       </p>
                     </div>
@@ -225,8 +225,8 @@ const WhyAGE = () => {
             </div>
           </div>
 
-          {/* Bottom dark calculator section */}
-          <div className="border-t border-white/5 bg-[#0D1F24] p-6 sm:p-8 lg:p-10">
+          {/* Calculator section */}
+          <div className="border-t border-slate-200 bg-[#0D1F24] p-6 sm:p-8 lg:p-10">
             <div className="flex flex-col gap-4">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="rounded-full bg-[#E8563A]/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-[#E8563A]">
@@ -243,7 +243,7 @@ const WhyAGE = () => {
                   Estimate your follow-up leak
                 </h4>
 
-                <p className="mt-3 max-w-2xl text-sm leading-7 text-white/60 sm:text-base">
+                <p className="mt-3 max-w-3xl text-sm leading-7 text-white/60 sm:text-base">
                   Change the numbers to estimate how much revenue weak
                   follow-up could be costing.
                 </p>
@@ -383,23 +383,24 @@ const WhyAGE = () => {
             </p>
           </div>
 
-          <div className="border-t border-slate-200 bg-[#FFFBF5] px-6 py-5 text-center">
-            <p className="text-sm font-bold leading-6 text-[#1A2E35] sm:text-base">
+          {/* Bottom takeaway */}
+          <div className="border-t border-slate-200 bg-[#0F5E6E] px-6 py-5 text-center">
+            <p className="text-sm font-bold leading-6 text-white sm:text-base">
               The problem is not always lack of leads. It is losing the leads
               you already paid for.
             </p>
           </div>
         </div>
 
-        {/* The Comparison */}
+        {/* The Comparison heading */}
         <div className="mt-16 text-center sm:mt-20">
           <div className="inline-flex rounded-full bg-[#0F5E6E]/10 px-4 py-1.5 text-sm font-bold uppercase tracking-[0.18em] text-[#0F5E6E]">
             The Comparison
           </div>
 
           <h3 className="mx-auto mt-4 max-w-3xl text-2xl font-bold tracking-tight text-[#1A2E35] sm:text-3xl">
-            Traditional CRM shows you leads.
-            <span className="text-[#0F5E6E]"> AGE follows up with them.</span>
+            Traditional CRM shows you leads.{" "}
+            <span className="text-[#0F5E6E]">AGE follows up with them.</span>
           </h3>
         </div>
 
@@ -414,7 +415,7 @@ const WhyAGE = () => {
           className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
         >
           <div className="grid sm:grid-cols-2">
-            {/* Old way */}
+            {/* Traditional CRM */}
             <div className="border-b border-slate-200 bg-slate-50 p-6 sm:border-b-0 sm:border-r sm:p-8">
               <div className="mb-6 flex items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-200">
@@ -465,7 +466,7 @@ const WhyAGE = () => {
               </ul>
             </div>
 
-            {/* AGE way */}
+            {/* With AGE */}
             <div className="bg-white p-6 sm:p-8">
               <div className="mb-6 flex items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0F5E6E]/10">
