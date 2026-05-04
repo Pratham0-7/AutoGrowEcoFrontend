@@ -9,7 +9,7 @@ const useInView = (threshold = 0.15) => {
       ([entry]) => {
         if (entry.isIntersecting) setInView(true);
       },
-      { threshold }
+      { threshold },
     );
 
     if (ref.current) observer.observe(ref.current);
@@ -71,7 +71,14 @@ const WhyAGE = () => {
       <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent" />
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+        <h2 className="mt-16 text-4xl font-bold tracking-tight text-[#1A2E35] sm:text-5xl">
+          AGE isn't a CRM.{" "}
+          <span className="text-[#0F5E6E]">It's a closer.</span>
+        </h2>
+
+        <p className="mt-4 text-lg text-[#6B7280]">
+          Traditional CRMs help you organize leads. AGE helps you convert them.
+        </p>
         <div
           ref={headerRef}
           style={{
@@ -227,15 +234,6 @@ const WhyAGE = () => {
               </p>
             </div>
           </div>
-
-          <h2 className="mt-16 text-4xl font-bold tracking-tight text-[#1A2E35] sm:text-5xl">
-            AGE isn't a CRM.{" "}
-            <span className="text-[#0F5E6E]">It's a closer.</span>
-          </h2>
-
-          <p className="mt-4 text-lg text-[#6B7280]">
-            Traditional CRMs help you organize leads. AGE helps you convert them.
-          </p>
         </div>
 
         {/* Comparison card */}
